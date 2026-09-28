@@ -1,0 +1,57 @@
+{
+ "shape": [
+  128,
+  128,
+  512
+ ],
+ "rule": "majority",
+ "init": "rho",
+ "levels": 2,
+ "fluid_fraction": 0.14217841625213623,
+ "cold": {
+  "0.01": 3200,
+  "0.001": 5600
+ },
+ "ms_per_fine_step": 1.259954537033404,
+ "per_level": [
+  {
+   "level": 2,
+   "shape": [
+    32,
+    32,
+    128
+   ],
+   "steps": 5800,
+   "seconds": 0.1838209629058838,
+   "flux_error_vs_fine": 0.7875402743385291
+  },
+  {
+   "level": 1,
+   "shape": [
+    64,
+    64,
+    256
+   ],
+   "steps": 5000,
+   "seconds": 1.0033974647521973,
+   "flux_error_vs_fine": 0.28183767041577257
+  }
+ ],
+ "warm": {
+  "0.01": {
+   "fine_steps": 2000,
+   "fine_equiv_total": 2715.625,
+   "speedup_steps": 1.1783659378596087,
+   "wall_s": 3.7342734336853027,
+   "wall_cold_s": 4.031854518506893
+  },
+  "0.001": {
+   "fine_steps": 4600,
+   "fine_equiv_total": 5315.625,
+   "speedup_steps": 1.0534979423868314,
+   "wall_s": 7.079646348953247,
+   "wall_cold_s": 7.055745407387063
+  }
+ },
+ "initial_warm_flux_error": -1.0
+}

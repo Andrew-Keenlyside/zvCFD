@@ -1,0 +1,5 @@
+NVIDIA RTX A2000 12GB: device copy 251 GB/s
+dense fp32 open 256^3                          1603 MLUPS     245 GB/s (  98% of copy)    10.47 ms/step
+sparse fp32 open 256^3                         1268 MLUPS     194 GB/s (  77% of copy)    13.24 ms/step  bricks 100.0%
+dense fp16 open 256^3                          1980 MLUPS     152 GB/s (  61% of copy)     8.47 ms/step
+sparse fp16 open 256^3                          960 MLUPS      74 GB/s (  29% of copy)    17.48 ms/step  bricks 100.0%

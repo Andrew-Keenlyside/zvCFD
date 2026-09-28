@@ -1,0 +1,13 @@
+/home/andrew/Downloads/mesh 1.msh
+  5,673,949 nodes, 14,790,642 cells, 34,539,621 faces (1,672,260 on the boundary)
+  bounding box 58.48 x 58.77 x 66.21 mm; enclosed volume 628.6 mm^3
+  pressure-outlet    77 zones     21,411 faces  area 15.07 mm^2
+  velocity-inlet      1 zones      1,822 faces  area 1.94 mm^2
+  wall                4 zones  1,649,027 faces  area 2269 mm^2
+  outlet diameters 0.242 .. 1.12 mm (median 0.417)
+
+     voxel   fluid voxels   box voxels  fluid %  min patch (vox)   GB/GPU   Gupd/s
+      0.02       7.86e+07     2.85e+10     0.28             12.1      2.6     48.5
+      0.01       6.29e+08     2.28e+11     0.28             24.2     20.6     48.5
+     0.005       5.03e+09     1.82e+12     0.28             48.3    164.5     48.5
+    0.0025       4.02e+10     1.46e+13     0.28             96.7   1315.9     48.5

@@ -1,0 +1,252 @@
+"""``zvcfd`` command line.
+
+Subcommands follow the zarr-vectors-tools / bridge-sim conventions:
+argparse, kebab-case flags with snake_case dests, ``main(argv) -> int``,
+comma-separated shapes (``--shape 2048,2048,2048``).
+
+    zvcfd probe [--require cupy,zv_device_decode] [--json]
+    zvcfd plan --fluid-cells 6.3e8 [--fill 0.6] [--gpus 8] [--gpu H100-SXM] [--method lbm-fp32]
+    zvcfd plan --shape 2048,2048,2048 --fluid-fraction 0.2 --geometry porous --layout dense
+    zvcfd mesh-info coronary.msh [--voxel-size 0.02,0.01,0.005] [--unit mm]
+    zvcfd phantom list | zvcfd phantom build <name> --out mask.npy
+    zvcfd run config.yaml [--out runs/] [--steps N]
+    zvcfd info <run.zvcfd | store.zarrvectors>
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+
+
+def _floats(s: str) -> list[float]:
+    return [float(v) for v in s.split(",") if v]
+
+
+def _ints(s: str) -> list[int]:
+    return [int(v) for v in s.split(",") if v]
+
+
+def _fmt_s(sec: float | None) -> str:
+    if sec is None:
+        return "-"
+    for unit, n in (("d", 86400), ("h", 3600), ("min", 60)):
+        if sec >= n:
+            return f"{sec / n:.1f} {unit}"
+    return f"{sec:.2f} s"
+
+
+# ---------------------------------------------------------------- probe
+
+def cmd_probe(args) -> int:
+    from zvcfd.capabilities import device_count, runtime_capabilities
+
+    caps = runtime_capabilities(probe_device=True)
+    if args.json:
+        print(json.dumps(caps | {"device_count": device_count()}, indent=1))
+    else:
+        width = max(map(len, caps))
+        for k, v in caps.items():
+            print(f"{k:<{width}}  {'yes' if v else 'no'}")
+        print(f"{'device_count':<{width}}  {device_count()}")
+    missing = [r for r in (args.require.split(",") if args.require else []) if not caps.get(r)]
+    if missing:
+        print(f"missing: {', '.join(missing)}", file=sys.stderr)
+        return 1
+    return 0
+
+
+# ---------------------------------------------------------------- plan
+
+def cmd_plan(args) -> int:
+    from zvcfd.perfmodel import estimate
+
+    box = None
+    if args.shape:
+        z, y, x = _ints(args.shape)
+        box = float(z) * y * x
+    fluid = args.fluid_cells
+    if fluid is None:
+        if box is None or args.fluid_fraction is None:
+            print("give --fluid-cells, or --shape with --fluid-fraction", file=sys.stderr)
+            return 2
+        fluid = box * args.fluid_fraction
+    rows = []
+    for method in args.method.split(","):
+        e = estimate(fluid, fill=args.fill, box_cells=box, gpus=args.gpus, gpu=args.gpu,
+                     method=method, layout=args.layout, geometry=args.geometry,
+                     steps=args.steps, efficiency=args.efficiency)
+        rows.append(e.as_dict())
+    if args.json:
+        print(json.dumps(rows, indent=1))
+        return 0
+    print(f"{fluid:.3g} fluid cells, {args.layout} layout, {args.geometry} geometry, "
+          f"{args.gpus} x {args.gpu}, {args.efficiency} kernel efficiency")
+    print(f"{'method':<16}{'stored':>10}{'GB/GPU':>9}{'fits':>6}{'Gupd/s':>9}"
+          f"{'ms/step':>10}{'total':>12}")
+    for r in rows:
+        print(f"{r['method']:<16}{r['stored_cells']:>10.3g}{r['memory_per_gpu_gb']:>9.1f}"
+              f"{'yes' if r['fits'] else 'NO':>6}{r['updates_per_s'] / 1e9:>9.1f}"
+              f"{r['seconds_per_step'] * 1e3:>10.2f}{_fmt_s(r['seconds']):>12}")
+    return 0
+
+
+# ---------------------------------------------------------------- mesh-info
+
+def cmd_mesh_info(args) -> int:
+    from zvcfd.io.fluent_msh import read_fluent_boundary, voxel_estimate
+    from zvcfd.perfmodel import estimate
+
+    s = read_fluent_boundary(args.mesh).summary()
+    est = [voxel_estimate(s, h) for h in _floats(args.voxel_size)]
+    if args.json:
+        print(json.dumps({"summary": s, "voxel_estimates": est}, indent=1))
+        return 0
+    u = args.unit
+    ext = [hi - lo for lo, hi in zip(s["bbox_min"], s["bbox_max"])]
+    print(f"{s['source']}")
+    print(f"  {s['nodes']:,} nodes, {s['cells']:,} cells, {s['faces']:,} faces "
+          f"({s['boundary_faces']:,} on the boundary)")
+    print(f"  bounding box {' x '.join(f'{e:.2f}' for e in ext)} {u}; "
+          f"enclosed volume {s['volume']:.4g} {u}^3")
+    for kind, k in sorted(s["kinds"].items()):
+        print(f"  {kind:<16} {k['zones']:>4} zones {k['faces']:>10,} faces  "
+              f"area {k['area']:.4g} {u}^2")
+    d = sorted(p["equivalent_diameter"] for p in s["patches"] if "outlet" in p["kind"])
+    if d:
+        print(f"  outlet diameters {d[0]:.3g} .. {d[-1]:.3g} {u} (median {d[len(d) // 2]:.3g})")
+    print(f"\n  {'voxel':>8} {'fluid voxels':>14} {'box voxels':>12} {'fluid %':>8} "
+          f"{'min patch (vox)':>16} {'GB/GPU':>8} {'fits':>5} {'Gupd/s':>8}")
+    for e in est:
+        p = estimate(e["fluid_voxels"], fill=args.fill, gpus=args.gpus, gpu=args.gpu,
+                     method=args.method, geometry="vessel")
+        print(f"  {e['voxel_size']:>8g} {e['fluid_voxels']:>14.3g} {e['box_voxels']:>12.3g} "
+              f"{100 * e['fluid_fraction']:>8.2f} {e['min_patch_diameter_voxels'] or 0:>16.1f} "
+              f"{p.memory_per_gpu_gb:>8.1f} {'yes' if p.fits else 'NO':>5} "
+              f"{p.updates_per_s / 1e9:>8.1f}")
+    return 0
+
+
+# ---------------------------------------------------------------- phantom
+
+def cmd_phantom(args) -> int:
+    from zvcfd.phantoms import PHANTOMS
+
+    if args.action == "list":
+        for name in PHANTOMS:
+            print(name)
+        return 0
+    import numpy as np
+
+    flags = PHANTOMS[args.name]()
+    np.save(args.out, flags == 0)
+    print(f"{args.name}: {flags.shape}, fluid {100 * (flags == 0).mean():.2f}% -> {args.out}")
+    return 0
+
+
+# ---------------------------------------------------------------- run / info
+
+def cmd_run(args) -> int:
+    from zvcfd.config import load
+    from zvcfd.run import run
+
+    run(load(args.config), out=args.out, steps=args.steps)
+    return 0
+
+
+def cmd_info(args) -> int:
+    from pathlib import Path
+
+    p = Path(args.target)
+    if (p / "zarr.json").exists():
+        attrs = json.loads((p / "zarr.json").read_text()).get("attributes", {})
+        if "ome" in attrs and attrs["ome"].get("type") == "collection" and \
+                "zvcfd:run" in attrs["ome"].get("attributes", {}):
+            from zvcfd import collection as col
+
+            doc = attrs["ome"]
+            print(f"run {doc['name']} ({doc['id']})")
+            for n in doc["nodes"]:
+                print(f"  {n['type']:<16} {n['id']:<12} {n.get('path', {}).get('path', '')}")
+            snaps = col.snapshots(doc)
+            if snaps:
+                print(f"  {len(snaps)} snapshots: {snaps[0]['id']} .. {snaps[-1]['id']}")
+            return 0
+        if "zarr_vectors" in attrs:
+            import zarr_vectors as zv
+
+            ds = zv.open(str(p))
+            meta = dict(ds.metadata["zvcfd"]) if "zvcfd" in ds.metadata else {}
+            print(f"zarr vectors store {p.name}: levels {len(ds.levels)}; zvcfd {meta}")
+            return 0
+    print(f"{p}: not a zvcfd run or brick store", file=sys.stderr)
+    return 1
+
+
+# ---------------------------------------------------------------- parser
+
+def build_parser() -> argparse.ArgumentParser:
+    ap = argparse.ArgumentParser(prog="zvcfd", description="GPU CFD on Zarr Vectors stores.")
+    sub = ap.add_subparsers(dest="command", required=True)
+
+    p = sub.add_parser("probe", help="report what this install and machine can do")
+    p.add_argument("--require", default="", help="comma list of capabilities that must be present")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=cmd_probe)
+
+    def plan_opts(p):
+        p.add_argument("--fill", type=float, default=0.6,
+                       help="brick fill: fluid / stored cells (sparse layout)")
+        p.add_argument("--gpus", type=int, default=8)
+        p.add_argument("--gpu", default="H100-SXM")
+        p.add_argument("--method", default="lbm-fp32",
+                       help="comma list: lbm-fp32, lbm-fp16, lubrication-amg")
+
+    p = sub.add_parser("plan", help="memory and time estimate for a domain")
+    p.add_argument("--fluid-cells", type=float, dest="fluid_cells")
+    p.add_argument("--shape", help="bounding box Z,Y,X in voxels")
+    p.add_argument("--fluid-fraction", type=float, dest="fluid_fraction")
+    p.add_argument("--layout", default="sparse", choices=["sparse", "dense"])
+    p.add_argument("--geometry", default="vessel", choices=["open", "porous", "vessel"])
+    p.add_argument("--steps", type=int)
+    p.add_argument("--efficiency", default="planning", choices=["planning", "measured", "target"],
+                   help="kernel efficiency basis (planning = the lower of measured and target)")
+    p.add_argument("--json", action="store_true")
+    plan_opts(p)
+    p.set_defaults(func=cmd_plan)
+
+    p = sub.add_parser("mesh-info", help="summarise an ASCII Fluent .msh and size a voxel run")
+    p.add_argument("mesh")
+    p.add_argument("--voxel-size", default="0.02,0.01,0.005", dest="voxel_size",
+                   help="comma list, in mesh units")
+    p.add_argument("--unit", default="mm")
+    p.add_argument("--json", action="store_true")
+    plan_opts(p)
+    p.set_defaults(func=cmd_mesh_info)
+
+    p = sub.add_parser("phantom", help="synthetic geometries")
+    p.add_argument("action", choices=["list", "build"])
+    p.add_argument("name", nargs="?")
+    p.add_argument("--out", default="phantom.npy")
+    p.set_defaults(func=cmd_phantom)
+
+    p = sub.add_parser("run", help="run a configuration (single GPU)")
+    p.add_argument("config")
+    p.add_argument("--out")
+    p.add_argument("--steps", type=int)
+    p.set_defaults(func=cmd_run)
+
+    p = sub.add_parser("info", help="describe a run collection or a brick store")
+    p.add_argument("target")
+    p.set_defaults(func=cmd_info)
+    return ap
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    return int(args.func(args) or 0)
+
+
+if __name__ == "__main__":  # pragma: no cover
+    sys.exit(main())

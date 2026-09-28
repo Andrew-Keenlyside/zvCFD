@@ -1,0 +1,629 @@
+{
+ "summary": {
+  "source": "/home/andrew/Downloads/mesh 1.msh",
+  "nodes": 5673949,
+  "cells": 14790642,
+  "faces": 34539621,
+  "interior_faces": 32867361,
+  "boundary_faces": 1672260,
+  "bbox_min": [
+   40.893261719,
+   24.740254211,
+   76.141835022
+  ],
+  "bbox_max": [
+   99.374356079,
+   83.505581665,
+   142.35223083
+  ],
+  "volume": 628.6101893788248,
+  "kinds": {
+   "wall": {
+    "zones": 4,
+    "faces": 1649027,
+    "area": 2269.435450156554
+   },
+   "pressure-outlet": {
+    "zones": 77,
+    "faces": 21411,
+    "area": 15.066657945217148
+   },
+   "velocity-inlet": {
+    "zones": 1,
+    "faces": 1822,
+    "area": 1.9395728225214957
+   }
+  },
+  "patches": [
+   {
+    "zone": 6,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_001_amira_amiranode_101-pressure-outlet",
+    "area": 0.07939964178752593,
+    "equivalent_diameter": 0.3179540277487997
+   },
+   {
+    "zone": 7,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_002_amira_amiranode_182-pressure-outlet",
+    "area": 0.07557940528392504,
+    "equivalent_diameter": 0.3102107147973117
+   },
+   {
+    "zone": 8,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_003_amira_amiranode_311-pressure-outlet",
+    "area": 0.4097064796492282,
+    "equivalent_diameter": 0.7222565275742612
+   },
+   {
+    "zone": 9,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_004_amira_amiranode_312-pressure-outlet",
+    "area": 0.07552726194065425,
+    "equivalent_diameter": 0.3101036868668478
+   },
+   {
+    "zone": 10,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_005_amira_amiranode_313-pressure-outlet",
+    "area": 0.0807442427043806,
+    "equivalent_diameter": 0.32063493699363305
+   },
+   {
+    "zone": 11,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_006_amira_amiranode_314-pressure-outlet",
+    "area": 0.4775040626198215,
+    "equivalent_diameter": 0.7797288344669909
+   },
+   {
+    "zone": 12,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_007_amira_amiranode_315-pressure-outlet",
+    "area": 0.18387306563753597,
+    "equivalent_diameter": 0.4838537572256673
+   },
+   {
+    "zone": 13,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_008_amira_amiranode_316-pressure-outlet",
+    "area": 0.12419800758617554,
+    "equivalent_diameter": 0.39766042628860676
+   },
+   {
+    "zone": 14,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_009_amira_amiranode_317-pressure-outlet",
+    "area": 0.10644415190127518,
+    "equivalent_diameter": 0.3681425043464828
+   },
+   {
+    "zone": 15,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_010_amira_amiranode_318-pressure-outlet",
+    "area": 0.19863491541047526,
+    "equivalent_diameter": 0.5029014110794889
+   },
+   {
+    "zone": 16,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_011_amira_amiranode_319-pressure-outlet",
+    "area": 0.08577582983397353,
+    "equivalent_diameter": 0.33047417225418574
+   },
+   {
+    "zone": 17,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_012_amira_amiranode_320-pressure-outlet",
+    "area": 0.06864750543203901,
+    "equivalent_diameter": 0.29564289026373347
+   },
+   {
+    "zone": 18,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_013_amira_amiranode_321-pressure-outlet",
+    "area": 0.14920499203013962,
+    "equivalent_diameter": 0.4358597206953959
+   },
+   {
+    "zone": 19,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_014_amira_amiranode_322-pressure-outlet",
+    "area": 0.147094470776872,
+    "equivalent_diameter": 0.43276609964853324
+   },
+   {
+    "zone": 20,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_015_amira_amiranode_323-pressure-outlet",
+    "area": 0.47655097804059565,
+    "equivalent_diameter": 0.7789502874532525
+   },
+   {
+    "zone": 21,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_016_amira_amiranode_324-pressure-outlet",
+    "area": 0.12539782895429663,
+    "equivalent_diameter": 0.3995766192466051
+   },
+   {
+    "zone": 22,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_017_amira_amiranode_325-pressure-outlet",
+    "area": 0.15161877238419424,
+    "equivalent_diameter": 0.4393711605507987
+   },
+   {
+    "zone": 23,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_018_amira_amiranode_326-pressure-outlet",
+    "area": 0.15515955292280123,
+    "equivalent_diameter": 0.44447190971391976
+   },
+   {
+    "zone": 24,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_019_amira_amiranode_327-pressure-outlet",
+    "area": 0.1559801276585555,
+    "equivalent_diameter": 0.4456456739694797
+   },
+   {
+    "zone": 25,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_020_amira_amiranode_328-pressure-outlet",
+    "area": 0.4326176331759347,
+    "equivalent_diameter": 0.742176446883981
+   },
+   {
+    "zone": 26,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_021_amira_amiranode_330-pressure-outlet",
+    "area": 0.1160834767373943,
+    "equivalent_diameter": 0.3844503518952672
+   },
+   {
+    "zone": 27,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_022_amira_amiranode_331-pressure-outlet",
+    "area": 0.6690289289871725,
+    "equivalent_diameter": 0.9229485841358017
+   },
+   {
+    "zone": 28,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_023_amira_amiranode_332-pressure-outlet",
+    "area": 0.14183250777159356,
+    "equivalent_diameter": 0.42495500658746244
+   },
+   {
+    "zone": 29,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_024_amira_amiranode_333-pressure-outlet",
+    "area": 0.06756343179546648,
+    "equivalent_diameter": 0.293299221171835
+   },
+   {
+    "zone": 30,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_025_amira_amiranode_334-pressure-outlet",
+    "area": 0.5751825703309004,
+    "equivalent_diameter": 0.8557716950143399
+   },
+   {
+    "zone": 31,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_026_amira_amiranode_335-pressure-outlet",
+    "area": 0.30912766455118235,
+    "equivalent_diameter": 0.6273703586225536
+   },
+   {
+    "zone": 32,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_027_amira_amiranode_336-pressure-outlet",
+    "area": 0.3465547449276493,
+    "equivalent_diameter": 0.6642644094466379
+   },
+   {
+    "zone": 33,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_028_amira_amiranode_337-pressure-outlet",
+    "area": 0.221455792394538,
+    "equivalent_diameter": 0.5310049644658572
+   },
+   {
+    "zone": 34,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_029_amira_amiranode_338-pressure-outlet",
+    "area": 0.7055851081340856,
+    "equivalent_diameter": 0.9478284981221833
+   },
+   {
+    "zone": 35,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_030_amira_amiranode_339-pressure-outlet",
+    "area": 0.5086775254044527,
+    "equivalent_diameter": 0.8047784420963167
+   },
+   {
+    "zone": 36,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_031_amira_amiranode_340-pressure-outlet",
+    "area": 0.09249730266273645,
+    "equivalent_diameter": 0.34317812216330623
+   },
+   {
+    "zone": 37,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_032_amira_amiranode_341-pressure-outlet",
+    "area": 0.07673013573109466,
+    "equivalent_diameter": 0.3125633425175227
+   },
+   {
+    "zone": 38,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_033_amira_amiranode_342-pressure-outlet",
+    "area": 0.1615913081663759,
+    "equivalent_diameter": 0.45359061238402615
+   },
+   {
+    "zone": 39,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_034_amira_amiranode_343-pressure-outlet",
+    "area": 0.1288539629987674,
+    "equivalent_diameter": 0.40504562852334564
+   },
+   {
+    "zone": 40,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_035_amira_amiranode_344-pressure-outlet",
+    "area": 0.5161891634977267,
+    "equivalent_diameter": 0.810698745237138
+   },
+   {
+    "zone": 41,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_036_amira_amiranode_345-pressure-outlet",
+    "area": 0.2403443665195073,
+    "equivalent_diameter": 0.5531870857196131
+   },
+   {
+    "zone": 42,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_037_amira_amiranode_346-pressure-outlet",
+    "area": 0.1528589259537313,
+    "equivalent_diameter": 0.44116440165774345
+   },
+   {
+    "zone": 43,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_038_amira_amiranode_347-pressure-outlet",
+    "area": 0.19521806086392735,
+    "equivalent_diameter": 0.49855727347865275
+   },
+   {
+    "zone": 44,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_039_amira_amiranode_348-pressure-outlet",
+    "area": 0.17371736222776182,
+    "equivalent_diameter": 0.4703018341400221
+   },
+   {
+    "zone": 45,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_040_amira_amiranode_349-pressure-outlet",
+    "area": 0.12806196175922147,
+    "equivalent_diameter": 0.40379890278231684
+   },
+   {
+    "zone": 46,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_041_amira_amiranode_350-pressure-outlet",
+    "area": 0.23859360980551225,
+    "equivalent_diameter": 0.5511685941030108
+   },
+   {
+    "zone": 47,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_042_amira_amiranode_351-pressure-outlet",
+    "area": 0.12905582782596048,
+    "equivalent_diameter": 0.40536278007057513
+   },
+   {
+    "zone": 48,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_043_amira_amiranode_352-pressure-outlet",
+    "area": 0.27935868497871386,
+    "equivalent_diameter": 0.596397958480838
+   },
+   {
+    "zone": 49,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_044_amira_amiranode_353-pressure-outlet",
+    "area": 0.2683414656853389,
+    "equivalent_diameter": 0.5845194313303598
+   },
+   {
+    "zone": 50,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_045_amira_amiranode_354-pressure-outlet",
+    "area": 0.08050757647112783,
+    "equivalent_diameter": 0.32016469201620296
+   },
+   {
+    "zone": 51,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_046_amira_amiranode_355-pressure-outlet",
+    "area": 0.09358284029555701,
+    "equivalent_diameter": 0.3451859976490044
+   },
+   {
+    "zone": 52,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_047_amira_amiranode_356-pressure-outlet",
+    "area": 0.09266679838562641,
+    "equivalent_diameter": 0.34349240484846255
+   },
+   {
+    "zone": 53,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_048_amira_amiranode_357-pressure-outlet",
+    "area": 0.07158057345133763,
+    "equivalent_diameter": 0.30189272391540506
+   },
+   {
+    "zone": 54,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_049_amira_amiranode_358-pressure-outlet",
+    "area": 0.13441545628626422,
+    "equivalent_diameter": 0.41369442148437563
+   },
+   {
+    "zone": 55,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_050_amira_amiranode_359-pressure-outlet",
+    "area": 0.06866097238813204,
+    "equivalent_diameter": 0.2956718877819446
+   },
+   {
+    "zone": 56,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_051_amira_amiranode_360-pressure-outlet",
+    "area": 0.17174954764264302,
+    "equivalent_diameter": 0.4676305334866287
+   },
+   {
+    "zone": 57,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_052_amira_amiranode_361-pressure-outlet",
+    "area": 0.13360747397838613,
+    "equivalent_diameter": 0.41244917182782104
+   },
+   {
+    "zone": 58,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_053_amira_amiranode_362-pressure-outlet",
+    "area": 0.08287097796866236,
+    "equivalent_diameter": 0.32483011907853826
+   },
+   {
+    "zone": 59,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_054_amira_amiranode_363-pressure-outlet",
+    "area": 0.16787253553397535,
+    "equivalent_diameter": 0.46232234503300423
+   },
+   {
+    "zone": 60,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_055_amira_amiranode_364-pressure-outlet",
+    "area": 0.07644226981310387,
+    "equivalent_diameter": 0.3119764747787225
+   },
+   {
+    "zone": 61,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_056_amira_amiranode_365-pressure-outlet",
+    "area": 0.13950008185180252,
+    "equivalent_diameter": 0.4214463438060734
+   },
+   {
+    "zone": 62,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_057_amira_amiranode_366-pressure-outlet",
+    "area": 0.12724910086799712,
+    "equivalent_diameter": 0.40251532549348656
+   },
+   {
+    "zone": 63,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_058_amira_amiranode_367-pressure-outlet",
+    "area": 0.08623018813114229,
+    "equivalent_diameter": 0.33134828425468427
+   },
+   {
+    "zone": 64,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_059_amira_amiranode_368-pressure-outlet",
+    "area": 0.07997780967155807,
+    "equivalent_diameter": 0.3191095579501343
+   },
+   {
+    "zone": 65,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_060_amira_amiranode_369-pressure-outlet",
+    "area": 0.10177227745218505,
+    "equivalent_diameter": 0.3599728992714323
+   },
+   {
+    "zone": 66,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_061_amira_amiranode_370-pressure-outlet",
+    "area": 0.0635157192699736,
+    "equivalent_diameter": 0.28437778655659374
+   },
+   {
+    "zone": 67,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_062_amira_amiranode_371-pressure-outlet",
+    "area": 0.13942357858749385,
+    "equivalent_diameter": 0.42133076522619123
+   },
+   {
+    "zone": 68,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_063_amira_amiranode_372-pressure-outlet",
+    "area": 0.08000198303390857,
+    "equivalent_diameter": 0.3191577798769818
+   },
+   {
+    "zone": 69,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_064_amira_amiranode_373-pressure-outlet",
+    "area": 0.1414951673253002,
+    "equivalent_diameter": 0.4244493402368425
+   },
+   {
+    "zone": 70,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_065_amira_amiranode_374-pressure-outlet",
+    "area": 0.11385420443441052,
+    "equivalent_diameter": 0.3807409557957392
+   },
+   {
+    "zone": 71,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_066_amira_amiranode_375-pressure-outlet",
+    "area": 0.13685628230720878,
+    "equivalent_diameter": 0.41743362415955115
+   },
+   {
+    "zone": 72,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_067_amira_amiranode_376-pressure-outlet",
+    "area": 0.1587642776776953,
+    "equivalent_diameter": 0.4496053342994895
+   },
+   {
+    "zone": 73,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_068_amira_amiranode_377-pressure-outlet",
+    "area": 0.14629406838528575,
+    "equivalent_diameter": 0.43158706309195133
+   },
+   {
+    "zone": 74,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_069_amira_amiranode_378-pressure-outlet",
+    "area": 0.06900559594916034,
+    "equivalent_diameter": 0.2964129780736456
+   },
+   {
+    "zone": 75,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_070_amira_amiranode_379-pressure-outlet",
+    "area": 0.09209193096168013,
+    "equivalent_diameter": 0.3424253031705333
+   },
+   {
+    "zone": 76,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_071_amira_amiranode_380-pressure-outlet",
+    "area": 0.09899055010525049,
+    "equivalent_diameter": 0.35501927123621396
+   },
+   {
+    "zone": 77,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_072_amira_amiranode_381-pressure-outlet",
+    "area": 0.04585363207664274,
+    "equivalent_diameter": 0.24162503518824008
+   },
+   {
+    "zone": 78,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_073_amira_amiranode_383-pressure-outlet",
+    "area": 0.5056871437263393,
+    "equivalent_diameter": 0.8024094146111129
+   },
+   {
+    "zone": 79,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_074_amira_amiranode_384-pressure-outlet",
+    "area": 0.9775094939859591,
+    "equivalent_diameter": 1.1156180991257636
+   },
+   {
+    "zone": 80,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_075_amira_amiranode_385-pressure-outlet",
+    "area": 0.06682817786855469,
+    "equivalent_diameter": 0.29169895228615245
+   },
+   {
+    "zone": 81,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_076_amira_amiranode_386-pressure-outlet",
+    "area": 0.22579655679291033,
+    "equivalent_diameter": 0.536183835241023
+   },
+   {
+    "zone": 82,
+    "kind": "pressure-outlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_outlet_077_amira_amiranode_387-pressure-outlet",
+    "area": 0.0938402870986606,
+    "equivalent_diameter": 0.34566047564527186
+   },
+   {
+    "zone": 84,
+    "kind": "velocity-inlet",
+    "name": "from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_inlet_001_amira_amiranode_329-velocity-inlet",
+    "area": 1.9395728225214957,
+    "equivalent_diameter": 1.5714772723548895
+   }
+  ]
+ },
+ "voxel_estimates": [
+  {
+   "voxel_size": 0.0025,
+   "box_voxels": 14564081662735,
+   "fluid_voxels": 40231052120.24478,
+   "fluid_fraction": 0.0027623473317362436,
+   "min_patch_diameter_voxels": 96.65001407529603,
+   "inlet_diameter_voxels": 628.5909089419558
+  },
+  {
+   "voxel_size": 0.005,
+   "box_voxels": 1820734222734,
+   "fluid_voxels": 5028881515.030598,
+   "fluid_fraction": 0.0027620074650320293,
+   "min_patch_diameter_voxels": 48.325007037648014,
+   "inlet_diameter_voxels": 314.2954544709779
+  },
+  {
+   "voxel_size": 0.01,
+   "box_voxels": 227628422406,
+   "fluid_voxels": 628610189.3788247,
+   "fluid_fraction": 0.002761562825654655,
+   "min_patch_diameter_voxels": 24.162503518824007,
+   "inlet_diameter_voxels": 157.14772723548896
+  },
+  {
+   "voxel_size": 0.02,
+   "box_voxels": 28463259825,
+   "fluid_voxels": 78576273.67235309,
+   "fluid_fraction": 0.0027606210306009137,
+   "min_patch_diameter_voxels": 12.081251759412003,
+   "inlet_diameter_voxels": 78.57386361774448
+  },
+  {
+   "voxel_size": 0.05,
+   "box_voxels": 1823094000,
+   "fluid_voxels": 5028881.515030597,
+   "fluid_fraction": 0.0027584323765151974,
+   "min_patch_diameter_voxels": 4.832500703764802,
+   "inlet_diameter_voxels": 31.42954544709779
+  }
+ ],
+ "units": "mm (inferred)"
+}

@@ -1,0 +1,35 @@
+[
+ {
+  "nx": 256,
+  "unknowns": 674086,
+  "jacobi_cg_iters": 1333,
+  "jacobi_cg_s": 19.10784602165222,
+  "amg_levels": 4,
+  "amg_cg_iters": 12,
+  "amg_setup_s": 3.2225418090820312,
+  "amg_solve_s": 1.7414462566375732,
+  "operator_complexity": 1.5248673526104268
+ },
+ {
+  "nx": 512,
+  "unknowns": 1188892,
+  "jacobi_cg_iters": 2296,
+  "jacobi_cg_s": 50.26626896858215,
+  "amg_levels": 4,
+  "amg_cg_iters": 13,
+  "amg_setup_s": 3.660978317260742,
+  "amg_solve_s": 2.5940208435058594,
+  "operator_complexity": 1.5195045782418108
+ },
+ {
+  "nx": 1024,
+  "unknowns": 2242494,
+  "jacobi_cg_iters": 3853,
+  "jacobi_cg_s": 142.3537437915802,
+  "amg_levels": 4,
+  "amg_cg_iters": 14,
+  "amg_setup_s": 8.200490236282349,
+  "amg_solve_s": 5.513454437255859,
+  "operator_complexity": 1.5131930760246535
+ }
+]

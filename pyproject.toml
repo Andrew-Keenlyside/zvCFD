@@ -1,0 +1,89 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zvcfd"
+version = "0.0.1.dev0"
+description = "GPU computational fluid dynamics on chunked Zarr Vectors stores, for image-derived geometries at any scale."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    {name = "Andrew Keenlyside"},
+]
+keywords = ["cfd", "lattice-boltzmann", "gpu", "zarr", "ome-zarr", "hip-ct", "vasculature", "porous-media"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "zarr>=3.0",
+    # Brick stores go through zarr_vectors.building, and use read_cells /
+    # defer_presence / rebuild_presence and device decode from the
+    # `gpu-backend` branch (format 0.9.4).  No released version carries
+    # them yet, so the real requirement is an editable install of that
+    # branch; zvcfd.runtime_capabilities() reports what is present.
+    "zarr-vectors>=0.2.1.dev0",
+]
+
+[project.optional-dependencies]
+# cupy for the GPU solvers.  In a conda environment install cupy from
+# conda-forge instead, so there is one cupy, as zarr-vectors advises.
+gpu = ["cupy-cuda12x>=13"]
+# GPUDirect Storage reads of brick stores (pip environments; conda: rapidsai channel)
+gpu-io = ["kvikio-cu12>=25.2"]
+# nvCOMP zstd decode on the device, through zarr-vectors
+gpu-codecs = ["nvidia-nvcomp-cu12>=4.2"]
+# Algebraic multigrid for the lubrication pressure solve (CPU)
+amg = ["pyamg>=5.0"]
+# Transactional stores (optional backend; see docs/how_to/icechunk.md)
+icechunk = ["icechunk>=2; python_version >= '3.12'"]
+yaml = ["pyyaml>=6"]
+all = ["zvcfd[amg,yaml]"]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "pyyaml>=6",
+    "pyamg>=5.0",
+]
+docs = [
+    "sphinx>=7.2,<9",
+    "furo>=2024.1.29",
+    "myst-parser>=3.0",
+    "sphinx-copybutton>=0.5.2",
+]
+
+[project.scripts]
+zvcfd = "zvcfd.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["zvcfd*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "gpu: needs cupy and a CUDA device",
+    "store: needs zarr-vectors with the building surface (gpu-backend branch)",
+    "slow: longer than a few seconds",
+]
+filterwarnings = [
+    "ignore::zarr.errors.UnstableSpecificationWarning",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# CUDA C source is templated with %-formatting: its braces would all need escaping for str.format
+"zvcfd/lbm/_cuda.py" = ["UP031"]

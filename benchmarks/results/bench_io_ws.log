@@ -1,0 +1,36 @@
+domain (1536, 1536, 1536), 289075 bricks (4.1% active), 148 M cells, 1224 store chunks
+zv-flat-none           w=8  payload 2.37 GB  write  0.57 GB/s ( 0.47 to disk)  read  2.12 GB/s  files   7353  disk 2.37 GB (x1.00)  finalize 2.21 s
+zv-flat-zstd           w=8  payload 2.37 GB  write  0.38 GB/s ( 0.33 to disk)  read  1.95 GB/s  files   7353  disk 1.89 GB (x1.25)  finalize 3.79 s
+zv-flat-zstd           w=1  payload 2.37 GB  write  0.28 GB/s ( 0.26 to disk)  read  0.44 GB/s  files   7353  disk 1.89 GB (x1.25)  finalize 4.23 s
+zv-shard2-zstd         w=8  payload 2.37 GB  write  0.30 GB/s ( 0.28 to disk)  read  2.05 GB/s  files   1281  disk 1.89 GB (x1.25)  finalize 5.08 s
+zarr-dense-none        w=8  payload 2.37 GB  write  0.17 GB/s ( 0.12 to disk)  read  4.67 GB/s  files   4901  disk 21.04 GB (x0.11)  finalize 0.00 s
+zarr-dense-zstd        w=8  payload 2.37 GB  write  0.13 GB/s ( 0.13 to disk)  read  6.13 GB/s  files   4901  disk 1.95 GB (x1.21)  finalize 0.00 s
+zarr-dense-zstd        w=1  payload 2.37 GB  write  0.03 GB/s ( 0.03 to disk)  read  1.80 GB/s  files   4901  disk 1.95 GB (x1.21)  finalize 0.00 s
+  [2m2026-09-28T14:48:55.339303Z[0m [33m WARN[0m [1;33micechunk_arrow_object_store[0m[33m: [33mThe LocalFileSystem storage is not safe for concurrent commits. If more than one thread/process will attempt to commit at the same time, prefer using object stores.[0m
+    [2;3mat[0m icechunk-arrow-object-store/src/lib.rs:196
+
+  [2m2026-09-28T14:49:19.133518Z[0m [33m WARN[0m [1;33micechunk_arrow_object_store[0m[33m: [33mThe LocalFileSystem storage is not safe for concurrent commits. If more than one thread/process will attempt to commit at the same time, prefer using object stores.[0m
+    [2;3mat[0m icechunk-arrow-object-store/src/lib.rs:196
+
+  [2m2026-09-28T14:49:19.133631Z[0m [33m WARN[0m [1;33micechunk_arrow_object_store[0m[33m: [33mThe LocalFileSystem storage is not safe for concurrent commits. If more than one thread/process will attempt to commit at the same time, prefer using object stores.[0m
+    [2;3mat[0m icechunk-arrow-object-store/src/lib.rs:196
+
+  [2m2026-09-28T14:49:19.134005Z[0m [33m WARN[0m [1;33micechunk_arrow_object_store[0m[33m: [33mThe LocalFileSystem storage is not safe for concurrent commits. If more than one thread/process will attempt to commit at the same time, prefer using object stores.[0m
+    [2;3mat[0m icechunk-arrow-object-store/src/lib.rs:196
+
+  [2m2026-09-28T14:49:19.137829Z[0m [33m WARN[0m [1;33micechunk_arrow_object_store[0m[33m: [33mThe LocalFileSystem storage is not safe for concurrent commits. If more than one thread/process will attempt to commit at the same time, prefer using object stores.[0m
+    [2;3mat[0m icechunk-arrow-object-store/src/lib.rs:196
+
+  [2m2026-09-28T14:49:19.137838Z[0m [33m WARN[0m [1;33micechunk_arrow_object_store[0m[33m: [33mThe LocalFileSystem storage is not safe for concurrent commits. If more than one thread/process will attempt to commit at the same time, prefer using object stores.[0m
+    [2;3mat[0m icechunk-arrow-object-store/src/lib.rs:196
+
+  [2m2026-09-28T14:49:19.137958Z[0m [33m WARN[0m [1;33micechunk_arrow_object_store[0m[33m: [33mThe LocalFileSystem storage is not safe for concurrent commits. If more than one thread/process will attempt to commit at the same time, prefer using object stores.[0m
+    [2;3mat[0m icechunk-arrow-object-store/src/lib.rs:196
+
+  [2m2026-09-28T14:49:19.138372Z[0m [33m WARN[0m [1;33micechunk_arrow_object_store[0m[33m: [33mThe LocalFileSystem storage is not safe for concurrent commits. If more than one thread/process will attempt to commit at the same time, prefer using object stores.[0m
+    [2;3mat[0m icechunk-arrow-object-store/src/lib.rs:196
+
+  [2m2026-09-28T14:49:19.145245Z[0m [33m WARN[0m [1;33micechunk_arrow_object_store[0m[33m: [33mThe LocalFileSystem storage is not safe for concurrent commits. If more than one thread/process will attempt to commit at the same time, prefer using object stores.[0m
+    [2;3mat[0m icechunk-arrow-object-store/src/lib.rs:196
+
+icechunk-dense-zstd    w=8  payload 2.37 GB  write  0.20 GB/s ( 0.19 to disk)  read  5.80 GB/s  files   4933  disk 1.95 GB (x1.21)  finalize 0.01 s

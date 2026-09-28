@@ -1,0 +1,8 @@
+# Pressure-driven flow through the synthetic vessel network (128 x 128 x 512 voxels).
+# zvcfd run examples/network_demo.yaml --out runs/
+name: network-demo
+source: {kind: phantom, name: network-128x128x512, voxel_size: 10.0}   # micrometre
+physics: {nu: 3.5e-6, rho: 1060.0, pressure_drop: 20.0}                  # blood; Pa across x
+solver: {method: lbm, precision: fp32, tau: 1.0, steps: 20000, check_every: 1000, tolerance: 1.0e-4}
+domain: {brick: 8, chunk_bricks: 16}
+output: {path: runs, every: 5000, fields: [rho, ux, uy, uz], compressor: zstd}

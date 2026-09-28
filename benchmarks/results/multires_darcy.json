@@ -1,0 +1,39 @@
+{
+ "shape": [
+  128,
+  128,
+  512
+ ],
+ "rule": "majority",
+ "init": "darcy",
+ "levels": 0,
+ "fluid_fraction": 0.14217841625213623,
+ "cold": {
+  "0.01": 3200,
+  "0.001": 5600
+ },
+ "ms_per_fine_step": 1.2509484896584162,
+ "per_level": [
+  {
+   "darcy_cg_iterations": 737,
+   "darcy_cg_seconds": 1.5779128074645996
+  }
+ ],
+ "warm": {
+  "0.01": {
+   "fine_steps": 2800,
+   "fine_equiv_total": 4061.373126478984,
+   "speedup_steps": 0.7879108617568086,
+   "wall_s": 5.03735089302063,
+   "wall_cold_s": 4.0030351669069315
+  },
+  "0.001": {
+   "fine_steps": 6400,
+   "fine_equiv_total": 7661.373126478984,
+   "speedup_steps": 0.7309394683631144,
+   "wall_s": 9.869546175003052,
+   "wall_cold_s": 7.005311542087131
+  }
+ },
+ "initial_warm_flux_error": -0.01289908663231265
+}

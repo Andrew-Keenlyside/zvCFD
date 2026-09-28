@@ -1,0 +1,68 @@
+[
+ {
+  "store": "zv-flat-none-w8",
+  "decode": "host",
+  "cache": "cold",
+  "chunks": 1224,
+  "gb": 2.3681024,
+  "seconds": 3.6571238040924072,
+  "gbs": 0.6475313735209177
+ },
+ {
+  "store": "zv-flat-none-w8",
+  "decode": "host",
+  "cache": "warm",
+  "chunks": 1224,
+  "gb": 2.3681024,
+  "seconds": 1.3904569149017334,
+  "gbs": 1.703110951961686
+ },
+ {
+  "store": "zv-flat-none-w8",
+  "decode": "device",
+  "cache": "cold",
+  "chunks": 1224,
+  "gb": 2.3681024,
+  "seconds": 3.2928314208984375,
+  "gbs": 0.7191690364014662
+ },
+ {
+  "store": "zv-flat-none-w8",
+  "decode": "device",
+  "cache": "warm",
+  "chunks": 1224,
+  "gb": 2.3681024,
+  "seconds": 0.7040958404541016,
+  "gbs": 3.363323945320724
+ },
+ {
+  "store": "zv-shard2-zstd-w8",
+  "decode": "host",
+  "cache": "cold",
+  "chunks": 1224,
+  "gb": 2.3681024,
+  "seconds": 3.419541835784912,
+  "gbs": 0.6925203766242072
+ },
+ {
+  "store": "zv-shard2-zstd-w8",
+  "decode": "host",
+  "cache": "warm",
+  "chunks": 1224,
+  "gb": 2.3681024,
+  "seconds": 3.2466845512390137,
+  "gbs": 0.7293909718134688
+ },
+ {
+  "store": "zv-shard2-zstd-w8",
+  "decode": "device+nvcomp",
+  "cache": "cold",
+  "error": "RuntimeError: CUDA Runtime failure: out of memory"
+ },
+ {
+  "store": "zv-shard2-zstd-w8",
+  "decode": "device+nvcomp",
+  "cache": "warm",
+  "error": "RuntimeError: Encountered Cuda Error from previous asynchronous launches: 2: 'out of memory'."
+ }
+]
