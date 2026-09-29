@@ -23,7 +23,16 @@ Solvers
 
 .. automodule:: zvcfd.lbm.solver
 
+.. automodule:: zvcfd.lbm.multi
+
 .. automodule:: zvcfd.solvers.lubrication
+
+Boundaries and geometry
+-----------------------
+
+.. automodule:: zvcfd.boundary
+
+.. automodule:: zvcfd.geometry
 
 Brick stores
 ------------

@@ -43,6 +43,35 @@ measurements. Retrieved September 2026.
 - P. Vaněk, J. Mandel, M. Brezina, *Algebraic multigrid by smoothed
   aggregation*, Computing 56 (1996); pyamg <https://github.com/pyamg/pyamg>.
 
+## Validation references
+
+- Plane and pipe Poiseuille flow, square-duct series solution: F. M. White,
+  *Viscous Fluid Flow*, 3rd ed., McGraw-Hill, 2006, §3-3 and eq. 3-48.
+- J. R. Womersley, *Method for the calculation of velocity, rate of flow
+  and viscous drag in arteries when the pressure gradient is known*, J.
+  Physiol. 127, 553 (1955).
+- G. I. Taylor, A. E. Green, *Mechanism of the production of small eddies
+  from large ones*, Proc. R. Soc. A 158, 499 (1937).
+- R. Mei, L.-S. Luo, P. Lallemand, D. d'Humières, *Consistent initial
+  conditions for lattice Boltzmann simulations*, Comput. Fluids 35, 855
+  (2006).
+- R. B. Bird, R. C. Armstrong, O. Hassager, *Dynamics of Polymeric Liquids*,
+  vol. 1, 2nd ed., Wiley, 1987 (generalised Newtonian channel flow).
+- A. S. Sangani, A. Acrivos, *Slow flow through a periodic array of
+  spheres*, Int. J. Multiphase Flow 8, 343 (1982).
+- S. Bogner, S. Mohanty, U. Rüde, *Drag correlation for dilute and
+  moderately dense fluid-particle systems using the lattice Boltzmann
+  method*, Int. J. Multiphase Flow 68, 71 (2015), arXiv:1401.2025 (Table 1:
+  Sangani–Acrivos drag and a TRT code's errors at 32³ and 64³).
+- M. Schäfer, S. Turek, *Benchmark computations of laminar flow around a
+  cylinder*, Notes Numer. Fluid Mech. 52, 547 (1996); high-accuracy 2D-1
+  values from the FeatFlow benchmark page
+  <https://featflow.de/en/benchmarks/cfdbenchmarking/flow/dfg_benchmark1_re20.html>
+  and V. John, G. Matthies, Int. J. Numer. Meth. Fluids 37, 885 (2001).
+- I. Ginzburg, D. d'Humières, *Multireflection boundary conditions for
+  lattice Boltzmann models*, Phys. Rev. E 68, 066614 (2003) (TRT, the magic
+  parameter and exact walls).
+
 ## Ansys
 
 - Fluent theory guide: algebraic multigrid, FAS multigrid and FMG
@@ -69,6 +98,21 @@ measurements. Retrieved September 2026.
 | Exxact / ATA, STAR-CCM+ GPU | 8 × H100 ≈ 3,000 cores (25× vs 96 cores) | vendor |
 | HemeLB GPU, arXiv 2202.11770 | 90 % efficiency at 6,144 V100s | peer-reviewed |
 | Kempner Institute H100 benchmarks | STREAM 3.12 TB/s on H100 SXM | self-reported |
+
+## SimVascular
+
+- SimVascular documentation, <https://simvascular.github.io/> (modelling,
+  meshing, Python interface, simulation guides).
+- svMultiPhysics, <https://github.com/SimVascular/svMultiPhysics> (BSD-3);
+  GPU linear solvers via Trilinos/Kokkos: Codoni et al., arXiv 2607.19631.
+- svZeroDSolver, <https://github.com/SimVascular/svZeroDSolver> (BSD-3),
+  JOSS 10(109):7595 (2025).
+- svOneDSolver, <https://github.com/SimVascular/svOneDSolver>.
+- Vascular Model Repository, <https://github.com/SimVascular/vascularmodel>
+  (316 projects; 87 coronary).
+- Menon et al., coronary 3-D vs 0-D cost, arXiv 2409.02247.
+- Feiger et al., LBM boundary conditions for image-derived vessels, Int. J.
+  Numer. Meth. Biomed. Eng., doi:10.1002/cnm.3198 (2019).
 
 ## Data
 

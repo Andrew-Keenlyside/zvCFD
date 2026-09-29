@@ -1,8 +1,9 @@
 # From an Ansys mesh
 
 Collaborators who work in Ansys hand over Fluent meshes. This tutorial
-reads one — a HiP-CT coronary lumen meshed in Simpleware ScanIP — and sizes
-a voxel run of the same geometry at several resolutions. zvCFD does not
+reads one — a HiP-CT coronary lumen meshed in Simpleware ScanIP — sizes a
+voxel run of the same geometry at several resolutions, then voxelises and
+runs it. zvCFD does not
 solve on the unstructured cells. It takes the **boundary**: the wall
 surface, to voxelise, and the named inlet and outlet zones, to place
 boundary conditions.
@@ -25,10 +26,10 @@ zvcfd mesh-info "mesh 1.msh" --voxel-size 0.02,0.01,0.005,0.0025
   outlet diameters 0.242 .. 1.12 mm (median 0.417)
 
      voxel   fluid voxels   box voxels  fluid %  min patch (vox)   GB/GPU  fits   Gupd/s
-      0.02       7.86e+07     2.85e+10     0.28             12.1      2.6   yes     48.5
-      0.01       6.29e+08     2.28e+11     0.28             24.2     20.6   yes     48.5
-     0.005       5.03e+09     1.82e+12     0.28             48.3    164.5    NO     48.5
-    0.0025       4.02e+10     1.46e+13     0.28             96.7   1315.9    NO     48.5
+      0.02       7.86e+07     2.85e+10     0.28             12.1      2.6   yes     52.6
+      0.01       6.29e+08     2.28e+11     0.28             24.2     20.6   yes     52.6
+     0.005       5.03e+09     1.82e+12     0.28             48.3    164.5    NO     52.6
+    0.0025       4.02e+10     1.46e+13     0.28             96.7   1315.9    NO     52.6
 ```
 
 The reader parses the 1.9 GB ASCII file in about 15 s using 2.8 GB of
@@ -71,21 +72,89 @@ print(tris.shape, len(set(zone.tolist())))
 
 ```text
 from-lumen_bspline_cropped_smoothed_meshmixer-2-to-cor_inlet_001_amira_amiranode_329-velocity-inlet 1.94 1.571
-(3339948, 3) 82
+(1683184, 3) 82
 ```
 
-`triangles()` is the input for voxelisation: every triangle carries its
+`triangles()` is the input for voxelisation. Every triangle carries its
 zone, so wall triangles bound the fluid, and each inlet and outlet zone
 becomes a patch of boundary voxels ([Boundary conditions](../spec/boundary_conditions.md)).
-Voxelising the surface and mapping zones to patches is milestone 2 on the
-[roadmap](../feasibility/roadmap.md). Until then, the fastest route to a
-flag volume is the segmentation the mesh was made from.
 
-## Comparing with the Fluent run
+## Voxelise and run
 
-The comparison page estimates a pulsatile cardiac cycle at roughly 25 min
-for Fluent GPU on this 14.8 M-cell mesh (one H100). zvCFD at 20 µm (5× the
-cells, as voxels) is estimated at ~46 min on one H100 or ~7 min on eight.
-At 10 µm the estimate is ~1.8 h on eight; a meshed solver would need ~1.2
-days on 1,024 cores at that cell count. The same geometry and zones in
-both solvers is the validation case of milestone 2.
+`examples/coronary_50um.yaml` runs the mesh as it stands: steady flow of
+blood as a Newtonian fluid, 0.194 mL/s into the inlet (a mean of 0.1 m/s,
+Re ≈ 45), and 0 Pa at every outlet. Patch rules match zone names by
+substring, and the inlet's flow rate is held by flow control on the
+measured patch flux.
+
+```yaml
+name: coronary-50um
+source: {kind: mesh, path: "/home/andrew/Downloads/mesh 1.msh", unit: mm, voxel_size: 50.0}
+physics: {nu: 3.5e-6, rho: 1060.0}
+boundaries:
+  patches:
+    - {match: inlet, kind: velocity, flow_rate: 1.9396e-7}
+    - {match: outlet, kind: pressure, pressure: 0.0}
+solver: {collision: trt, tau: 0.6, steps: 200000, check_every: 2000, tolerance: 1.0e-4}
+domain: {chunk_bricks: 16}
+output: {path: runs, every: 0, fields: [rho, ux, uy, uz]}
+```
+
+```bash
+zvcfd run examples/coronary_50um.yaml
+```
+
+```text
+domain (1336, 1184, 1176): 21849 bricks (0.60% active), 5,028,753 fluid cells, fill 0.45; 78 patches; tau = 0.6000, dt = 2.38e-05 s  (15.3 s)
+  step     2000  inflow 1.8772e-07 m3/s  imbalance +3.00e-01  change inf
+  step     4000  inflow 1.9255e-07 m3/s  imbalance +4.15e-02  change 3.72e-02
+  ...
+  step    16000  inflow 1.9394e-07 m3/s  imbalance +5.96e-05  change 9.02e-05
+  converged: change <= 0.0001, |imbalance| <= 0.001
+  wrote step-000016000.zarrvectors
+done: 16000 steps, 727 MLUPS incl. checks/output, 128.1 s total -> runs/coronary-50um-b1ee088e1393.zvcfd
+```
+
+Voxelising takes 15 s. The solve takes under two minutes on one RTX
+A2000, which is 0.38 s of flow at a time step of 23.8 µs. Convergence
+requires two things: the flows must stop changing (10⁻⁴ between checks),
+and inflow must equal outflow (10⁻³).
+
+Every patch's flow, share and mean pressure are in `patches.csv`:
+
+```python
+from zvcfd.run import load_patch_table
+
+rows = load_patch_table("runs/coronary-50um-b1ee088e1393.zvcfd/patches.csv")
+inlet = next(r for r in rows if r["kind"] == "velocity")
+print(f"inlet {float(inlet['flow_m3s']) * 1e6:.4f} mL/s at {float(inlet['pressure_pa']):.1f} Pa")
+outlets = sorted((r for r in rows if r["kind"] == "pressure"), key=lambda r: -float(r["split"]))
+for r in outlets[:4]:
+    print(f"{r['patch'].split('-to-')[1][:14]}  {100 * float(r['split']):5.2f} %  {r['cells']:>4} voxels")
+print(f"{len(outlets)} outlets, total {sum(-float(r['flow_m3s']) for r in outlets) * 1e6:.4f} mL/s")
+```
+
+```text
+inlet 0.1939 mL/s at 65.6 Pa
+cor_outlet_074  29.85 %   470 voxels
+cor_outlet_029   9.28 %   332 voxels
+cor_outlet_022   8.03 %   343 voxels
+cor_outlet_035   7.32 %   250 voxels
+77 outlets, total 0.1939 mL/s
+```
+
+At 35 µm (`examples/coronary_35um.yaml`: 14.7 M fluid voxels, about the
+Ansys mesh's own cell count), the run takes 20,000 steps and 6.3 min. The
+splits move by 0.07 percentage points on average, and by 2.6 points
+at the dominant outlet (29.8 % → 27.2 %).
+
+## Comparing with other solvers
+
+The same case on the same workstation, with OpenFOAM on the body-fitted
+14.8 M-cell mesh, is in the [OpenFOAM comparison](../benchmarks/openfoam.md).
+For Ansys, the comparison page estimates a pulsatile cardiac cycle on this
+mesh at 1.3–5.3 h for CFX on 128 cores, and 6–25 min for Fluent's GPU
+solver on one H100 (the ranges span 5–20 iterations per time step). zvCFD
+at 20 µm (5× the cells, as voxels) is estimated at ~42 min on one H100 or
+~6 min on eight. At 10 µm the estimate is ~1.7 h on eight; a meshed solver
+would need 7 h to 1.2 days on 1,024 cores at that cell count.

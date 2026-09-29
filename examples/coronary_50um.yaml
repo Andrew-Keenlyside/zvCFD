@@ -1,0 +1,12 @@
+# HiP-CT coronary tree straight from its Ansys Fluent mesh: steady flow, 1 inlet, 77 outlets.
+# Inlet 0.19 mL/s (mean 0.1 m/s over the 1.94 mm^2 inlet, Re ~ 45), outlets at 0 Pa.
+name: coronary-50um
+source: {kind: mesh, path: "/home/andrew/Downloads/mesh 1.msh", unit: mm, voxel_size: 50.0}
+physics: {nu: 3.5e-6, rho: 1060.0}
+boundaries:
+  patches:
+    - {match: inlet, kind: velocity, flow_rate: 1.9396e-7}
+    - {match: outlet, kind: pressure, pressure: 0.0}
+solver: {collision: trt, tau: 0.6, steps: 200000, check_every: 2000, tolerance: 1.0e-4}
+domain: {chunk_bricks: 16}
+output: {path: runs, every: 0, fields: [rho, ux, uy, uz]}

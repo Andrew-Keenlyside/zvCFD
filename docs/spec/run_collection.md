@@ -50,8 +50,8 @@ BRIDGE does. All document writing lives in `zvcfd.collection`.
       "id": "zvc-run-8e7437307dd4",
       "name": "network-demo",
       "attributes": {
-        "zvcfd:run": {"config_hash": "78c04469a293", "voxel_size_um": 10.0,
-                      "dt_s": 4.76e-06, "solver": "lbm"},
+        "zvcfd:run": {"config_hash": "d78037f7f963", "voxel_size_um": 10.0,
+                      "dt_s": 9.52e-07, "tau": 0.6, "solver": "lbm"},
         "scene": {
           "coordinateSystems": [{"id": "physical", "name": "physical",
             "axes": [{"name": "z", "type": "space", "unit": "micrometer"},
@@ -72,7 +72,7 @@ BRIDGE does. All document writing lives in `zvcfd.collection`.
         {"type": "collection", "id": "fields", "name": "fields", "nodes": [
           {"type": "zvcfd:fields", "id": "step-000005000", "name": "step-000005000",
            "path": {"type": "zarr", "path": "./fields/step-000005000.zarrvectors"},
-           "attributes": {"zvcfd:step": 5000, "zvcfd:time_s": 0.0238,
+           "attributes": {"zvcfd:step": 5000, "zvcfd:time_s": 0.00476,
                           "zvcfd:fields": ["rho", "ux", "uy", "uz"]}}
         ]}
       ]

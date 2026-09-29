@@ -1,0 +1,39 @@
+{
+ "shape": [
+  128,
+  128,
+  1024
+ ],
+ "rule": "majority",
+ "init": "darcy",
+ "levels": 0,
+ "fluid_fraction": 0.13388872146606445,
+ "cold": {
+  "0.01": 10600,
+  "0.001": 14000
+ },
+ "ms_per_fine_step": 2.130734757338156,
+ "per_level": [
+  {
+   "lubrication_cg_iterations": 1093,
+   "lubrication_cg_seconds": 3.7494301795959473
+  }
+ ],
+ "warm": {
+  "0.01": {
+   "fine_steps": 8000,
+   "fine_equiv_total": 9759.688842866562,
+   "speedup_steps": 1.0861001995722055,
+   "wall_s": 20.864686012268066,
+   "wall_cold_s": 22.585788427784454
+  },
+  "0.001": {
+   "fine_steps": 18200,
+   "fine_equiv_total": 19959.688842866562,
+   "speedup_steps": 0.7014137399743829,
+   "wall_s": 42.34210133552551,
+   "wall_cold_s": 29.830286602734187
+  }
+ },
+ "initial_warm_flux_error": -0.13289862280472853
+}

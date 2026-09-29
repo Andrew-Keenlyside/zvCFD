@@ -1,0 +1,19 @@
+{
+ "cy_iters open 256^3": {
+  "3": 987.5092029818925,
+  "8": 779.3152898242558
+ },
+ "cy_iters porous phi=0.45 256^3": {
+  "3": 505.22882574281255,
+  "8": 401.9198649100748
+ },
+ "coronary_patch_sums": {
+  "patch_cells": 8143,
+  "patches": 78,
+  "patch_flux_host_ms": 0.07387779478449374,
+  "patch_flux_atomic_ms": 0.1848054549191147,
+  "patch_velocity_host_ms": 3.289575681556016,
+  "steps_2000_s": 13.746870063012466,
+  "max_rel_diff_host_vs_atomic": 0.0
+ }
+}

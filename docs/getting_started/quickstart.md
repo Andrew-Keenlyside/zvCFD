@@ -48,7 +48,7 @@ print(f"{plan.memory_per_gpu_gb:.2f} GB, {plan.updates_per_s / 1e6:.0f} MLUPS, "
 ```
 
 ```text
-0.33 GB, 668 MLUPS, 2.8 s for 2000 steps
+0.33 GB, 684 MLUPS, 2.8 s for 2000 steps
 ```
 
 ## Solve
@@ -73,10 +73,10 @@ print(f"{sim.steps} steps in {time.time() - t:.1f} s; "
 ```
 
 ```text
-2000 steps in 2.8 s; mean u_x = 8.883e-06 (lattice)
+2000 steps in 2.9 s; mean u_x = 7.886e-06 (lattice)
 ```
 
-The plan's 2.8 s and the measured 2.8 s agree because the model's kernel
+The plan's 2.8 s and the measured 2.9 s agree because the model's kernel
 efficiency was measured on this GPU; on an H100 the model extrapolates by
 bandwidth (see [Kernel benchmarks](../benchmarks/kernels.md)).
 

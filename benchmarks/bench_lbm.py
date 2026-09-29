@@ -4,6 +4,8 @@
 
 Reports MLUPS per fluid cell, effective bandwidth (bytes a pull step must
 move per fluid cell) and that as a fraction of a device-to-device copy.
+BGK rows keep the original series comparable; TRT rows (with and without
+Carreau–Yasuda rheology) are the kernels production runs use.
 """
 
 from __future__ import annotations
@@ -21,6 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from zvcfd.domain import BrickDomain  # noqa: E402
 from zvcfd.lbm import DenseLBM, SparseLBM  # noqa: E402
+from zvcfd.lbm.solver import CarreauYasuda  # noqa: E402
 from zvcfd.phantoms import porous_spheres, vessel_tree  # noqa: E402
 
 
@@ -61,6 +64,9 @@ def main():
     print(f"{props['name'].decode()}: device copy {bw / 1e9:.0f} GB/s")
     rows = []
 
+    def free():
+        cp.get_default_memory_pool().free_all_blocks()
+
     def run(label, sim, fluid, frac_active=None):
         r = time_steps(sim, fluid)
         r.update(case=label, fluid_cells=fluid, of_copy=r["gbs"] * 1e9 / bw,
@@ -81,6 +87,19 @@ def main():
         sp = SparseLBM(BrickDomain.from_flags(open_box, periodic=True), force=(1e-6, 0, 0),
                        half=half)
         run(f"sparse {tag} open {n}^3", sp, sp.fluid_cells, sp.domain.active_fraction)
+        del sp
+        free()
+
+    # production kernels: TRT, and TRT with Carreau-Yasuda (blood exponents)
+    cy = CarreauYasuda(nu_0=0.3, nu_inf=0.3 / 16.23, lam=1e4)
+    for label, kw in (("trt", {}), ("trt+cy", {"rheology": cy})):
+        for half in ((False, True) if label == "trt" else (False,)):
+            tag = "fp16" if half else "fp32"
+            sp = SparseLBM(BrickDomain.from_flags(open_box, periodic=True), force=(1e-6, 0, 0),
+                           half=half, collision="trt", tau=1.4, **kw)
+            run(f"sparse {tag} {label} open {n}^3", sp, sp.fluid_cells, sp.domain.active_fraction)
+            del sp
+            free()
 
     porous = porous_spheres(n, porosity_target=0.45, radius=6)
     fluid = int((porous == 0).sum())
@@ -91,6 +110,15 @@ def main():
         sp = SparseLBM(BrickDomain.from_flags(porous, periodic=True), force=(1e-6, 0, 0),
                        half=half)
         run(f"sparse {tag} porous phi=0.45 {n}^3", sp, sp.fluid_cells, sp.domain.active_fraction)
+        del sp
+        free()
+    for label, kw in (("trt", {}), ("trt+cy", {"rheology": cy})):
+        sp = SparseLBM(BrickDomain.from_flags(porous, periodic=True), force=(1e-6, 0, 0),
+                       collision="trt", tau=1.4, **kw)
+        run(f"sparse fp32 {label} porous phi=0.45 {n}^3", sp, sp.fluid_cells,
+            sp.domain.active_fraction)
+        del sp
+        free()
 
     t = time.time()
     shape = (512, 512, 512)
@@ -102,6 +130,14 @@ def main():
         sp = SparseLBM(BrickDomain.from_flags(vessels, periodic=True), force=(1e-6, 0, 0),
                        half=half)
         run(f"sparse {tag} vessels 512^3", sp, sp.fluid_cells, sp.domain.active_fraction)
+        del sp
+        free()
+    for label, kw in (("trt", {}), ("trt+cy", {"rheology": cy})):
+        sp = SparseLBM(BrickDomain.from_flags(vessels, periodic=True), force=(1e-6, 0, 0),
+                       collision="trt", tau=1.4, **kw)
+        run(f"sparse fp32 {label} vessels 512^3", sp, sp.fluid_cells, sp.domain.active_fraction)
+        del sp
+        free()
     dense_need = 512 ** 3 * (2 * 19 * 4 + 1) / 1e9
     print(f"(dense fp32 at 512^3 would need {dense_need:.1f} GB; this GPU has "
           f"{cp.cuda.Device().mem_info[1] / 1e9:.1f} GB)")

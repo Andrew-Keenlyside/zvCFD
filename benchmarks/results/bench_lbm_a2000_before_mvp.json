@@ -1,0 +1,106 @@
+{
+ "gpu": "NVIDIA RTX A2000 12GB",
+ "copy_gbs": 252.58365049890918,
+ "rows": [
+  {
+   "mlups": 1630.475816563905,
+   "gbs": 249.46279993427746,
+   "ms_per_step": 10.289766845703125,
+   "case": "dense fp32 open 256^3",
+   "fluid_cells": 16777216,
+   "of_copy": 0.9876442890960387,
+   "active_brick_fraction": null,
+   "device_gb": 2.566914048
+  },
+  {
+   "mlups": 1275.3786979512959,
+   "gbs": 195.1329407865483,
+   "ms_per_step": 13.154693603515625,
+   "case": "sparse fp32 open 256^3",
+   "fluid_cells": 16777216,
+   "of_copy": 0.772547789221975,
+   "active_brick_fraction": 1.0,
+   "device_gb": 2.570452992
+  },
+  {
+   "mlups": 1975.8851256725127,
+   "gbs": 152.14315467678347,
+   "ms_per_step": 8.490987548828125,
+   "case": "dense fp16 open 256^3",
+   "fluid_cells": 16777216,
+   "of_copy": 0.6023475960390419,
+   "active_brick_fraction": null,
+   "device_gb": 1.291845632
+  },
+  {
+   "mlups": 963.6978447123445,
+   "gbs": 74.20473404285052,
+   "ms_per_step": 17.409207763671876,
+   "case": "sparse fp16 open 256^3",
+   "fluid_cells": 16777216,
+   "of_copy": 0.29378280777983684,
+   "active_brick_fraction": 1.0,
+   "device_gb": 1.295384576
+  },
+  {
+   "mlups": 917.692673623564,
+   "gbs": 140.4069790644053,
+   "ms_per_step": 8.226693115234376,
+   "case": "dense fp32 porous phi=0.45 256^3",
+   "fluid_cells": 7549576,
+   "of_copy": 0.5558830858096718,
+   "active_brick_fraction": null,
+   "device_gb": 2.566914048
+  },
+  {
+   "mlups": 693.7107018503774,
+   "gbs": 106.13773738310775,
+   "ms_per_step": 10.88288818359375,
+   "case": "sparse fp32 porous phi=0.45 256^3",
+   "fluid_cells": 7549576,
+   "of_copy": 0.420208264364942,
+   "active_brick_fraction": 0.99432373046875,
+   "device_gb": 2.555862408
+  },
+  {
+   "mlups": 923.1465100936011,
+   "gbs": 71.08228127720729,
+   "ms_per_step": 8.1780908203125,
+   "case": "dense fp16 porous phi=0.45 256^3",
+   "fluid_cells": 7549576,
+   "of_copy": 0.2814207536267842,
+   "active_brick_fraction": null,
+   "device_gb": 1.291845632
+  },
+  {
+   "mlups": 430.12737221756754,
+   "gbs": 33.1198076607527,
+   "ms_per_step": 17.551954345703123,
+   "case": "sparse fp16 porous phi=0.45 256^3",
+   "fluid_cells": 7549576,
+   "of_copy": 0.13112411510140767,
+   "active_brick_fraction": 0.99432373046875,
+   "device_gb": 1.288031624
+  },
+  {
+   "mlups": 629.6554969506714,
+   "gbs": 96.33729103345271,
+   "ms_per_step": 7.708836059570313,
+   "case": "sparse fp32 vessels 512^3",
+   "fluid_cells": 4853911,
+   "of_copy": 0.3814074697359272,
+   "active_brick_fraction": 0.10428237915039062,
+   "device_gb": 2.144423628
+  },
+  {
+   "mlups": 408.0740658959252,
+   "gbs": 31.421703073986237,
+   "ms_per_step": 11.894681396484375,
+   "case": "sparse fp16 vessels 512^3",
+   "fluid_cells": 4853911,
+   "of_copy": 0.12440117565773298,
+   "active_brick_fraction": 0.10428237915039062,
+   "device_gb": 1.080686284
+  }
+ ]
+}

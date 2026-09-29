@@ -1,0 +1,1466 @@
+{
+ "voxel": [
+  {
+   "case": "duct16",
+   "shape": [
+    24,
+    24,
+    128
+   ],
+   "fluid_voxels": 32768,
+   "dx": 1e-05,
+   "nu": 1e-06,
+   "duct_side_vox": 16,
+   "flux_poiseuille": 2.879017266302461e-13,
+   "flux_difference": -0.011099880859824607,
+   "zvcfd": {
+    "solver": "zvcfd",
+    "cells": 32768,
+    "flux_final": 2.8896643953544293e-13,
+    "wall_total_s": 0.21225953102111816,
+    "tau": 0.8,
+    "steps": 2810,
+    "mlups": 433.7995074098178,
+    "gpu": "NVIDIA RTX A2000 12GB",
+    "iters_to_0.01": 610,
+    "wall_to_0.01": 0.07544827461242676,
+    "iters_to_0.001": 1210,
+    "wall_to_0.001": 0.11326789855957031
+   },
+   "openfoam": {
+    "solver": "openfoam",
+    "cells": 32768,
+    "flux_final": 2.92209935e-13,
+    "wall_total_s": 5.89,
+    "iterations": 1510,
+    "converged": true,
+    "procs": 16,
+    "blockMesh_s": 0.6792843341827393,
+    "subsetMesh_s": 0.6168277263641357,
+    "decomposePar_s": 0.7286601066589355,
+    "solve_s": 6.977613210678101,
+    "iters_to_0.01": 47,
+    "wall_to_0.01": 0.28,
+    "iters_to_0.001": 70,
+    "wall_to_0.001": 0.39
+   }
+  },
+  {
+   "case": "duct32",
+   "shape": [
+    40,
+    40,
+    256
+   ],
+   "fluid_voxels": 262144,
+   "dx": 1e-05,
+   "nu": 1e-06,
+   "duct_side_vox": 32,
+   "flux_poiseuille": 4.606427626083938e-12,
+   "flux_difference": -0.002812158702111489,
+   "zvcfd": {
+    "solver": "zvcfd",
+    "cells": 262144,
+    "flux_final": 4.610756365582346e-12,
+    "wall_total_s": 2.434278726577759,
+    "tau": 0.8,
+    "steps": 8410,
+    "mlups": 905.6608908131856,
+    "gpu": "NVIDIA RTX A2000 12GB",
+    "iters_to_0.01": 2610,
+    "wall_to_0.01": 0.7488300800323486,
+    "iters_to_0.001": 3610,
+    "wall_to_0.001": 1.039428949356079
+   },
+   "openfoam": {
+    "solver": "openfoam",
+    "cells": 262144,
+    "flux_final": 4.62375911e-12,
+    "wall_total_s": 241.32,
+    "iterations": 5000,
+    "converged": false,
+    "procs": 16,
+    "blockMesh_s": 1.4996352195739746,
+    "subsetMesh_s": 0.94781494140625,
+    "decomposePar_s": 1.387300968170166,
+    "solve_s": 242.46108174324036,
+    "iters_to_0.01": 177,
+    "wall_to_0.01": 9.39,
+    "iters_to_0.001": 266,
+    "wall_to_0.001": 14.13
+   }
+  },
+  {
+   "case": "pipe6",
+   "shape": [
+    16,
+    16,
+    96
+   ],
+   "fluid_voxels": 10752,
+   "dx": 1e-05,
+   "nu": 1e-06,
+   "radius_vox": 6,
+   "area_vox": 112,
+   "flux_poiseuille": 6.238873769202301e-14,
+   "flux_difference": -0.026070571591209735,
+   "zvcfd": {
+    "solver": "zvcfd",
+    "cells": 10752,
+    "flux_final": 5.976531260785122e-14,
+    "wall_total_s": 0.03920722007751465,
+    "tau": 0.8,
+    "steps": 1610,
+    "mlups": 441.5186785948056,
+    "gpu": "NVIDIA RTX A2000 12GB",
+    "iters_to_0.01": 410,
+    "wall_to_0.01": 0.012298583984375,
+    "iters_to_0.001": 610,
+    "wall_to_0.001": 0.01678156852722168
+   },
+   "openfoam": {
+    "solver": "openfoam",
+    "cells": 10752,
+    "flux_final": 6.13651368e-14,
+    "wall_total_s": 1.03,
+    "iterations": 511,
+    "converged": true,
+    "procs": 16,
+    "blockMesh_s": 0.6297767162322998,
+    "subsetMesh_s": 0.5829801559448242,
+    "decomposePar_s": 0.6547966003417969,
+    "solve_s": 2.096813440322876,
+    "iters_to_0.01": 26,
+    "wall_to_0.01": 0.11,
+    "iters_to_0.001": 39,
+    "wall_to_0.001": 0.14
+   }
+  },
+  {
+   "case": "pipe12",
+   "shape": [
+    32,
+    32,
+    192
+   ],
+   "fluid_voxels": 86016,
+   "dx": 1e-05,
+   "nu": 1e-06,
+   "radius_vox": 12,
+   "area_vox": 448,
+   "flux_poiseuille": 9.982198030723682e-13,
+   "flux_difference": -0.006837882072672885,
+   "zvcfd": {
+    "solver": "zvcfd",
+    "cells": 86016,
+    "flux_final": 9.79288406881551e-13,
+    "wall_total_s": 0.5715234279632568,
+    "tau": 0.8,
+    "steps": 5410,
+    "mlups": 814.2213201274351,
+    "gpu": "NVIDIA RTX A2000 12GB",
+    "iters_to_0.01": 1210,
+    "wall_to_0.01": 0.1248621940612793,
+    "iters_to_0.001": 2010,
+    "wall_to_0.001": 0.20958352088928223
+   },
+   "openfoam": {
+    "solver": "openfoam",
+    "cells": 86016,
+    "flux_final": 9.86030769e-13,
+    "wall_total_s": 50.52,
+    "iterations": 5000,
+    "converged": false,
+    "procs": 16,
+    "blockMesh_s": 1.0833137035369873,
+    "subsetMesh_s": 0.7799477577209473,
+    "decomposePar_s": 0.9962193965911865,
+    "solve_s": 51.663851499557495,
+    "iters_to_0.01": 85,
+    "wall_to_0.01": 1.01,
+    "iters_to_0.001": 128,
+    "wall_to_0.001": 1.52
+   }
+  },
+  {
+   "case": "pipe24",
+   "shape": [
+    56,
+    56,
+    384
+   ],
+   "fluid_voxels": 692736,
+   "dx": 1e-05,
+   "nu": 1e-06,
+   "radius_vox": 24,
+   "area_vox": 1804,
+   "flux_poiseuille": 1.6186137289917306e-11,
+   "flux_difference": -0.0021209060008923197,
+   "zvcfd": {
+    "solver": "zvcfd",
+    "cells": 692736,
+    "flux_final": 1.6026659117483175e-11,
+    "wall_total_s": 7.833897113800049,
+    "tau": 0.8,
+    "steps": 11410,
+    "mlups": 1008.9636926780992,
+    "gpu": "NVIDIA RTX A2000 12GB",
+    "iters_to_0.01": 4610,
+    "wall_to_0.01": 3.150477170944214,
+    "iters_to_0.001": 6810,
+    "wall_to_0.001": 4.6620402336120605
+   },
+   "openfoam": {
+    "solver": "openfoam",
+    "cells": 692736,
+    "flux_final": 1.60607224e-11,
+    "wall_total_s": 933.14,
+    "iterations": 5000,
+    "converged": false,
+    "procs": 16,
+    "blockMesh_s": 3.055797576904297,
+    "subsetMesh_s": 1.3717529773712158,
+    "decomposePar_s": 2.355729341506958,
+    "solve_s": 934.4926161766052,
+    "iters_to_0.01": 334,
+    "wall_to_0.01": 67.85,
+    "iters_to_0.001": 502,
+    "wall_to_0.001": 101.5
+   }
+  },
+  {
+   "case": "porous",
+   "shape": [
+    128,
+    128,
+    136
+   ],
+   "fluid_voxels": 1042190,
+   "dx": 1e-05,
+   "nu": 1e-06,
+   "flux_difference": 0.010004963158582347,
+   "buffer_vox": 4,
+   "zvcfd": {
+    "solver": "zvcfd",
+    "cells": 1042190,
+    "flux_final": 1.1122135466109738e-12,
+    "wall_total_s": 8.626846551895142,
+    "tau": 0.8,
+    "steps": 5010,
+    "mlups": 605.2468730712466,
+    "gpu": "NVIDIA RTX A2000 12GB",
+    "iters_to_0.01": 610,
+    "wall_to_0.01": 1.0736558437347412,
+    "iters_to_0.001": 1410,
+    "wall_to_0.001": 2.446974515914917
+   },
+   "openfoam": {
+    "solver": "openfoam",
+    "cells": 1042190,
+    "flux_final": 1.10119612e-12,
+    "wall_total_s": 57.8,
+    "iterations": 147,
+    "converged": true,
+    "procs": 16,
+    "blockMesh_s": 5.082283973693848,
+    "subsetMesh_s": 2.09824538230896,
+    "decomposePar_s": 3.249433994293213,
+    "solve_s": 58.95592641830444,
+    "iters_to_0.01": 14,
+    "wall_to_0.01": 5.69,
+    "iters_to_0.001": 34,
+    "wall_to_0.001": 13.53
+   }
+  },
+  {
+   "case": "vessels",
+   "shape": [
+    128,
+    128,
+    520
+   ],
+   "fluid_voxels": 1315097,
+   "dx": 1e-05,
+   "nu": 1e-06,
+   "flux_difference": -0.009564822772165527,
+   "buffer_vox": 4,
+   "zvcfd": {
+    "solver": "zvcfd",
+    "cells": 1315097,
+    "flux_final": 2.0574262098534743e-12,
+    "wall_total_s": 34.71818399429321,
+    "tau": 0.8,
+    "steps": 18410,
+    "mlups": 697.3560533575046,
+    "gpu": "NVIDIA RTX A2000 12GB",
+    "iters_to_0.01": 2010,
+    "wall_to_0.01": 3.773315191268921,
+    "iters_to_0.001": 6610,
+    "wall_to_0.001": 12.405969619750977
+   },
+   "openfoam": {
+    "solver": "openfoam",
+    "cells": 1315097,
+    "flux_final": 2.07729517e-12,
+    "wall_total_s": 2319.09,
+    "iterations": 5000,
+    "converged": false,
+    "procs": 16,
+    "blockMesh_s": 17.288466930389404,
+    "subsetMesh_s": 3.949846029281616,
+    "decomposePar_s": 3.0844240188598633,
+    "solve_s": 2320.4997556209564,
+    "iters_to_0.01": 57,
+    "wall_to_0.01": 26.95,
+    "iters_to_0.001": 88,
+    "wall_to_0.001": 41.9
+   }
+  }
+ ],
+ "coronary": {
+  "openfoam": {
+   "names": [
+    "cor_outlet_001_amira_amiranode_101-pressure-outlet",
+    "cor_outlet_002_amira_amiranode_182-pressure-outlet",
+    "cor_outlet_003_amira_amiranode_311-pressure-outlet",
+    "cor_outlet_004_amira_amiranode_312-pressure-outlet",
+    "cor_outlet_005_amira_amiranode_313-pressure-outlet",
+    "cor_outlet_006_amira_amiranode_314-pressure-outlet",
+    "cor_outlet_007_amira_amiranode_315-pressure-outlet",
+    "cor_outlet_008_amira_amiranode_316-pressure-outlet",
+    "cor_outlet_009_amira_amiranode_317-pressure-outlet",
+    "cor_outlet_010_amira_amiranode_318-pressure-outlet",
+    "cor_outlet_011_amira_amiranode_319-pressure-outlet",
+    "cor_outlet_012_amira_amiranode_320-pressure-outlet",
+    "cor_outlet_013_amira_amiranode_321-pressure-outlet",
+    "cor_outlet_014_amira_amiranode_322-pressure-outlet",
+    "cor_outlet_015_amira_amiranode_323-pressure-outlet",
+    "cor_outlet_016_amira_amiranode_324-pressure-outlet",
+    "cor_outlet_017_amira_amiranode_325-pressure-outlet",
+    "cor_outlet_018_amira_amiranode_326-pressure-outlet",
+    "cor_outlet_019_amira_amiranode_327-pressure-outlet",
+    "cor_outlet_020_amira_amiranode_328-pressure-outlet",
+    "cor_outlet_021_amira_amiranode_330-pressure-outlet",
+    "cor_outlet_022_amira_amiranode_331-pressure-outlet",
+    "cor_outlet_023_amira_amiranode_332-pressure-outlet",
+    "cor_outlet_024_amira_amiranode_333-pressure-outlet",
+    "cor_outlet_025_amira_amiranode_334-pressure-outlet",
+    "cor_outlet_026_amira_amiranode_335-pressure-outlet",
+    "cor_outlet_027_amira_amiranode_336-pressure-outlet",
+    "cor_outlet_028_amira_amiranode_337-pressure-outlet",
+    "cor_outlet_029_amira_amiranode_338-pressure-outlet",
+    "cor_outlet_030_amira_amiranode_339-pressure-outlet",
+    "cor_outlet_031_amira_amiranode_340-pressure-outlet",
+    "cor_outlet_032_amira_amiranode_341-pressure-outlet",
+    "cor_outlet_033_amira_amiranode_342-pressure-outlet",
+    "cor_outlet_034_amira_amiranode_343-pressure-outlet",
+    "cor_outlet_035_amira_amiranode_344-pressure-outlet",
+    "cor_outlet_036_amira_amiranode_345-pressure-outlet",
+    "cor_outlet_037_amira_amiranode_346-pressure-outlet",
+    "cor_outlet_038_amira_amiranode_347-pressure-outlet",
+    "cor_outlet_039_amira_amiranode_348-pressure-outlet",
+    "cor_outlet_040_amira_amiranode_349-pressure-outlet",
+    "cor_outlet_041_amira_amiranode_350-pressure-outlet",
+    "cor_outlet_042_amira_amiranode_351-pressure-outlet",
+    "cor_outlet_043_amira_amiranode_352-pressure-outlet",
+    "cor_outlet_044_amira_amiranode_353-pressure-outlet",
+    "cor_outlet_045_amira_amiranode_354-pressure-outlet",
+    "cor_outlet_046_amira_amiranode_355-pressure-outlet",
+    "cor_outlet_047_amira_amiranode_356-pressure-outlet",
+    "cor_outlet_048_amira_amiranode_357-pressure-outlet",
+    "cor_outlet_049_amira_amiranode_358-pressure-outlet",
+    "cor_outlet_050_amira_amiranode_359-pressure-outlet",
+    "cor_outlet_051_amira_amiranode_360-pressure-outlet",
+    "cor_outlet_052_amira_amiranode_361-pressure-outlet",
+    "cor_outlet_053_amira_amiranode_362-pressure-outlet",
+    "cor_outlet_054_amira_amiranode_363-pressure-outlet",
+    "cor_outlet_055_amira_amiranode_364-pressure-outlet",
+    "cor_outlet_056_amira_amiranode_365-pressure-outlet",
+    "cor_outlet_057_amira_amiranode_366-pressure-outlet",
+    "cor_outlet_058_amira_amiranode_367-pressure-outlet",
+    "cor_outlet_059_amira_amiranode_368-pressure-outlet",
+    "cor_outlet_060_amira_amiranode_369-pressure-outlet",
+    "cor_outlet_061_amira_amiranode_370-pressure-outlet",
+    "cor_outlet_062_amira_amiranode_371-pressure-outlet",
+    "cor_outlet_063_amira_amiranode_372-pressure-outlet",
+    "cor_outlet_064_amira_amiranode_373-pressure-outlet",
+    "cor_outlet_065_amira_amiranode_374-pressure-outlet",
+    "cor_outlet_066_amira_amiranode_375-pressure-outlet",
+    "cor_outlet_067_amira_amiranode_376-pressure-outlet",
+    "cor_outlet_068_amira_amiranode_377-pressure-outlet",
+    "cor_outlet_069_amira_amiranode_378-pressure-outlet",
+    "cor_outlet_070_amira_amiranode_379-pressure-outlet",
+    "cor_outlet_071_amira_amiranode_380-pressure-outlet",
+    "cor_outlet_072_amira_amiranode_381-pressure-outlet",
+    "cor_outlet_073_amira_amiranode_383-pressure-outlet",
+    "cor_outlet_074_amira_amiranode_384-pressure-outlet",
+    "cor_outlet_075_amira_amiranode_385-pressure-outlet",
+    "cor_outlet_076_amira_amiranode_386-pressure-outlet",
+    "cor_outlet_077_amira_amiranode_387-pressure-outlet"
+   ],
+   "split": [
+    0.0016730862584458884,
+    9.16241393761378e-05,
+    0.024136041692355763,
+    3.0168323460064157e-06,
+    3.242323203339997e-06,
+    0.0002594217892428151,
+    0.0014370625954542025,
+    0.00021843115125890094,
+    0.0003213834937921171,
+    0.001622297338411753,
+    0.0005439044970532284,
+    0.00014861836767705847,
+    0.0022036161371163615,
+    0.0035329779032697737,
+    0.028727464942797445,
+    0.0014581096926439196,
+    0.003413202007030878,
+    0.0006141451131748153,
+    0.004331675592980933,
+    0.024491929089284215,
+    0.001340829398573263,
+    0.07732199728375999,
+    0.00021844899720639184,
+    0.0008828645276349573,
+    0.06794018305898991,
+    0.014864532890598579,
+    0.02626095103997303,
+    0.008921144502335275,
+    0.10173614848124937,
+    0.04040875296021878,
+    0.0042747387713613924,
+    8.262113418145933e-06,
+    0.005121151226663749,
+    0.001821933349569451,
+    0.0751297019807556,
+    0.007501300833341204,
+    0.00040066479968225305,
+    0.00048450449077398365,
+    0.002316660289744728,
+    0.007253836151664268,
+    0.00037332599806220854,
+    0.0013917485722670193,
+    0.03499008023124068,
+    0.018108399077016883,
+    0.0004274441292501891,
+    0.001136581725250027,
+    0.004719481096508146,
+    1.0997570296987977e-05,
+    0.00303290666533921,
+    5.0744251030535464e-05,
+    0.0028665706745670907,
+    0.0009816164345412613,
+    0.002940271091653924,
+    0.0001702335644708952,
+    0.0005661005115372974,
+    0.005737715828375668,
+    0.0045759275916533275,
+    6.486895035247188e-05,
+    0.00030215089751749966,
+    0.0004094365876172877,
+    0.003067295600957287,
+    0.0008701424922543584,
+    0.0001504658341518327,
+    2.3329203690267046e-05,
+    2.226684424227749e-05,
+    2.709130497301404e-05,
+    3.6378325374990687e-05,
+    6.010652720636246e-05,
+    0.00015961147133147156,
+    0.0002765160327795213,
+    0.0020192631635895263,
+    1.023338655320541e-05,
+    0.043519099555919885,
+    0.31853141554887593,
+    0.00024475580306146404,
+    0.0039149880675930695,
+    0.0007705812844670394
+   ],
+   "inflow": 1.9396e-07,
+   "outflow": 1.93960001381779e-07,
+   "iterations": 500,
+   "cells": 14790642,
+   "procs": 16,
+   "p_in": 65.736653024,
+   "t_1pp": 559.31,
+   "t_01pp": 1654.87
+  },
+  "zvcfd_50um": {
+   "names": [
+    "cor_outlet_001_amira_amiranode_101-pressure-outlet",
+    "cor_outlet_002_amira_amiranode_182-pressure-outlet",
+    "cor_outlet_003_amira_amiranode_311-pressure-outlet",
+    "cor_outlet_004_amira_amiranode_312-pressure-outlet",
+    "cor_outlet_005_amira_amiranode_313-pressure-outlet",
+    "cor_outlet_006_amira_amiranode_314-pressure-outlet",
+    "cor_outlet_007_amira_amiranode_315-pressure-outlet",
+    "cor_outlet_008_amira_amiranode_316-pressure-outlet",
+    "cor_outlet_009_amira_amiranode_317-pressure-outlet",
+    "cor_outlet_010_amira_amiranode_318-pressure-outlet",
+    "cor_outlet_011_amira_amiranode_319-pressure-outlet",
+    "cor_outlet_012_amira_amiranode_320-pressure-outlet",
+    "cor_outlet_013_amira_amiranode_321-pressure-outlet",
+    "cor_outlet_014_amira_amiranode_322-pressure-outlet",
+    "cor_outlet_015_amira_amiranode_323-pressure-outlet",
+    "cor_outlet_016_amira_amiranode_324-pressure-outlet",
+    "cor_outlet_017_amira_amiranode_325-pressure-outlet",
+    "cor_outlet_018_amira_amiranode_326-pressure-outlet",
+    "cor_outlet_019_amira_amiranode_327-pressure-outlet",
+    "cor_outlet_020_amira_amiranode_328-pressure-outlet",
+    "cor_outlet_021_amira_amiranode_330-pressure-outlet",
+    "cor_outlet_022_amira_amiranode_331-pressure-outlet",
+    "cor_outlet_023_amira_amiranode_332-pressure-outlet",
+    "cor_outlet_024_amira_amiranode_333-pressure-outlet",
+    "cor_outlet_025_amira_amiranode_334-pressure-outlet",
+    "cor_outlet_026_amira_amiranode_335-pressure-outlet",
+    "cor_outlet_027_amira_amiranode_336-pressure-outlet",
+    "cor_outlet_028_amira_amiranode_337-pressure-outlet",
+    "cor_outlet_029_amira_amiranode_338-pressure-outlet",
+    "cor_outlet_030_amira_amiranode_339-pressure-outlet",
+    "cor_outlet_031_amira_amiranode_340-pressure-outlet",
+    "cor_outlet_032_amira_amiranode_341-pressure-outlet",
+    "cor_outlet_033_amira_amiranode_342-pressure-outlet",
+    "cor_outlet_034_amira_amiranode_343-pressure-outlet",
+    "cor_outlet_035_amira_amiranode_344-pressure-outlet",
+    "cor_outlet_036_amira_amiranode_345-pressure-outlet",
+    "cor_outlet_037_amira_amiranode_346-pressure-outlet",
+    "cor_outlet_038_amira_amiranode_347-pressure-outlet",
+    "cor_outlet_039_amira_amiranode_348-pressure-outlet",
+    "cor_outlet_040_amira_amiranode_349-pressure-outlet",
+    "cor_outlet_041_amira_amiranode_350-pressure-outlet",
+    "cor_outlet_042_amira_amiranode_351-pressure-outlet",
+    "cor_outlet_043_amira_amiranode_352-pressure-outlet",
+    "cor_outlet_044_amira_amiranode_353-pressure-outlet",
+    "cor_outlet_045_amira_amiranode_354-pressure-outlet",
+    "cor_outlet_046_amira_amiranode_355-pressure-outlet",
+    "cor_outlet_047_amira_amiranode_356-pressure-outlet",
+    "cor_outlet_048_amira_amiranode_357-pressure-outlet",
+    "cor_outlet_049_amira_amiranode_358-pressure-outlet",
+    "cor_outlet_050_amira_amiranode_359-pressure-outlet",
+    "cor_outlet_051_amira_amiranode_360-pressure-outlet",
+    "cor_outlet_052_amira_amiranode_361-pressure-outlet",
+    "cor_outlet_053_amira_amiranode_362-pressure-outlet",
+    "cor_outlet_054_amira_amiranode_363-pressure-outlet",
+    "cor_outlet_055_amira_amiranode_364-pressure-outlet",
+    "cor_outlet_056_amira_amiranode_365-pressure-outlet",
+    "cor_outlet_057_amira_amiranode_366-pressure-outlet",
+    "cor_outlet_058_amira_amiranode_367-pressure-outlet",
+    "cor_outlet_059_amira_amiranode_368-pressure-outlet",
+    "cor_outlet_060_amira_amiranode_369-pressure-outlet",
+    "cor_outlet_061_amira_amiranode_370-pressure-outlet",
+    "cor_outlet_062_amira_amiranode_371-pressure-outlet",
+    "cor_outlet_063_amira_amiranode_372-pressure-outlet",
+    "cor_outlet_064_amira_amiranode_373-pressure-outlet",
+    "cor_outlet_065_amira_amiranode_374-pressure-outlet",
+    "cor_outlet_066_amira_amiranode_375-pressure-outlet",
+    "cor_outlet_067_amira_amiranode_376-pressure-outlet",
+    "cor_outlet_068_amira_amiranode_377-pressure-outlet",
+    "cor_outlet_069_amira_amiranode_378-pressure-outlet",
+    "cor_outlet_070_amira_amiranode_379-pressure-outlet",
+    "cor_outlet_071_amira_amiranode_380-pressure-outlet",
+    "cor_outlet_072_amira_amiranode_381-pressure-outlet",
+    "cor_outlet_073_amira_amiranode_383-pressure-outlet",
+    "cor_outlet_074_amira_amiranode_384-pressure-outlet",
+    "cor_outlet_075_amira_amiranode_385-pressure-outlet",
+    "cor_outlet_076_amira_amiranode_386-pressure-outlet",
+    "cor_outlet_077_amira_amiranode_387-pressure-outlet"
+   ],
+   "split": [
+    0.0017171156442630988,
+    0.000112894912533274,
+    0.025368641403006334,
+    3.927127988932885e-06,
+    4.447185622985057e-06,
+    0.00030118482787165813,
+    0.0017261704057926935,
+    0.00027358585192837855,
+    0.00033246222391160687,
+    0.001936969047985379,
+    0.0006214685405245399,
+    0.00015151935850217182,
+    0.002504833831663571,
+    0.0036606583661710867,
+    0.03008539756452824,
+    0.0016976372912054008,
+    0.0035291606552435737,
+    0.0007090412537503384,
+    0.004665004686463165,
+    0.026266282188226908,
+    0.0014877018206196993,
+    0.08031367980742472,
+    0.000238860988153881,
+    0.0009092839916860768,
+    0.07202798023726359,
+    0.01654589460765137,
+    0.028320832449099057,
+    0.009680105051063353,
+    0.09277376351311115,
+    0.04711591135275341,
+    0.004374840444025837,
+    1.0633394189063702e-05,
+    0.005462860416971828,
+    0.0022281807523515614,
+    0.07320654951037629,
+    0.007811305251506353,
+    0.00044123957862713645,
+    0.0006293923795323037,
+    0.0027628791073836213,
+    0.007761131887573048,
+    0.00045779015729523724,
+    0.0016639259959115478,
+    0.03471878646105628,
+    0.018497583030636422,
+    0.0004557961574713703,
+    0.0012279584031799743,
+    0.004853648721842377,
+    1.4405764706109933e-05,
+    0.0029784686165314975,
+    6.397165474422332e-05,
+    0.0031939678359887568,
+    0.00108030733129418,
+    0.002988113613261388,
+    0.00018829406271869982,
+    0.000666995857008973,
+    0.005760221974236383,
+    0.005048426473848432,
+    7.98663365346412e-05,
+    0.0003225290073535972,
+    0.00044994590651160703,
+    0.002826457183662033,
+    0.0009458881581117398,
+    0.0001608208641978364,
+    2.6588151782170356e-05,
+    2.4157778961495776e-05,
+    2.946000561198734e-05,
+    3.939084021296182e-05,
+    6.442057324441118e-05,
+    0.0001725261680187049,
+    0.00030647874168963484,
+    0.0022260398349101687,
+    1.5066274750594516e-05,
+    0.0447039069916702,
+    0.298473360906925,
+    0.0002597252186098491,
+    0.004418076726087822,
+    0.0008252033108748152
+   ],
+   "inflow": 1.9394473451259548e-07,
+   "outflow": 1.9393317974117642e-07,
+   "p_in": 65.59759889764413,
+   "steps": 16000,
+   "solve_s": 110.63533067703247,
+   "cells": 5028753,
+   "voxel_um": 50.0,
+   "mlups": 727.2545533838518,
+   "converged": true,
+   "imbalance": 5.9577649520137906e-05,
+   "t_1pp": 23.817858457565308,
+   "t_01pp": 37.50561714172363,
+   "vs_openfoam": {
+    "mean_abs_pp": 0.08184457744611878,
+    "max_abs_pp": 2.0058054641950926,
+    "rel_err_big_median": 0.05561821695894367,
+    "r2": 0.9953442529096648,
+    "pairs": [
+     [
+      0.0016730862584458884,
+      0.0017171156442630988
+     ],
+     [
+      9.16241393761378e-05,
+      0.000112894912533274
+     ],
+     [
+      0.024136041692355763,
+      0.025368641403006334
+     ],
+     [
+      3.0168323460064157e-06,
+      3.927127988932885e-06
+     ],
+     [
+      3.242323203339997e-06,
+      4.447185622985057e-06
+     ],
+     [
+      0.0002594217892428151,
+      0.00030118482787165813
+     ],
+     [
+      0.0014370625954542025,
+      0.0017261704057926935
+     ],
+     [
+      0.00021843115125890094,
+      0.00027358585192837855
+     ],
+     [
+      0.0003213834937921171,
+      0.00033246222391160687
+     ],
+     [
+      0.001622297338411753,
+      0.001936969047985379
+     ],
+     [
+      0.0005439044970532284,
+      0.0006214685405245399
+     ],
+     [
+      0.00014861836767705847,
+      0.00015151935850217182
+     ],
+     [
+      0.0022036161371163615,
+      0.002504833831663571
+     ],
+     [
+      0.0035329779032697737,
+      0.0036606583661710867
+     ],
+     [
+      0.028727464942797445,
+      0.03008539756452824
+     ],
+     [
+      0.0014581096926439196,
+      0.0016976372912054008
+     ],
+     [
+      0.003413202007030878,
+      0.0035291606552435737
+     ],
+     [
+      0.0006141451131748153,
+      0.0007090412537503384
+     ],
+     [
+      0.004331675592980933,
+      0.004665004686463165
+     ],
+     [
+      0.024491929089284215,
+      0.026266282188226908
+     ],
+     [
+      0.001340829398573263,
+      0.0014877018206196993
+     ],
+     [
+      0.07732199728375999,
+      0.08031367980742472
+     ],
+     [
+      0.00021844899720639184,
+      0.000238860988153881
+     ],
+     [
+      0.0008828645276349573,
+      0.0009092839916860768
+     ],
+     [
+      0.06794018305898991,
+      0.07202798023726359
+     ],
+     [
+      0.014864532890598579,
+      0.01654589460765137
+     ],
+     [
+      0.02626095103997303,
+      0.028320832449099057
+     ],
+     [
+      0.008921144502335275,
+      0.009680105051063353
+     ],
+     [
+      0.10173614848124937,
+      0.09277376351311115
+     ],
+     [
+      0.04040875296021878,
+      0.04711591135275341
+     ],
+     [
+      0.0042747387713613924,
+      0.004374840444025837
+     ],
+     [
+      8.262113418145933e-06,
+      1.0633394189063702e-05
+     ],
+     [
+      0.005121151226663749,
+      0.005462860416971828
+     ],
+     [
+      0.001821933349569451,
+      0.0022281807523515614
+     ],
+     [
+      0.0751297019807556,
+      0.07320654951037629
+     ],
+     [
+      0.007501300833341204,
+      0.007811305251506353
+     ],
+     [
+      0.00040066479968225305,
+      0.00044123957862713645
+     ],
+     [
+      0.00048450449077398365,
+      0.0006293923795323037
+     ],
+     [
+      0.002316660289744728,
+      0.0027628791073836213
+     ],
+     [
+      0.007253836151664268,
+      0.007761131887573048
+     ],
+     [
+      0.00037332599806220854,
+      0.00045779015729523724
+     ],
+     [
+      0.0013917485722670193,
+      0.0016639259959115478
+     ],
+     [
+      0.03499008023124068,
+      0.03471878646105628
+     ],
+     [
+      0.018108399077016883,
+      0.018497583030636422
+     ],
+     [
+      0.0004274441292501891,
+      0.0004557961574713703
+     ],
+     [
+      0.001136581725250027,
+      0.0012279584031799743
+     ],
+     [
+      0.004719481096508146,
+      0.004853648721842377
+     ],
+     [
+      1.0997570296987977e-05,
+      1.4405764706109933e-05
+     ],
+     [
+      0.00303290666533921,
+      0.0029784686165314975
+     ],
+     [
+      5.0744251030535464e-05,
+      6.397165474422332e-05
+     ],
+     [
+      0.0028665706745670907,
+      0.0031939678359887568
+     ],
+     [
+      0.0009816164345412613,
+      0.00108030733129418
+     ],
+     [
+      0.002940271091653924,
+      0.002988113613261388
+     ],
+     [
+      0.0001702335644708952,
+      0.00018829406271869982
+     ],
+     [
+      0.0005661005115372974,
+      0.000666995857008973
+     ],
+     [
+      0.005737715828375668,
+      0.005760221974236383
+     ],
+     [
+      0.0045759275916533275,
+      0.005048426473848432
+     ],
+     [
+      6.486895035247188e-05,
+      7.98663365346412e-05
+     ],
+     [
+      0.00030215089751749966,
+      0.0003225290073535972
+     ],
+     [
+      0.0004094365876172877,
+      0.00044994590651160703
+     ],
+     [
+      0.003067295600957287,
+      0.002826457183662033
+     ],
+     [
+      0.0008701424922543584,
+      0.0009458881581117398
+     ],
+     [
+      0.0001504658341518327,
+      0.0001608208641978364
+     ],
+     [
+      2.3329203690267046e-05,
+      2.6588151782170356e-05
+     ],
+     [
+      2.226684424227749e-05,
+      2.4157778961495776e-05
+     ],
+     [
+      2.709130497301404e-05,
+      2.946000561198734e-05
+     ],
+     [
+      3.6378325374990687e-05,
+      3.939084021296182e-05
+     ],
+     [
+      6.010652720636246e-05,
+      6.442057324441118e-05
+     ],
+     [
+      0.00015961147133147156,
+      0.0001725261680187049
+     ],
+     [
+      0.0002765160327795213,
+      0.00030647874168963484
+     ],
+     [
+      0.0020192631635895263,
+      0.0022260398349101687
+     ],
+     [
+      1.023338655320541e-05,
+      1.5066274750594516e-05
+     ],
+     [
+      0.043519099555919885,
+      0.0447039069916702
+     ],
+     [
+      0.31853141554887593,
+      0.298473360906925
+     ],
+     [
+      0.00024475580306146404,
+      0.0002597252186098491
+     ],
+     [
+      0.0039149880675930695,
+      0.004418076726087822
+     ],
+     [
+      0.0007705812844670394,
+      0.0008252033108748152
+     ]
+    ]
+   }
+  },
+  "zvcfd_35um": {
+   "names": [
+    "cor_outlet_001_amira_amiranode_101-pressure-outlet",
+    "cor_outlet_002_amira_amiranode_182-pressure-outlet",
+    "cor_outlet_003_amira_amiranode_311-pressure-outlet",
+    "cor_outlet_004_amira_amiranode_312-pressure-outlet",
+    "cor_outlet_005_amira_amiranode_313-pressure-outlet",
+    "cor_outlet_006_amira_amiranode_314-pressure-outlet",
+    "cor_outlet_007_amira_amiranode_315-pressure-outlet",
+    "cor_outlet_008_amira_amiranode_316-pressure-outlet",
+    "cor_outlet_009_amira_amiranode_317-pressure-outlet",
+    "cor_outlet_010_amira_amiranode_318-pressure-outlet",
+    "cor_outlet_011_amira_amiranode_319-pressure-outlet",
+    "cor_outlet_012_amira_amiranode_320-pressure-outlet",
+    "cor_outlet_013_amira_amiranode_321-pressure-outlet",
+    "cor_outlet_014_amira_amiranode_322-pressure-outlet",
+    "cor_outlet_015_amira_amiranode_323-pressure-outlet",
+    "cor_outlet_016_amira_amiranode_324-pressure-outlet",
+    "cor_outlet_017_amira_amiranode_325-pressure-outlet",
+    "cor_outlet_018_amira_amiranode_326-pressure-outlet",
+    "cor_outlet_019_amira_amiranode_327-pressure-outlet",
+    "cor_outlet_020_amira_amiranode_328-pressure-outlet",
+    "cor_outlet_021_amira_amiranode_330-pressure-outlet",
+    "cor_outlet_022_amira_amiranode_331-pressure-outlet",
+    "cor_outlet_023_amira_amiranode_332-pressure-outlet",
+    "cor_outlet_024_amira_amiranode_333-pressure-outlet",
+    "cor_outlet_025_amira_amiranode_334-pressure-outlet",
+    "cor_outlet_026_amira_amiranode_335-pressure-outlet",
+    "cor_outlet_027_amira_amiranode_336-pressure-outlet",
+    "cor_outlet_028_amira_amiranode_337-pressure-outlet",
+    "cor_outlet_029_amira_amiranode_338-pressure-outlet",
+    "cor_outlet_030_amira_amiranode_339-pressure-outlet",
+    "cor_outlet_031_amira_amiranode_340-pressure-outlet",
+    "cor_outlet_032_amira_amiranode_341-pressure-outlet",
+    "cor_outlet_033_amira_amiranode_342-pressure-outlet",
+    "cor_outlet_034_amira_amiranode_343-pressure-outlet",
+    "cor_outlet_035_amira_amiranode_344-pressure-outlet",
+    "cor_outlet_036_amira_amiranode_345-pressure-outlet",
+    "cor_outlet_037_amira_amiranode_346-pressure-outlet",
+    "cor_outlet_038_amira_amiranode_347-pressure-outlet",
+    "cor_outlet_039_amira_amiranode_348-pressure-outlet",
+    "cor_outlet_040_amira_amiranode_349-pressure-outlet",
+    "cor_outlet_041_amira_amiranode_350-pressure-outlet",
+    "cor_outlet_042_amira_amiranode_351-pressure-outlet",
+    "cor_outlet_043_amira_amiranode_352-pressure-outlet",
+    "cor_outlet_044_amira_amiranode_353-pressure-outlet",
+    "cor_outlet_045_amira_amiranode_354-pressure-outlet",
+    "cor_outlet_046_amira_amiranode_355-pressure-outlet",
+    "cor_outlet_047_amira_amiranode_356-pressure-outlet",
+    "cor_outlet_048_amira_amiranode_357-pressure-outlet",
+    "cor_outlet_049_amira_amiranode_358-pressure-outlet",
+    "cor_outlet_050_amira_amiranode_359-pressure-outlet",
+    "cor_outlet_051_amira_amiranode_360-pressure-outlet",
+    "cor_outlet_052_amira_amiranode_361-pressure-outlet",
+    "cor_outlet_053_amira_amiranode_362-pressure-outlet",
+    "cor_outlet_054_amira_amiranode_363-pressure-outlet",
+    "cor_outlet_055_amira_amiranode_364-pressure-outlet",
+    "cor_outlet_056_amira_amiranode_365-pressure-outlet",
+    "cor_outlet_057_amira_amiranode_366-pressure-outlet",
+    "cor_outlet_058_amira_amiranode_367-pressure-outlet",
+    "cor_outlet_059_amira_amiranode_368-pressure-outlet",
+    "cor_outlet_060_amira_amiranode_369-pressure-outlet",
+    "cor_outlet_061_amira_amiranode_370-pressure-outlet",
+    "cor_outlet_062_amira_amiranode_371-pressure-outlet",
+    "cor_outlet_063_amira_amiranode_372-pressure-outlet",
+    "cor_outlet_064_amira_amiranode_373-pressure-outlet",
+    "cor_outlet_065_amira_amiranode_374-pressure-outlet",
+    "cor_outlet_066_amira_amiranode_375-pressure-outlet",
+    "cor_outlet_067_amira_amiranode_376-pressure-outlet",
+    "cor_outlet_068_amira_amiranode_377-pressure-outlet",
+    "cor_outlet_069_amira_amiranode_378-pressure-outlet",
+    "cor_outlet_070_amira_amiranode_379-pressure-outlet",
+    "cor_outlet_071_amira_amiranode_380-pressure-outlet",
+    "cor_outlet_072_amira_amiranode_381-pressure-outlet",
+    "cor_outlet_073_amira_amiranode_383-pressure-outlet",
+    "cor_outlet_074_amira_amiranode_384-pressure-outlet",
+    "cor_outlet_075_amira_amiranode_385-pressure-outlet",
+    "cor_outlet_076_amira_amiranode_386-pressure-outlet",
+    "cor_outlet_077_amira_amiranode_387-pressure-outlet"
+   ],
+   "split": [
+    0.001766389990248754,
+    0.00011857862691473521,
+    0.025879477656269908,
+    4.3331995351901606e-06,
+    5.63040127980899e-06,
+    0.0003203634807742741,
+    0.0018264503080564426,
+    0.00028627890500149464,
+    0.0003608585532049541,
+    0.0020248328929225626,
+    0.0006574660439762989,
+    0.0001669516063278983,
+    0.0026328964433163576,
+    0.0038043684302750277,
+    0.03058847415365242,
+    0.0017865834375604785,
+    0.0038106779499790908,
+    0.0007536061011721981,
+    0.004949479571208016,
+    0.027262061607999055,
+    0.0015688359633164847,
+    0.08506165443323432,
+    0.00025684985964089283,
+    0.0009951421079804905,
+    0.07604640623409512,
+    0.01741236663257987,
+    0.0294541643778163,
+    0.009830166355116361,
+    0.09205185267367384,
+    0.04891338374892519,
+    0.004421823399963228,
+    1.1671243943105927e-05,
+    0.005669591659597804,
+    0.0022407416837158076,
+    0.07626810624578485,
+    0.00803272243669857,
+    0.00046008499939969975,
+    0.0006121336873818999,
+    0.002981453656758086,
+    0.007660402856921613,
+    0.0005065528510073152,
+    0.0018249540908641382,
+    0.03592292018449856,
+    0.01928259930888883,
+    0.00048037081317209805,
+    0.0013141551956445396,
+    0.005209466176378854,
+    1.7226994792853064e-05,
+    0.0038457927130963942,
+    7.586047461808891e-05,
+    0.003392686279293955,
+    0.0011588531904157275,
+    0.0031943384656807337,
+    0.00020509327772881816,
+    0.0006810608302500044,
+    0.006211174262769799,
+    0.0052679243464837525,
+    8.98410572611198e-05,
+    0.0003435138376396398,
+    0.00047117144910764343,
+    0.003156876583840368,
+    0.0010046569184703207,
+    0.00017232723677169053,
+    2.890618533446808e-05,
+    2.6436094913327017e-05,
+    3.1972703582366594e-05,
+    4.2555123247424644e-05,
+    6.86751765579935e-05,
+    0.0001871084861614773,
+    0.0003414328511036789,
+    0.0022593150076649733,
+    1.5358750313621588e-05,
+    0.046049592629820696,
+    0.27235529917757595,
+    0.0002861271707687582,
+    0.004626096642156077,
+    0.0008963938459057017
+   ],
+   "inflow": 1.9394891869617863e-07,
+   "outflow": 1.9395264576233796e-07,
+   "p_in": 67.39051449783443,
+   "steps": 20000,
+   "solve_s": 358.60288643836975,
+   "cells": 14661804,
+   "voxel_um": 35.0,
+   "mlups": 817.7181252287443,
+   "converged": true,
+   "imbalance": -1.9216741110925338e-05,
+   "t_1pp": 97.64771223068237,
+   "t_01pp": 169.40755009651184,
+   "vs_openfoam": {
+    "mean_abs_pp": 0.14509197968539128,
+    "max_abs_pp": 4.617611637129998,
+    "rel_err_big_median": 0.09764337960555577,
+    "r2": 0.9799907177137834,
+    "pairs": [
+     [
+      0.0016730862584458884,
+      0.001766389990248754
+     ],
+     [
+      9.16241393761378e-05,
+      0.00011857862691473521
+     ],
+     [
+      0.024136041692355763,
+      0.025879477656269908
+     ],
+     [
+      3.0168323460064157e-06,
+      4.3331995351901606e-06
+     ],
+     [
+      3.242323203339997e-06,
+      5.63040127980899e-06
+     ],
+     [
+      0.0002594217892428151,
+      0.0003203634807742741
+     ],
+     [
+      0.0014370625954542025,
+      0.0018264503080564426
+     ],
+     [
+      0.00021843115125890094,
+      0.00028627890500149464
+     ],
+     [
+      0.0003213834937921171,
+      0.0003608585532049541
+     ],
+     [
+      0.001622297338411753,
+      0.0020248328929225626
+     ],
+     [
+      0.0005439044970532284,
+      0.0006574660439762989
+     ],
+     [
+      0.00014861836767705847,
+      0.0001669516063278983
+     ],
+     [
+      0.0022036161371163615,
+      0.0026328964433163576
+     ],
+     [
+      0.0035329779032697737,
+      0.0038043684302750277
+     ],
+     [
+      0.028727464942797445,
+      0.03058847415365242
+     ],
+     [
+      0.0014581096926439196,
+      0.0017865834375604785
+     ],
+     [
+      0.003413202007030878,
+      0.0038106779499790908
+     ],
+     [
+      0.0006141451131748153,
+      0.0007536061011721981
+     ],
+     [
+      0.004331675592980933,
+      0.004949479571208016
+     ],
+     [
+      0.024491929089284215,
+      0.027262061607999055
+     ],
+     [
+      0.001340829398573263,
+      0.0015688359633164847
+     ],
+     [
+      0.07732199728375999,
+      0.08506165443323432
+     ],
+     [
+      0.00021844899720639184,
+      0.00025684985964089283
+     ],
+     [
+      0.0008828645276349573,
+      0.0009951421079804905
+     ],
+     [
+      0.06794018305898991,
+      0.07604640623409512
+     ],
+     [
+      0.014864532890598579,
+      0.01741236663257987
+     ],
+     [
+      0.02626095103997303,
+      0.0294541643778163
+     ],
+     [
+      0.008921144502335275,
+      0.009830166355116361
+     ],
+     [
+      0.10173614848124937,
+      0.09205185267367384
+     ],
+     [
+      0.04040875296021878,
+      0.04891338374892519
+     ],
+     [
+      0.0042747387713613924,
+      0.004421823399963228
+     ],
+     [
+      8.262113418145933e-06,
+      1.1671243943105927e-05
+     ],
+     [
+      0.005121151226663749,
+      0.005669591659597804
+     ],
+     [
+      0.001821933349569451,
+      0.0022407416837158076
+     ],
+     [
+      0.0751297019807556,
+      0.07626810624578485
+     ],
+     [
+      0.007501300833341204,
+      0.00803272243669857
+     ],
+     [
+      0.00040066479968225305,
+      0.00046008499939969975
+     ],
+     [
+      0.00048450449077398365,
+      0.0006121336873818999
+     ],
+     [
+      0.002316660289744728,
+      0.002981453656758086
+     ],
+     [
+      0.007253836151664268,
+      0.007660402856921613
+     ],
+     [
+      0.00037332599806220854,
+      0.0005065528510073152
+     ],
+     [
+      0.0013917485722670193,
+      0.0018249540908641382
+     ],
+     [
+      0.03499008023124068,
+      0.03592292018449856
+     ],
+     [
+      0.018108399077016883,
+      0.01928259930888883
+     ],
+     [
+      0.0004274441292501891,
+      0.00048037081317209805
+     ],
+     [
+      0.001136581725250027,
+      0.0013141551956445396
+     ],
+     [
+      0.004719481096508146,
+      0.005209466176378854
+     ],
+     [
+      1.0997570296987977e-05,
+      1.7226994792853064e-05
+     ],
+     [
+      0.00303290666533921,
+      0.0038457927130963942
+     ],
+     [
+      5.0744251030535464e-05,
+      7.586047461808891e-05
+     ],
+     [
+      0.0028665706745670907,
+      0.003392686279293955
+     ],
+     [
+      0.0009816164345412613,
+      0.0011588531904157275
+     ],
+     [
+      0.002940271091653924,
+      0.0031943384656807337
+     ],
+     [
+      0.0001702335644708952,
+      0.00020509327772881816
+     ],
+     [
+      0.0005661005115372974,
+      0.0006810608302500044
+     ],
+     [
+      0.005737715828375668,
+      0.006211174262769799
+     ],
+     [
+      0.0045759275916533275,
+      0.0052679243464837525
+     ],
+     [
+      6.486895035247188e-05,
+      8.98410572611198e-05
+     ],
+     [
+      0.00030215089751749966,
+      0.0003435138376396398
+     ],
+     [
+      0.0004094365876172877,
+      0.00047117144910764343
+     ],
+     [
+      0.003067295600957287,
+      0.003156876583840368
+     ],
+     [
+      0.0008701424922543584,
+      0.0010046569184703207
+     ],
+     [
+      0.0001504658341518327,
+      0.00017232723677169053
+     ],
+     [
+      2.3329203690267046e-05,
+      2.890618533446808e-05
+     ],
+     [
+      2.226684424227749e-05,
+      2.6436094913327017e-05
+     ],
+     [
+      2.709130497301404e-05,
+      3.1972703582366594e-05
+     ],
+     [
+      3.6378325374990687e-05,
+      4.2555123247424644e-05
+     ],
+     [
+      6.010652720636246e-05,
+      6.86751765579935e-05
+     ],
+     [
+      0.00015961147133147156,
+      0.0001871084861614773
+     ],
+     [
+      0.0002765160327795213,
+      0.0003414328511036789
+     ],
+     [
+      0.0020192631635895263,
+      0.0022593150076649733
+     ],
+     [
+      1.023338655320541e-05,
+      1.5358750313621588e-05
+     ],
+     [
+      0.043519099555919885,
+      0.046049592629820696
+     ],
+     [
+      0.31853141554887593,
+      0.27235529917757595
+     ],
+     [
+      0.00024475580306146404,
+      0.0002861271707687582
+     ],
+     [
+      0.0039149880675930695,
+      0.004626096642156077
+     ],
+     [
+      0.0007705812844670394,
+      0.0008963938459057017
+     ]
+    ]
+   }
+  }
+ }
+}

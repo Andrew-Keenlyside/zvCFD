@@ -15,8 +15,8 @@ zvcfd plan --fluid-cells 6.3e8 --fill 0.7 --gpus 8 --method lbm-fp32,lbm-fp16 --
 ```text
 6.3e+08 fluid cells, sparse layout, vessel geometry, 8 x H100-SXM, planning kernel efficiency
 method              stored   GB/GPU  fits   Gupd/s   ms/step       total
-lbm-fp32             9e+08     17.7   yes     48.5     13.00       1.8 h
-lbm-fp16             9e+08      9.1   yes     30.3     20.82       2.9 h
+lbm-fp32             9e+08     17.7   yes     52.6     11.97       1.7 h
+lbm-fp16             9e+08      9.1   yes     33.0     19.08       2.7 h
 ```
 
 ## From a box and a fluid fraction
@@ -29,7 +29,7 @@ zvcfd plan --shape 2048,2048,2048 --fluid-fraction 0.2 --layout dense --geometry
 ```text
 1.72e+09 fluid cells, dense layout, porous geometry, 8 x H100-SXM, planning kernel efficiency
 method              stored   GB/GPU  fits   Gupd/s   ms/step       total
-lbm-fp32          8.59e+09    168.6    NO     73.4     23.41    11.7 min
+lbm-fp32          8.59e+09    168.6    NO     76.2     22.56    11.3 min
 lbm-fp16          8.59e+09     87.0    NO     74.3     23.13    11.6 min
 ```
 

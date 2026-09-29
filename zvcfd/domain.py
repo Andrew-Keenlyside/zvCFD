@@ -51,6 +51,16 @@ class BrickDomain:
     neighbours: np.ndarray
     periodic: tuple[bool, bool, bool] = (False, False, False)
     _lut: np.ndarray | None = field(default=None, repr=False)
+    #: For a partition-local domain: the first ``n_owned`` bricks are owned, the
+    #: rest are ghosts, and ``global_ids`` maps local bricks to the parent's.
+    n_owned: int | None = None
+    global_ids: np.ndarray | None = None
+
+    def __post_init__(self):
+        if self.global_ids is None:
+            self.global_ids = np.arange(len(self.coords), dtype=np.int64)
+        if self.n_owned is None:
+            self.n_owned = len(self.coords)
 
     # ------------------------------------------------------------ building
 
@@ -154,6 +164,10 @@ class BrickDomain:
         return int((self.flags != SOLID).sum())
 
     @property
+    def owned_fluid_cells(self) -> int:
+        return int((self.flags[:self.n_owned] != SOLID).sum())
+
+    @property
     def stored_cells(self) -> int:
         return self.n_bricks * self.cells_per_brick
 
@@ -204,6 +218,25 @@ class BrickDomain:
         part_of_chunk = np.empty(len(uniq), np.int32)
         part_of_chunk[order] = part_of_ordered
         return part_of_chunk[inv]
+
+    def local(self, parts: np.ndarray, part: int) -> BrickDomain:
+        """Partition ``part``'s view: its bricks, then its ghost bricks.
+
+        Owned bricks keep their Morton order and come first; ghosts follow.
+        The neighbour table is renumbered to local indices; ghost rows are -1
+        (ghosts are never updated, only refreshed from their owners).
+        """
+        owned = np.flatnonzero(parts == part)
+        ghosts = self.halo(parts, part)
+        gids = np.concatenate([owned, ghosts]).astype(np.int64)
+        g2l = -np.ones(self.n_bricks, np.int64)
+        g2l[gids] = np.arange(len(gids))
+        nb = self.neighbours[owned]
+        nbl = np.where(nb >= 0, g2l[np.maximum(nb, 0)], -1).astype(np.int32)
+        nbl = np.vstack([nbl, -np.ones((len(ghosts), 27), np.int32)])
+        return BrickDomain(shape=self.shape, brick=self.brick, coords=self.coords[gids],
+                           flags=self.flags[gids].copy(), neighbours=nbl, periodic=self.periodic,
+                           n_owned=len(owned), global_ids=gids)
 
     def halo(self, parts: np.ndarray, part: int) -> np.ndarray:
         """Bricks owned by other parts that neighbour ``part``'s bricks (its ghost set)."""

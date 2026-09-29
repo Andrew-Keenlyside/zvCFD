@@ -21,7 +21,9 @@ licence would bind out of the package.
 - Published benchmark numbers, cited as such.
 - Permissively licensed code (BSD, MIT, Apache-2.0) *with attribution*:
   zarr-vectors-py, zarr-python, cupy, scipy, pyamg, XLB (Apache-2.0), NVIDIA
-  Warp (Apache-2.0).
+  Warp (Apache-2.0), and SimVascular's svMultiPhysics and svZeroDSolver
+  (BSD-3). svZeroDSolver may be *linked* as a library for outlet boundary
+  conditions, keeping its licence notice.
 
 ## May not be consulted for implementation
 
@@ -32,6 +34,8 @@ licence would bind out of the package.
 | Palabos | AGPL-3.0 | network copyleft |
 | FluidX3D | custom, non-commercial, no military use | its terms would bind derived code |
 | HemeLB | LGPL-3.0 | reading is fine, but keep implementation independent |
+| TetGen (bundled in SimVascular and svMultiPhysics) | AGPL-3.0 | run only as a separate external program, never linked or vendored |
+| ParMETIS / METIS 4 (bundled in svMultiPhysics / svSolver) | non-commercial / academic only | do not vendor; zvCFD's partitioner is its own |
 | Ansys, STAR-CCM+, M-Star and other commercial solvers | proprietary | no source access; use documentation only |
 
 Reading a paper *about* one of these codes is fine. Porting its kernels

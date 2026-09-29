@@ -1,0 +1,6 @@
+domain (1336, 1184, 1176): 21849 bricks (0.60% active), 5,028,753 fluid cells, fill 0.45; 78 patches; tau = 0.6000, dt = 2.38e-05 s  (26.9 s)
+  step     2000  inflow 1.8772e-07 m3/s  imbalance +2.99e-01  change inf
+  step     4000  inflow 1.9255e-07 m3/s  imbalance +3.87e-02  change 3.74e-02
+  step     6000  inflow 1.9321e-07 m3/s  imbalance +7.65e-03  change 5.06e-03
+  step     8000  inflow 1.9364e-07 m3/s  imbalance +3.99e-04  change 2.77e-03
+  step    10000  inflow 1.9381e-07 m3/s  imbalance -2.08e-03  change 8.85e-04

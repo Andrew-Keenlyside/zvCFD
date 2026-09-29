@@ -1,0 +1,15 @@
+pipe12   zvcfd          cells    86,016  flux 9.88011e-13  to 1%:     0.11 s  to 0.1%:     5.22 s  total    20.14 s
+pipe12   openfoam       cells    86,016  flux 9.86031e-13  to 1%:     1.01 s  to 0.1%:     1.52 s  total    50.52 s
+pipe12   zvCFD / OpenFOAM flux: 1.0020; vs Poiseuille: zvCFD 0.9898, OpenFOAM 0.9878
+pipe24   zvcfd          cells   692,736  flux 1.60894e-11  to 1%:     1.08 s  to 0.1%:     1.74 s  total     7.69 s
+pipe24   openfoam       cells   692,736  flux 1.60607e-11  to 1%:    67.85 s  to 0.1%:   101.50 s  total   933.14 s
+pipe24   zvCFD / OpenFOAM flux: 1.0018; vs Poiseuille: zvCFD 0.9940, OpenFOAM 0.9923
+duct32   zvcfd          cells   262,144  flux 4.63496e-12  to 1%:     0.31 s  to 0.1%:     0.37 s  total     6.89 s
+duct32   openfoam       cells   262,144  flux 4.62376e-12  to 1%:     9.39 s  to 0.1%:    14.13 s  total   241.32 s
+duct32   zvCFD / OpenFOAM flux: 1.0024; vs Poiseuille: zvCFD 1.0062, OpenFOAM 1.0038
+porous   zvcfd          cells   915,182  flux 1.13944e-12  to 1%:     6.01 s  to 0.1%:    58.77 s  total   115.78 s
+porous   openfoam       cells   915,182  flux 1.05979e-12  to 1%:     8.40 s  to 0.1%:    14.99 s  total    48.03 s
+porous   zvCFD / OpenFOAM flux: 1.0752
+vessels  zvcfd          cells 1,188,089  flux 2.14213e-12  to 1%:    14.47 s  to 0.1%:    50.23 s  total   186.16 s
+vessels  openfoam       cells 1,188,089  flux 2.06509e-12  to 1%:    21.95 s  to 0.1%:    33.63 s  total    82.15 s
+vessels  zvCFD / OpenFOAM flux: 1.0373

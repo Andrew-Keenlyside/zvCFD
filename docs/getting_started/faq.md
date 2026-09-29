@@ -7,7 +7,7 @@
 Because the input is an image. A lattice-Boltzmann step is local — each
 voxel reads its 18 neighbours and writes itself — so it maps onto the voxel
 grid with no mesh, no matrix and no global solve, and it runs at the GPU's
-memory bandwidth. Our kernel reaches 96 % of the device's copy bandwidth on
+memory bandwidth. Our kernel reaches 98 % of the device's copy bandwidth on
 open domains. A finite-volume solver on an image first needs a body-fitted
 mesh, which for a 10⁹-voxel lumen is itself a large, fragile job, and then
 holds a system matrix of 1–5.6 GB per million cells. The trade-off:
@@ -19,12 +19,24 @@ LBM. [Risks](../feasibility/risks.md) covers both.
 
 No. At the size of a typical Ansys model it is not faster per GPU and far
 less complete. For the HiP-CT coronary case, Fluent's GPU solver on the
-14.8 M-cell Simpleware mesh needs an estimated ~25 min per cardiac cycle on
-one H100; zvCFD at 20 µm (5× as many cells) needs ~46 min on one H100 or
-~7 min on eight. zvCFD is for the regime a meshed solver cannot reach on
+14.8 M-cell Simpleware mesh needs an estimated 6–25 min per cardiac cycle on
+one H100 (CFX, which is CPU-only, 1.3–5.3 h on 128 cores); zvCFD at 20 µm (5× as many cells) needs ~42 min on one H100 or
+~6 min on eight. zvCFD is for the regime a meshed solver cannot reach on
 one node: image-native resolutions with 10⁸–10¹⁰ fluid voxels, straight from
 OME-Zarr, where a mesh and its matrix would not fit in memory. See
 [Comparison](../benchmarks/comparison.md).
+
+### How does it relate to SimVascular?
+
+It complements it. SimVascular is the open-source reference for
+cardiovascular modelling: its finite-element solver (svMultiPhysics)
+handles FSI, rheology and a full set of outlet models, on meshes of a few
+million elements from CT angiography. zvCFD solves image-native voxel
+domains 30–300× larger, on GPUs, without a mesh. Its planned outlet
+conditions come from SimVascular's own 0-D solver (svZeroDSolver, BSD-3),
+coupled every few steps. Its validation cases include SimVascular's test
+problems and the Vascular Model Repository. See
+[Comparison](../benchmarks/comparison.md#scenario-4-simvascular).
 
 ### What does "clean-room" mean here?
 

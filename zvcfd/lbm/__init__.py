@@ -15,6 +15,15 @@ except ImportError as exc:  # pragma: no cover - exercised without cupy
         "environment conda install -c conda-forge cupy."
     ) from exc
 
-from zvcfd.lbm.solver import DenseLBM, SparseLBM, dense_from_bricks, equilibrium, kernel
+from zvcfd.lbm.multi import MultiLBM
+from zvcfd.lbm.solver import (
+    CarreauYasuda,
+    DenseLBM,
+    SparseLBM,
+    dense_from_bricks,
+    equilibrium,
+    kernel,
+)
 
-__all__ = ["DenseLBM", "SparseLBM", "dense_from_bricks", "equilibrium", "kernel"]
+__all__ = ["CarreauYasuda", "DenseLBM", "MultiLBM", "SparseLBM", "dense_from_bricks",
+           "equilibrium", "kernel"]

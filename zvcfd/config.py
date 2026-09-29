@@ -4,14 +4,17 @@ Unknown keys are errors (a typo must not silently fall back to a default).
 The resolved configuration is written into the run collection
 (``config`` node), and its hash names the run, as in BRIDGE-Simulation.
 
-Example::
+Example (the HiP-CT coronary tree from its Fluent mesh)::
 
-    name: vessels-demo
-    source: {kind: phantom, name: network-128x128x512, voxel_size: 5.0}
-    physics: {nu: 3.5e-6, rho: 1060.0, pressure_drop: 50.0}
-    solver: {method: lbm, precision: fp32, tau: 1.0, steps: 20000, check_every: 500}
-    domain: {brick: 8, chunk_bricks: 32}
-    output: {path: runs/, every: 5000, fields: [rho, ux, uy, uz]}
+    name: coronary-50um
+    source: {kind: mesh, path: "mesh 1.msh", unit: mm, voxel_size: 50.0}
+    physics: {nu: 3.5e-6, rho: 1060.0, u_ref: 0.2}
+    boundaries:
+      patches:
+        - {match: inlet, kind: velocity, flow_rate: 1.9e-7, profile: parabolic}
+        - {match: outlet, kind: pressure, pressure: 0.0}
+    solver: {collision: trt, mach: 0.05, steps: 200000, check_every: 2000, tolerance: 1.0e-4}
+    output: {path: runs, every: 0}
 """
 
 from __future__ import annotations
@@ -26,14 +29,15 @@ from typing import Any
 
 @dataclass
 class Source:
-    kind: str = "phantom"            # phantom | omezarr | npy
+    kind: str = "phantom"            # phantom | omezarr | npy | mesh
     name: str | None = None          # phantom name
-    path: str | None = None          # omezarr / npy path
+    path: str | None = None          # omezarr / npy / mesh path
     level: int = 0                   # pyramid level to solve on
     array: str | None = None         # array path inside the multiscale (default: datasets[level])
     threshold: float | None = None   # fluid = value > threshold (or == label)
     label: int | None = None
     voxel_size: float | None = None  # micrometre; taken from OME metadata when omitted
+    unit: str = "mm"                 # mesh coordinate unit (mesh sources)
     region: list[list[int]] | None = None  # [[z0, z1], [y0, y1], [x0, x1]] voxel crop
 
 
@@ -41,18 +45,30 @@ class Source:
 class Physics:
     nu: float = 3.5e-6               # m^2/s (blood ~3.5e-6, water 1.0e-6)
     rho: float = 1060.0              # kg/m^3
-    pressure_drop: float | None = None  # Pa, between the x faces (reservoir BC)
+    u_ref: float | None = None       # m/s, reference (peak) velocity: sets dt with solver.mach
+    pressure_drop: float | None = None  # Pa between the x faces (shorthand for two face patches)
     body_force: list[float] | None = None  # lattice units (z, y, x)
+    rheology: dict | None = None     # {model: carreau-yasuda, mu_0, mu_inf, lam, a, n} (SI)
+
+
+@dataclass
+class Boundaries:
+    faces: dict = field(default_factory=dict)      # {xmin: {kind, pressure|velocity|...}, ...}
+    patches: list = field(default_factory=list)    # [{match: substring, kind, ...}, ...]
 
 
 @dataclass
 class Solver:
     method: str = "lbm"              # lbm | lubrication
+    collision: str = "trt"           # trt | bgk
     precision: str = "fp32"          # fp32 | fp16 (population storage)
-    tau: float = 1.0
+    tau: float | None = None         # relaxation time; or derived from mach and u_ref
+    mach: float = 0.05               # lattice velocity at u_ref (keeps compressibility error small)
     steps: int = 10_000
     check_every: int = 500
-    tolerance: float = 1e-5          # relative flux change between checks, to stop early
+    tolerance: float = 1e-5          # relative change of every patch flux between checks
+    mass_tolerance: float = 1e-3     # and |inflow - outflow| / inflow: mean pressure settled
+    flow_control: bool = True        # correct velocity patches to hit their flow_rate
 
 
 @dataclass
@@ -64,7 +80,8 @@ class Domain:
 
 @dataclass
 class Parallel:
-    gpus: int = 1
+    gpus: int = 1                    # devices to use
+    partitions: int | None = None    # default: one per GPU (more than GPUs: shared round-robin)
 
 
 @dataclass
@@ -82,6 +99,7 @@ class RunConfig:
     name: str = "run"
     source: Source = field(default_factory=Source)
     physics: Physics = field(default_factory=Physics)
+    boundaries: Boundaries = field(default_factory=Boundaries)
     solver: Solver = field(default_factory=Solver)
     domain: Domain = field(default_factory=Domain)
     parallel: Parallel = field(default_factory=Parallel)
@@ -96,8 +114,9 @@ class RunConfig:
         return hashlib.sha256(blob).hexdigest()[:12]
 
 
-_SECTIONS = {"source": Source, "physics": Physics, "solver": Solver, "domain": Domain,
-             "parallel": Parallel, "output": Output}
+_SECTIONS = {"source": Source, "physics": Physics, "boundaries": Boundaries, "solver": Solver,
+             "domain": Domain, "parallel": Parallel, "output": Output}
+_PATCH_KEYS = {"match", "kind", "pressure", "velocity", "flow_rate", "profile", "rcr", "waveform"}
 
 
 def from_dict(d: dict[str, Any]) -> RunConfig:
@@ -129,13 +148,26 @@ def load(path: str | Path) -> RunConfig:
 
 
 def _validate(cfg: RunConfig) -> None:
-    if cfg.source.kind not in ("phantom", "omezarr", "npy"):
+    if cfg.source.kind not in ("phantom", "omezarr", "npy", "mesh"):
         raise ValueError(f"source.kind {cfg.source.kind!r}")
+    if cfg.source.kind == "mesh" and not cfg.source.voxel_size:
+        raise ValueError("mesh sources need source.voxel_size (micrometre)")
     if cfg.solver.method not in ("lbm", "lubrication"):
         raise ValueError(f"solver.method {cfg.solver.method!r}")
+    if cfg.solver.collision not in ("trt", "bgk"):
+        raise ValueError(f"solver.collision {cfg.solver.collision!r}")
     if cfg.solver.precision not in ("fp32", "fp16"):
         raise ValueError(f"solver.precision {cfg.solver.precision!r}")
-    if cfg.solver.tau <= 0.5:
+    if cfg.solver.tau is not None and cfg.solver.tau <= 0.5:
         raise ValueError("solver.tau must exceed 0.5")
     if cfg.domain.brick != 8:
         raise ValueError("domain.brick: only 8 is compiled")
+    for spec in list(cfg.boundaries.faces.values()) + list(cfg.boundaries.patches):
+        bad = set(spec) - _PATCH_KEYS
+        if bad:
+            raise ValueError(f"unknown patch keys: {sorted(bad)}")
+        if spec.get("kind") not in ("pressure", "velocity", "rcr"):
+            raise ValueError(f"patch kind {spec.get('kind')!r}")
+    for face in cfg.boundaries.faces:
+        if face not in ("xmin", "xmax", "ymin", "ymax", "zmin", "zmax"):
+            raise ValueError(f"face {face!r}")

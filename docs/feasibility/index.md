@@ -28,13 +28,15 @@ measurements and should be confirmed first (see [Roadmap](roadmap.md)).
 |---|---|---|
 | Can a GPU solver work in chunked ZV stores? | Yes. One ZV vertex per 8³ brick, fields as 512-wide vertex attributes; round-trips exactly, including GPU-side reads | [Brick store](../spec/brick_store.md), tests |
 | Is the zarr-vectors GPU module enough? | For reads, mostly: device decode is 2.2× faster warm. Gaps: nvCOMP decode runs out of memory on large reads (no batching); host write path is 0.3–0.6 GB/s | [I/O benchmarks](../benchmarks/io.md) |
-| How fast is the kernel? | 96 % of copy bandwidth dense, 78 % sparse (open), 35 % sparse (thin vessels) on the A2000 → **7–16 G fluid-cell updates/s per H100** (planning basis) | [Kernels](../benchmarks/kernels.md) |
+| How fast is the kernel? | 98 % of copy bandwidth dense, 77 % sparse (open), 38 % sparse (thin vessels) on the A2000 → **8–16 G fluid-cell updates/s per H100** (planning basis) | [Kernels](../benchmarks/kernels.md) |
 | How large a domain fits on 8 × H100? | ~2 × 10⁹ fluid voxels fp32, ~4 × 10⁹ fp16 (fill 0.6) | [Plan a run](../how_to/plan_a_run.md) |
 | Do parallel reads and writes work? | Yes: whole chunks (or shards) per worker, presence deferred, one rebuild. 8 writers need no lock | [Parallel I/O](../spec/parallel_io.md) |
 | Is Icechunk async I/O needed? | **No.** Same throughput as plain Zarr (0.20 vs 0.13–0.17 GB/s writes, 5.8 vs 4.7–6.1 GB/s reads); its local-filesystem backend is officially unsafe for concurrent commits. Optional for versioned runs on object storage | [Icechunk](../how_to/icechunk.md) |
-| Do Ansys-style coarsening and scale give initial speedups? | **Partly.** Coarse *previews* are 7–35× cheaper (25–80 % flux error in thin vessels). Coarse-to-fine *initialisation* of LBM gave 0.6–1.6× — not worth it. *Operator* coarsening (AMG) works: iterations flat at 12–14 as the domain grows 4× | [Multiresolution](../benchmarks/multiresolution.md) |
+| Do Ansys-style coarsening and scale give initial speedups? | **Partly.** Coarse *previews* are 8–43× cheaper (25–80 % flux error in thin vessels). Coarse-to-fine *initialisation* of LBM gave 0.7–1.6× — not worth it. *Operator* coarsening (AMG) works: iterations flat at 12–14 as the domain grows 4× | [Multiresolution](../benchmarks/multiresolution.md) |
 | RFC-8 collections? | Yes, following BRIDGE's layout. RFC-8 is still a draft under review; expect a version change | [Run collection](../spec/run_collection.md) |
-| Speed against common packages? | Real HiP-CT coronary case: at 10 µm (6.3 × 10⁸ fluid voxels) **~1.8 h per cardiac cycle on 8 × H100**, against **~1.2 days on 1,024 CPU cores** for a meshed solver at the same cell count. At Fluent's own mesh size (1.5 × 10⁷ cells) Fluent GPU is competitive | [Comparison](../benchmarks/comparison.md) |
+| Speed against common packages? | Real HiP-CT coronary case: at 10 µm (6.3 × 10⁸ fluid voxels) **~1.7 h per cardiac cycle on 8 × H100**, against **7 h to 1.2 days on 1,024 CPU cores** for a meshed solver at the same cell count (5–20 iterations per time step). At the Ansys mesh's own size (1.5 × 10⁷ cells), Fluent's GPU solver (6–25 min per cycle on one H100) is competitive; CFX has no GPU solver; SimVascular's published ~3 M-tet coronary runs take ~1.4 h per cycle on 96 cores, which cross-checks the FV estimates | [Comparison](../benchmarks/comparison.md) |
+| Is it correct? | **Validated**: second order against exact solutions where walls lie on lattice planes (Poiseuille, duct, Womersley, Taylor–Green, Carreau–Yasuda), first order on staircase curved walls; sphere-array drag within 2 %. Reruns are byte-identical | [Validation](../validation/index.md) |
+| Measured against OpenFOAM? | Same voxels: same flux within 1.1 %, reached 3–22× sooner on one A2000 than on 16 cores. HiP-CT coronary: inlet pressure within 0.2 %, splits within 0.1–0.2 pp on average, 10× sooner at equal cell count; the dominant outlet differs by 2–5 pp (under investigation) | [OpenFOAM](../benchmarks/openfoam.md), [Against OpenFOAM](../validation/cross_code.md) |
 | Python + CLI, consistent API? | Built: `zvcfd` package and CLI in zarr-vectors / bridge-sim style (`probe`, `plan`, `mesh-info`, `run`, `info`) | [API](../api/index.rst) |
 
 ## What was built to find out
@@ -44,9 +46,10 @@ paper estimates alone:
 
 - `zvcfd.domain.BrickDomain` — sparse bricks, neighbour tables, Morton
   ordering, whole-chunk partitioning across GPUs, halo sets.
-- `zvcfd.lbm` — D3Q19 BGK lattice-Boltzmann, dense and sparse-brick,
-  fp32/fp16 storage. The sparse kernel is bit-identical to the dense one;
-  plane Poiseuille flow matches the analytic profile within 1 %.
+- `zvcfd.lbm` — D3Q19 BGK and TRT lattice-Boltzmann, dense and
+  sparse-brick, fp32/fp16 storage of shifted populations. The sparse kernel
+  is bit-identical to the dense one; plane Poiseuille flow is exact to
+  10⁻⁴ at any τ.
 - `zvcfd.io.fields` — brick stores on `zarr_vectors.building`, three-phase
   parallel writes, GPU reads through `read_cells`.
 - `zvcfd.collection` — RFC-8 run documents, atomic publication of snapshots.
@@ -56,7 +59,8 @@ paper estimates alone:
   1.9 GB HiP-CT coronary mesh in 15 s.
 - `zvcfd.perfmodel` and `zvcfd plan` — the roofline model behind every
   estimate here, calibrated on the measured kernels.
-- 38 tests; benchmarks under `benchmarks/` with results in
+- 59 tests, including the fast validation cases and the byte-identity
+  checks; benchmarks under `benchmarks/` with results in
   `benchmarks/results/`.
 
 ## Where it works and where it does not
@@ -69,10 +73,13 @@ layout), and transient flows, where time-marching LBM is the natural
 method.
 
 **Works, with care:** steady low-Reynolds flows. LBM reaches steady state
-by time-marching, which takes 10⁴–10⁵ steps. Coarse-level initialisation
-did not shorten that in our tests. The fast path for steady flow is an
-elliptic solve with AMG (built for the lubrication model; a Stokes solver
-would be new work).
+by time-marching, which takes 10³–10⁴ steps once τ is chosen for the
+geometry (TRT makes the answer independent of τ). On identical voxel
+geometries that was still 3–22× faster than OpenFOAM's SIMPLE on 16 cores
+([OpenFOAM comparison](../benchmarks/openfoam.md)). Coarse-level
+initialisation did not shorten it further in our tests. For very large,
+low-permeability samples an elliptic solve with AMG remains the fast path
+(built for the lubrication model; a Stokes solver would be new work).
 
 **Does not work without new design:** porous media larger than ~1536³ at
 porosity 0.2 (bricks are nearly all active, so sparsity buys nothing; a
@@ -87,8 +94,9 @@ one that retires the largest uncertainty: run `benchmarks/bench_lbm.py` and
 `benchmarks/bench_io.py` on the H100 node and replace the extrapolated
 figures on these pages with measured ones. The next is the multi-GPU driver
 with NVLink halo exchange, then a robust collision model (TRT or cumulant)
-and inlet/outlet boundary conditions from Fluent zones or label images, so
-the coronary case can run end to end.
+and inlet/outlet boundary conditions from Fluent zones or label images, with
+RCR and coronary outlets coupled to SimVascular's svZeroDSolver, so the
+coronary case can run end to end and be validated against CFX.
 
-Four upstream requests to zarr-vectors-py came out of this study. They are
+Five upstream requests to zarr-vectors-py came out of this study. They are
 listed in [Risks](risks.md#upstream-requests).

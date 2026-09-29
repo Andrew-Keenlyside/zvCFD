@@ -1,5 +1,20 @@
-NVIDIA RTX A2000 12GB: device copy 251 GB/s
-dense fp32 open 256^3                          1603 MLUPS     245 GB/s (  98% of copy)    10.47 ms/step
-sparse fp32 open 256^3                         1268 MLUPS     194 GB/s (  77% of copy)    13.24 ms/step  bricks 100.0%
-dense fp16 open 256^3                          1980 MLUPS     152 GB/s (  61% of copy)     8.47 ms/step
-sparse fp16 open 256^3                          960 MLUPS      74 GB/s (  29% of copy)    17.48 ms/step  bricks 100.0%
+NVIDIA RTX A2000 12GB: device copy 253 GB/s
+dense fp32 open 256^3                          1617 MLUPS     247 GB/s (  98% of copy)    10.37 ms/step
+sparse fp32 open 256^3                         1287 MLUPS     197 GB/s (  78% of copy)    13.04 ms/step  bricks 100.0%
+dense fp16 open 256^3                          2148 MLUPS     165 GB/s (  65% of copy)     7.81 ms/step
+sparse fp16 open 256^3                          972 MLUPS      75 GB/s (  30% of copy)    17.27 ms/step  bricks 100.0%
+sparse fp32 trt open 256^3                     1259 MLUPS     193 GB/s (  76% of copy)    13.32 ms/step  bricks 100.0%
+sparse fp16 trt open 256^3                      959 MLUPS      74 GB/s (  29% of copy)    17.49 ms/step  bricks 100.0%
+sparse fp32 trt+cy open 256^3                  1099 MLUPS     168 GB/s (  66% of copy)    15.26 ms/step  bricks 100.0%
+dense fp32 porous phi=0.45 256^3                891 MLUPS     136 GB/s (  54% of copy)     8.48 ms/step
+sparse fp32 porous phi=0.45 256^3               686 MLUPS     105 GB/s (  41% of copy)    11.01 ms/step  bricks 99.4%
+dense fp16 porous phi=0.45 256^3                993 MLUPS      76 GB/s (  30% of copy)     7.60 ms/step
+sparse fp16 porous phi=0.45 256^3               432 MLUPS      33 GB/s (  13% of copy)    17.48 ms/step  bricks 99.4%
+sparse fp32 trt porous phi=0.45 256^3           668 MLUPS     102 GB/s (  40% of copy)    11.31 ms/step  bricks 99.4%
+sparse fp32 trt+cy porous phi=0.45 256^3        530 MLUPS      81 GB/s (  32% of copy)    14.23 ms/step  bricks 99.4%
+vessel phantom (512, 512, 512): fluid 3.62% (built in 73 s)
+sparse fp32 vessels 512^3                       624 MLUPS      96 GB/s (  38% of copy)     7.77 ms/step  bricks 10.4%
+sparse fp16 vessels 512^3                       413 MLUPS      32 GB/s (  13% of copy)    11.76 ms/step  bricks 10.4%
+sparse fp32 trt vessels 512^3                   622 MLUPS      95 GB/s (  38% of copy)     7.80 ms/step  bricks 10.4%
+sparse fp32 trt+cy vessels 512^3                491 MLUPS      75 GB/s (  30% of copy)     9.89 ms/step  bricks 10.4%
+(dense fp32 at 512^3 would need 20.5 GB; this GPU has 12.5 GB)

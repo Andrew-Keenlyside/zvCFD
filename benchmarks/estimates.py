@@ -11,8 +11,11 @@ packages comes out of this script, so the assumptions sit in one place:
   150-300 M); 1.8 GB per million cells on the GPU.
 - Transient LBM: acoustic scaling, lattice Mach <= 0.1 at the peak velocity,
   so dt = 0.1 dx / u_peak (tau then follows from the viscosity).
-- Transient FV: 1 ms steps, 20 inner iterations each (a typical pulsatile
-  hemodynamics setting).
+- Transient FV: 1 ms steps (1,000 per cycle) and 5-20 iteration-equivalents
+  per step: CFX's guide recommends 3-5 coefficient loops per timestep for its
+  coupled solver (Modeling Guide 2025 R1, s16.4.2.6); segregated
+  SIMPLE/PISO-type setups use ~20 inner iterations. Each is costed as one
+  cell-iteration at the rates above, so the range brackets both.
 
     python benchmarks/estimates.py > benchmarks/results/estimates.md
 """
@@ -43,13 +46,17 @@ def coronary():
     print("| Solver | Resolution | Cells | Memory | Hardware | Time per cycle |")
     print("|---|---|---:|---:|---|---:|")
     cells = 14_790_642
-    iters = 1000 * 20
-    print(f"| Fluent-class FV, CPU | Simpleware mesh (~35 um equiv.) | {cells:.3g} | "
-          f"{cells / 1e6 * 2.5:.0f} GB RAM | 128 cores | {hms(cpu_fv_estimate(cells, iters))} |")
-    print(f"| Fluent-class FV, CPU | same | {cells:.3g} | | 1024 cores | "
-          f"{hms(cpu_fv_estimate(cells, iters, cores=1024))} |")
-    print(f"| Fluent-class FV, GPU | same | {cells:.3g} | {fv_memory_gb(cells):.0f} GB | 1 x H100 | "
-          f"{hms(gpu_fv_estimate(cells, iters))} |")
+    lo, hi = 1000 * 5, 1000 * 20
+
+    def rng(f, **kw):
+        return f"{hms(f(cells, lo, **kw))} - {hms(f(cells, hi, **kw))}"
+
+    print(f"| FV (CFX / Fluent class), CPU | Simpleware mesh (~35 um equiv.) | {cells:.3g} | "
+          f"{cells / 1e6 * 2.5:.0f} GB RAM | 128 cores | {rng(cpu_fv_estimate)} |")
+    print(f"| FV (CFX / Fluent class), CPU | same | {cells:.3g} | | 1024 cores | "
+          f"{rng(cpu_fv_estimate, cores=1024)} |")
+    print(f"| FV, GPU (Fluent GPU; CFX has none) | same | {cells:.3g} | "
+          f"{fv_memory_gb(cells):.0f} GB | 1 x H100 | {rng(gpu_fv_estimate)} |")
     for voxel_mm, fill in ((0.02, 0.55), (0.01, 0.7), (0.005, 0.82)):
         fluid = 628.6 / voxel_mm ** 3
         lat_dt = 0.1 * voxel_mm * 1e-3 / 0.5
@@ -65,9 +72,10 @@ def coronary():
                       f"{t} ({steps:.2g} steps) |")
         if voxel_mm == 0.01:
             fv = fluid
-            print(f"| Fluent-class FV at the same cell count | 10 um-equivalent mesh | {fv:.3g} | "
+            print(f"| FV at the same cell count | 10 um-equivalent mesh | {fv:.3g} | "
                   f"{fv_memory_gb(fv) / 1e3:.1f} TB GPU | 1024 cores | "
-                  f"{hms(cpu_fv_estimate(fv, iters, cores=1024))} |")
+                  f"{hms(cpu_fv_estimate(fv, lo, cores=1024))} - "
+                  f"{hms(cpu_fv_estimate(fv, hi, cores=1024))} |")
     print()
 
 

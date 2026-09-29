@@ -63,8 +63,8 @@ _GEOMETRIES = ("open", "porous", "vessel")
 METHODS = {
     "lbm-fp32": Method(
         "lbm-fp32", 2 * Q * 4 + 1, 2 * Q * 4 + 1 + 4,
-        {"measured": {"dense-open": 0.96, "dense-porous": 0.53,
-                      "sparse-open": 0.78, "sparse-porous": 0.41, "sparse-vessel": 0.35},
+        {"measured": {"dense-open": 0.98, "dense-porous": 0.55,
+                      "sparse-open": 0.77, "sparse-porous": 0.42, "sparse-vessel": 0.38},
          # FluidX3D 80% dense (H100); sparse assumed 70% open, 55% complex
          "target": {"dense-open": 0.80, "dense-porous": 0.60,
                     "sparse-open": 0.70, "sparse-porous": 0.55, "sparse-vessel": 0.55}}),
@@ -72,7 +72,7 @@ METHODS = {
         "lbm-fp16", 2 * Q * 2 + 1, 2 * Q * 2 + 1 + 4,
         # the spike's fp16 path is latency-bound (not yet vectorised)
         {"measured": {"dense-open": 0.61, "dense-porous": 0.27,
-                      "sparse-open": 0.30, "sparse-porous": 0.13, "sparse-vessel": 0.11},
+                      "sparse-open": 0.29, "sparse-porous": 0.13, "sparse-vessel": 0.12},
          # FluidX3D FP16S reaches 68% on H100
          "target": {"dense-open": 0.68, "dense-porous": 0.50,
                     "sparse-open": 0.60, "sparse-porous": 0.45, "sparse-vessel": 0.45}}),

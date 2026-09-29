@@ -1,0 +1,14 @@
+domain (1896, 1688, 1680): 51672 bricks (0.49% active), 14,661,804 fluid cells, fill 0.55; 78 patches; tau = 0.6000, dt = 1.17e-05 s  (18.7 s)
+  step     2000  inflow 1.8780e-07 m3/s  imbalance +3.69e-01  change inf
+  step     4000  inflow 1.9013e-07 m3/s  imbalance -2.73e-02  change 9.39e-02
+  step     6000  inflow 1.9238e-07 m3/s  imbalance -2.64e-02  change 1.61e-02
+  step     8000  inflow 1.9318e-07 m3/s  imbalance -8.95e-03  change 1.21e-02
+  step    10000  inflow 1.9358e-07 m3/s  imbalance -5.93e-03  change 2.13e-03
+  step    12000  inflow 1.9376e-07 m3/s  imbalance -5.97e-03  change 9.43e-04
+  step    14000  inflow 1.9387e-07 m3/s  imbalance -6.66e-03  change 5.50e-04
+  step    16000  inflow 1.9391e-07 m3/s  imbalance -6.87e-03  change 2.29e-04
+  step    18000  inflow 1.9394e-07 m3/s  imbalance -6.89e-03  change 1.24e-04
+  step    20000  inflow 1.9395e-07 m3/s  imbalance -6.89e-03  change 6.01e-05
+  converged: change <= 0.0001
+  wrote step-000020000.zarrvectors
+done: 20000 steps, 724 MLUPS incl. checks/output, 429.4 s total -> /tmp/claude-1001/-home-andrew-scripts-zvCFD/e2fd15e1-8690-4e57-bf4a-050fc6ad7f10/scratchpad/runs_bench/coronary-35um-09cba004ed42.zvcfd

@@ -16,16 +16,23 @@ fluid are stored, on the GPU and on disk, so memory follows the fluid volume
 rather than the bounding box — a coronary tree that fills 0.28 % of its
 scan's bounding box costs 0.28 % of it.
 
-The package is at the **feasibility stage**. What exists and is tested: a
-sparse-brick D3Q19 lattice-Boltzmann solver on one GPU (bit-identical to its
-dense counterpart, within 1 % of analytic Poiseuille flow), the brick-store
-layout on Zarr Vectors with GPU-side reads, a run collection following
-OME-NGFF RFC-8, a lubrication pressure solver with algebraic multigrid, a
-reader for Ansys Fluent meshes, a roofline performance model, and the
-``zvcfd`` command line. What does not yet exist: the multi-GPU driver
-(8 × H100 with NVLink halo exchange), production boundary conditions and
-collision models. :doc:`feasibility/index` sets out the evidence and
-:doc:`feasibility/roadmap` the order of work.
+The package is an **MVP (v0.1)**. It has:
+
+- a sparse-brick D3Q19 lattice-Boltzmann solver (TRT, Carreau–Yasuda
+  rheology) on one or several GPUs;
+- pressure, flow-controlled velocity and RCR inlets and outlets;
+- a voxeliser that turns an Ansys Fluent mesh into a domain and its
+  patches;
+- brick stores on Zarr Vectors, and run collections following OME-NGFF
+  RFC-8;
+- the ``zvcfd`` command line.
+
+It is :doc:`validated <validation/index>` against exact solutions
+(second order where walls lie on lattice planes, first order on curved
+voxel walls), standard benchmarks and OpenFOAM, and reruns are
+byte-identical. Not yet done: timing on the 8 × H100 node, and
+interpolated (sub-voxel) walls. :doc:`feasibility/index` sets out the
+evidence and :doc:`feasibility/roadmap` the order of work.
 
 zvCFD keeps the conventions of the packages it sits on. It writes stores
 only through ``zarr_vectors.building``, the supported surface for code that
@@ -51,9 +58,16 @@ Where to start
      - Build a domain, run the solver, write and read back a snapshot.
    * - :doc:`getting_started/concepts`
      - Bricks, chunks, shards, workers, snapshots and the run collection.
+   * - :doc:`validation/index`
+     - Exact solutions (Poiseuille, Womersley, Taylor–Green, Carreau–Yasuda),
+       standard benchmarks (sphere arrays, DFG cylinder) and OpenFOAM, with
+       orders of accuracy and what byte identity does and does not mean.
+   * - :doc:`benchmarks/openfoam`
+     - Measured against OpenFOAM on the same workstation: identical voxel
+       geometries and the HiP-CT coronary tree.
    * - :doc:`benchmarks/comparison`
-     - Estimated speed against Fluent, CFX, STAR-CCM+, OpenFOAM and GPU-native
-       lattice-Boltzmann codes, with the assumptions behind each number.
+     - Estimated speed against Fluent, CFX, STAR-CCM+, OpenFOAM, SimVascular and
+       GPU-native lattice-Boltzmann codes, with the assumptions behind each number.
    * - :doc:`spec/index`
      - The on-disk layout: brick stores, run collections, snapshots and the
        parallel I/O contract.
@@ -88,6 +102,16 @@ Where to start
    :hidden:
 
    spec/index
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Validation
+   :hidden:
+
+   validation/index
+   validation/exact_solutions
+   validation/benchmarks
+   validation/cross_code
 
 .. toctree::
    :maxdepth: 1
@@ -127,6 +151,7 @@ Where to start
    benchmarks/kernels
    benchmarks/io
    benchmarks/multiresolution
+   benchmarks/openfoam
    benchmarks/comparison
 
 .. toctree::

@@ -12,7 +12,7 @@ one. It continues from [Your first simulation](first_simulation.md).
 ```python
 from zvcfd import collection
 
-run = "runs/network-demo-78c04469a293.zvcfd"
+run = "runs/network-demo-d78037f7f963.zvcfd"
 doc = collection.read(run)
 snaps = collection.snapshots(doc)
 print([(s["id"], s["attributes"]["zvcfd:time_s"]) for s in snaps])
@@ -20,8 +20,8 @@ print(doc["attributes"]["zvcfd:run"])
 ```
 
 ```text
-[('step-000005000', 0.023809523809523805), ('step-000007000', 0.033333333333333326)]
-{'config_hash': '78c04469a293', 'voxel_size_um': 10.0, 'dt_s': 4.761904761904761e-06, 'solver': 'lbm'}
+[('step-000005000', 0.00476190476190476), ('step-000008000', 0.0076190476190476164)]
+{'config_hash': 'd78037f7f963', 'voxel_size_um': 10.0, 'dt_s': 9.52380952380952e-07, 'tau': 0.6, 'solver': 'lbm'}
 ```
 
 Paths in the document are relative to the run directory.
@@ -57,7 +57,7 @@ print(sorted(f), f["ux"].shape, float(np.abs(f["ux"]).max()))
 ```
 
 ```text
-['rho', 'ux', 'uy', 'uz'] (4989, 512) 0.0027461385
+['rho', 'ux', 'uy', 'uz'] (4989, 512) 0.00030803700792603195
 ```
 
 With `device="cuda"` the same call returns cupy arrays, decoded on the GPU
@@ -77,12 +77,12 @@ print(type(g["ux"]))
 ```python
 from zvcfd import Lattice
 
-lat = Lattice(dx=meta["voxel_size"] * 1e-6, nu=3.5e-6, tau=1.0, rho=1060.0)
+lat = Lattice(dx=meta["voxel_size"] * 1e-6, nu=3.5e-6, tau=0.6, rho=1060.0)
 print(f"peak velocity {lat.velocity(float(np.abs(f['ux']).max())) * 1e3:.2f} mm/s")
 ```
 
 ```text
-peak velocity 5.77 mm/s
+peak velocity 3.23 mm/s
 ```
 
 Density maps to pressure relative to the reference density:

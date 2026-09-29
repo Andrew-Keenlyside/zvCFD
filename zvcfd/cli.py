@@ -8,6 +8,7 @@ comma-separated shapes (``--shape 2048,2048,2048``).
     zvcfd plan --fluid-cells 6.3e8 [--fill 0.6] [--gpus 8] [--gpu H100-SXM] [--method lbm-fp32]
     zvcfd plan --shape 2048,2048,2048 --fluid-fraction 0.2 --geometry porous --layout dense
     zvcfd mesh-info coronary.msh [--voxel-size 0.02,0.01,0.005] [--unit mm]
+    zvcfd voxelize coronary.msh --voxel-size 50 [--unit mm] [--out domain.zarrvectors]
     zvcfd phantom list | zvcfd phantom build <name> --out mask.npy
     zvcfd run config.yaml [--out runs/] [--steps N]
     zvcfd info <run.zvcfd | store.zarrvectors>
@@ -128,6 +129,38 @@ def cmd_mesh_info(args) -> int:
     return 0
 
 
+# ---------------------------------------------------------------- voxelize
+
+def cmd_voxelize(args) -> int:
+    from zvcfd.geometry import voxelize_fluent
+    from zvcfd.run import _UNIT_UM
+
+    unit_um = _UNIT_UM[args.unit]
+    dom, bnd, grid, rep = voxelize_fluent(args.mesh, args.voxel_size / unit_um,
+                                          unit_scale=unit_um * 1e-6)
+    counts = bnd.counts()
+    print(f"{args.mesh}: {args.voxel_size:g} um voxels, box {grid.shape}, "
+          f"{rep['fluid_voxels']:,} fluid voxels in {dom.n_bricks:,} bricks (fill {dom.fill:.2f}); "
+          f"{rep['odd_columns_dropped']} leaky columns dropped")
+    kinds = {}
+    for p, c in zip(bnd.patches, counts):
+        kinds.setdefault(p.kind, []).append(int(c))
+    for k, c in kinds.items():
+        print(f"  {k:<9} {len(c):>3} patches, {sum(c):>8,} cells (min {min(c)}, max {max(c)})")
+    if rep["patches_without_cells"]:
+        print(f"  patches with no cells: {rep['patches_without_cells']}")
+    if args.out:
+        from zvcfd.io import fields as zf
+
+        lv = zf.create_brick_store(args.out, dom, voxel_size=args.voxel_size, fields={},
+                                   chunk_bricks=args.chunk_bricks, flags=True, compressor="zstd")
+        zf.write_brick_chunks(lv, dom, {"flags": dom.flags}, voxel_size=args.voxel_size,
+                              chunk_bricks=args.chunk_bricks)
+        zf.finalize_brick_store(lv)
+        print(f"  wrote {args.out}")
+    return 0
+
+
 # ---------------------------------------------------------------- phantom
 
 def cmd_phantom(args) -> int:
@@ -224,6 +257,15 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true")
     plan_opts(p)
     p.set_defaults(func=cmd_mesh_info)
+
+    p = sub.add_parser("voxelize", help="voxelise a Fluent mesh into a sparse domain with patches")
+    p.add_argument("mesh")
+    p.add_argument("--voxel-size", type=float, required=True, dest="voxel_size",
+                   help="micrometre")
+    p.add_argument("--unit", default="mm", help="mesh coordinate unit")
+    p.add_argument("--out", help="write the domain brick store here")
+    p.add_argument("--chunk-bricks", type=int, default=32, dest="chunk_bricks")
+    p.set_defaults(func=cmd_voxelize)
 
     p = sub.add_parser("phantom", help="synthetic geometries")
     p.add_argument("action", choices=["list", "build"])

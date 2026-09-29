@@ -1,0 +1,7 @@
+# Solve on level 1 (10 um) of an OME-Zarr label pyramid; see docs/tutorials/omezarr_input.md.
+name: vessels-level1
+source: {kind: omezarr, path: vessels.ome.zarr, level: 1, label: 1}
+physics: {nu: 3.5e-6, rho: 1060.0, pressure_drop: 20.0}
+solver: {method: lbm, tau: 0.6, steps: 20000, check_every: 1000, tolerance: 1.0e-4}
+domain: {chunk_bricks: 16}
+output: {path: runs, every: 0}

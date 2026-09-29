@@ -9,8 +9,9 @@ exit status 0 on success. `python -m zvcfd` is the same command.
 | `zvcfd probe [--require a,b] [--json]` | report capabilities; with `--require`, exit 1 naming what is missing |
 | `zvcfd plan …` | memory and time for a domain ([Plan a run](../how_to/plan_a_run.md)) |
 | `zvcfd mesh-info <file.msh> [--voxel-size …] [--unit mm]` | summarise an ASCII Fluent mesh and plan voxel runs of it |
+| `zvcfd voxelize <file.msh> --voxel-size UM [--unit mm] [--out domain.zarrvectors]` | voxelise a Fluent mesh into a sparse domain with inlet/outlet patches; report patch voxel counts |
 | `zvcfd phantom list` / `zvcfd phantom build <name> --out mask.npy` | synthetic geometries |
-| `zvcfd run <config> [--out DIR] [--steps N]` | run a configuration (one GPU today) |
+| `zvcfd run <config> [--out DIR] [--steps N]` | run a configuration, on one GPU or several (`parallel.gpus`) |
 | `zvcfd info <run.zvcfd \| store.zarrvectors>` | describe a run collection or brick store |
 
 ## `zvcfd plan`
@@ -40,3 +41,17 @@ Takes `--fill`, `--gpus`, `--gpu`, `--method` as `plan` does, and
 The configuration file is YAML (needs `pyyaml`) or JSON. Its schema is
 `zvcfd.config.RunConfig`, validated strictly
 ([Your first simulation](../tutorials/first_simulation.md#the-configuration)).
+
+| Section | Keys |
+|---|---|
+| `source` | `kind` (`phantom`, `omezarr`, `npy`, `mesh`), `name`, `path`, `level`, `label`, `threshold`, `voxel_size` (µm), `unit` (mesh unit), `region` |
+| `physics` | `nu` (m²/s), `rho` (kg/m³), `u_ref` (m/s, with `solver.mach` sets the time step), `pressure_drop` (Pa, shorthand for two x-face patches), `body_force`, `rheology` (`{model: carreau-yasuda, mu_0, mu_inf, lam, a, n}`) |
+| `boundaries` | `faces: {xmin: {kind, ...}}`, `patches: [{match: substring, kind, pressure / velocity / flow_rate / profile / rcr / waveform}]` |
+| `solver` | `collision` (`trt`), `precision`, `tau` or `mach`, `steps`, `check_every`, `tolerance` (flux change), `mass_tolerance` (imbalance), `flow_control` |
+| `domain` | `brick` (8), `chunk_bricks`, `periodic` |
+| `parallel` | `gpus`, `partitions` |
+| `output` | `path`, `every`, `fields`, `dtype`, `compressor`, `shard_shape` |
+
+A run writes `monitors.json` (flux history, imbalance, convergence) and
+`patches.csv` (per patch: kind, voxels, area, flow, split, mean pressure)
+into the run collection.

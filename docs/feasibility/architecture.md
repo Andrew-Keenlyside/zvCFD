@@ -77,7 +77,7 @@ neighbours' bricks (`BrickDomain.halo`). A step is:
 Only populations that cross a face need to travel: 5 of 19 per face
 direction. For the 10 µm coronary run (6.3 × 10⁸ fluid voxels, eight GPUs),
 the halo is a few percent of each GPU's bricks. At 450 GB/s per direction
-over NVSwitch, the exchange takes well under a millisecond against a ~14 ms
+over NVSwitch, the exchange takes well under a millisecond against a ~12 ms
 step, and it overlaps with the interior kernel. The transport is
 `cupy.cuda.nccl` send/recv, the pattern BRIDGE-Simulation already has
 written (`NcclComm`), or direct `cudaMemcpyPeerAsync` within one node.

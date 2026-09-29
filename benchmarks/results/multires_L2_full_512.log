@@ -1,0 +1,10 @@
+level 0: (128, 128, 512), fluid 14.22%, percolates=True
+level 1: (64, 64, 256), fluid 14.88%, percolates=True
+level 2: (32, 32, 128), fluid 15.89%, percolates=True
+reference: 37800 steps to stability, 44.2 s, Q=0.20838
+from rest: 3200 steps to 1%, 5600 steps to 0.1% (1.17 ms/step)
+level 2: 5800 steps, 0.2 s, predicts Q within +78.8% of the fine answer
+level 1: 4400 steps, 0.8 s, predicts Q within +28.2% of the fine answer
+to 1%: warm start 1800 fine steps + 641 fine-equivalent start-up = 2441 vs 3200 from rest -> 1.3x
+to 0.1%: warm start 4000 fine steps + 641 fine-equivalent start-up = 4641 vs 5600 from rest -> 1.2x
+(initial warm-start flux error +26.2%)

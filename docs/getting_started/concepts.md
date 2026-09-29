@@ -99,7 +99,7 @@ zvCFD run on it can sit in one study index. See
 
 OME-Zarr inputs come as multiscale pyramids. zvCFD uses them in three ways:
 to pick the resolution a run solves at, to run cheap **previews** on a
-coarse level (7–35× cheaper in our tests, with 25–80 % flux error in thin
+coarse level (8–43× cheaper in our tests, with 25–80 % flux error in thin
 vessels), and to build multigrid hierarchies for the *elliptic* solves. It
 does **not** use a coarse level to initialise a fine lattice-Boltzmann run:
 we measured that, and it does not pay (see

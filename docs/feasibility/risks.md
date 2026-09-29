@@ -13,7 +13,7 @@ it. Ordered by how much of the plan each one puts at stake.
 measurement scaled by copy bandwidth (249 GB/s → 3.12 TB/s). The A2000 has
 a small L2 cache and few SMs. The H100 has 50 MB of L2 that helps stencils,
 but also needs far more parallelism in flight. The dense fp32 kernel reached
-96 % of copy bandwidth on the A2000; FluidX3D reaches 80 % on an H100.
+98 % of copy bandwidth on the A2000; FluidX3D reaches 80 % on an H100.
 Planning numbers already take the lower of the two.
 
 *Retire it:* run `benchmarks/bench_lbm.py` on the H100 node. It takes about
@@ -42,7 +42,7 @@ coronary hemodynamics.
 distances from the segmentation's signed distance or from the Fluent wall
 surface. Report WSS from a smoothed surface (a ZV `mesh` store).
 
-### 4. Porous media above ~1536³ do not fit
+### 4. Large porous media do not fit
 
 **Likelihood: certain for those inputs. Impact: medium.** At porosity 0.2
 nearly every brick is active, so the sparse layout buys nothing. A 2048³
@@ -97,6 +97,11 @@ These came out of this study. They are all for zarr-vectors-py.
 4. **A user-metadata accessor in `building`.** Namespaced metadata is only
    reachable through `zv.open(...).metadata`, so code on the building
    surface has to reopen the store through the facade to set it.
+5. **Presence from known keys.** `rebuild_presence` lists every array to
+   rebuild `nonempty_chunks`. After an 8-worker snapshot write it took
+   2.2–5.1 s, longer than the writes themselves (1.9–2.9 s). The workers
+   know exactly which cells they wrote. A coordinator call that applies
+   presence from those key lists would roughly halve snapshot time.
 
 ---
 

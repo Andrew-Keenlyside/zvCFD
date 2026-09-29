@@ -1,0 +1,7 @@
+level 0: (128, 128, 512), fluid 14.22%, percolates=True
+reference: 37800 steps to stability, 45.5 s, Q=0.20838
+from rest: 3200 steps to 1%, 5600 steps to 0.1% (1.20 ms/step)
+lubrication start: 736 CG iterations, 1.48 s (cg)
+to 1%: warm start 2600 fine steps + 1228 fine-equivalent start-up = 3828 vs 3200 from rest -> 0.8x
+to 0.1%: warm start 7000 fine steps + 1228 fine-equivalent start-up = 8228 vs 5600 from rest -> 0.7x
+(initial warm-start flux error -1.4%)
