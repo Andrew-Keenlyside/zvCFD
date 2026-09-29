@@ -43,7 +43,7 @@ than parsing versions.
 
 ----
 
-| `Link to the GitHub repository <https://github.com/BRIDGE-Neuroscience/zvCFD>`__
+| `Source code on GitHub <https://github.com/Andrew-Keenlyside/zvCFD>`__
 
 Where to start
 --------------
@@ -76,87 +76,15 @@ Where to start
 
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Getting Started
+   :maxdepth: 2
    :hidden:
 
-   getting_started/installation
-   getting_started/quickstart
-   getting_started/concepts
-   getting_started/faq
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Feasibility Study
-   :hidden:
-
+   getting_started/index
    feasibility/index
-   feasibility/architecture
-   feasibility/ansys_context
-   feasibility/risks
-   feasibility/roadmap
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Specification
-   :hidden:
-
    spec/index
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Validation
-   :hidden:
-
    validation/index
-   validation/exact_solutions
-   validation/benchmarks
-   validation/cross_code
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Tutorials
-   :hidden:
-
-   tutorials/first_simulation
-   tutorials/omezarr_input
-   tutorials/ansys_mesh
-   tutorials/reading_results
-   tutorials/multi_gpu_node
-
-.. toctree::
-   :maxdepth: 1
-   :caption: API Reference
-   :hidden:
-
-   api/index
-
-.. toctree::
-   :maxdepth: 1
-   :caption: How-To Guides
-   :hidden:
-
-   how_to/plan_a_run
-   how_to/choose_brick_and_chunk
-   how_to/hpc_sge
-   how_to/icechunk
-   how_to/cleanroom
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Benchmarks
-   :hidden:
-
+   tutorials/index
+   how_to/index
    benchmarks/index
-   benchmarks/kernels
-   benchmarks/io
-   benchmarks/multiresolution
-   benchmarks/openfoam
-   benchmarks/comparison
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Reference
-   :hidden:
-
+   api/index
    references

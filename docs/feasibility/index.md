@@ -100,3 +100,12 @@ coronary case can run end to end and be validated against CFX.
 
 Five upstream requests to zarr-vectors-py came out of this study. They are
 listed in [Risks](risks.md#upstream-requests).
+
+```{toctree}
+:hidden:
+
+architecture
+ansys_context
+risks
+roadmap
+```

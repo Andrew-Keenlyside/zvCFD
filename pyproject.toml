@@ -11,6 +11,7 @@ requires-python = ">=3.11"
 authors = [
     {name = "Andrew Keenlyside"},
 ]
+urls = {Homepage = "https://github.com/Andrew-Keenlyside/zvCFD", Documentation = "https://zvcfd.readthedocs.io/en/latest/", Issues = "https://github.com/Andrew-Keenlyside/zvCFD/issues"}
 keywords = ["cfd", "lattice-boltzmann", "gpu", "zarr", "ome-zarr", "hip-ct", "vasculature", "porous-media"]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
