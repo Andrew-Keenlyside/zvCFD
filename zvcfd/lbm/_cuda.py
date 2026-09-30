@@ -267,6 +267,7 @@ extern "C" __global__ void boundary_neem(
     int t = blockIdx.x * blockDim.x + threadIdx.x;
     if (t >= nbnd) return;
     int b = bidx[t], n = bnbr[t], p = bpid[t];
+    if (b < 0) return;                  // an entry of a patch carried by links
     float fn[Q];
     float drn = 0.f, jx = 0.f, jy = 0.f, jz = 0.f;
     if (n >= 0) {
@@ -319,6 +320,7 @@ extern "C" __global__ void patch_flux(
     int t = blockIdx.x * blockDim.x + threadIdx.x;
     if (t >= nbnd) return;
     int b = bidx[t];
+    if (b < 0) { out[t] = 0.f; return; }
     float net = 0.f;
     #pragma unroll
     for (int q = 1; q < Q; q++) {
@@ -326,6 +328,94 @@ extern "C" __global__ void patch_flux(
         if (j >= 0 && flag[j] == 0) net += ld(f, q * nq + b, q);
         int s = neighbour_cell(nbr, b, -CX[q], -CY[q], -CZ[q]);       // s sends q to b
         if (s >= 0 && flag[s] == 0) net -= ld(f, q * nq + s, q);
+    }
+    out[t] = net;
+}
+"""
+
+# Pressure outlets on surface caps: anti-bounce-back (ABB) per lattice link.
+# A link runs from fluid cell i across the cap to a non-fluid node; the
+# population arriving at i along c_q is
+#   f_q(i, t+1) = -f*_qbar(i, t) + 2 w_q rho_b [1 + 4.5 (c_q . u)^2 - 1.5 u^2],
+# the even part of the equilibrium at the prescribed density rho_b, with u
+# the velocity of cell i. On walls, half-way bounce-back puts the no-slip
+# condition half a link out; ABB puts the pressure there in the same way,
+# for any orientation of the cap (TRT with Lambda = 3/16 makes both exact
+# mid-link for Poiseuille flow). Non-equilibrium extrapolation on patch cells
+# lost part of the imposed pressure where the flow crosses the patch off the
+# lattice axes, the more so as tau -> 1/2 (docs/validation/simvascular.md).
+#
+# abb_links runs on the newest (post-collision) buffer just before a step.
+# The step's bounce-back branch reads f*_qbar(i) for a link whose source
+# node is not fluid, and nothing else reads that slot (its destination is
+# the non-fluid node), so abb_links overwrites it with the ABB value and the
+# step delivers ABB. One thread per link cell (ids unique): the cell's
+# velocity comes from its populations before any is rewritten. link_mask
+# bit q is set when the population arriving along c_q crosses the cap.
+ABB = COMMON + r"""
+__device__ __forceinline__ float abb_term(int q, float drb, float ux, float uy, float uz,
+                                          float usq) {
+    float cu = CX[q] * ux + CY[q] * uy + CZ[q] * uz;
+    return 2.f * W[q] * (drb + (1.f + drb) * (4.5f * cu * cu - usq));
+}
+
+extern "C" __global__ void abb_links(
+    store_t* __restrict__ f, int nq,
+    const int* __restrict__ lcell, const unsigned int* __restrict__ lmask,
+    const int* __restrict__ lpatch, int nl, const float* __restrict__ pdrho)
+{
+    int t = blockIdx.x * blockDim.x + threadIdx.x;
+    if (t >= nl) return;
+    int i = lcell[t];
+    unsigned int m = lmask[t];
+    float g[Q];
+    float dr = 0.f, jx = 0.f, jy = 0.f, jz = 0.f;
+    #pragma unroll
+    for (int q = 0; q < Q; q++) {
+        g[q] = ld(f, q * nq + i, q);
+        dr += g[q]; jx += CX[q] * g[q]; jy += CY[q] * g[q]; jz += CZ[q] * g[q];
+    }
+    float r = 1.f + dr;
+    float ux = jx / r, uy = jy / r, uz = jz / r;
+    float usq = 1.5f * (ux * ux + uy * uy + uz * uz);
+    float drb = pdrho[lpatch[t]];
+    #pragma unroll
+    for (int q = 1; q < Q; q++) {
+        if (m & (1u << q)) {
+            int qo = OPP[q];
+            st(f, qo * nq + i, qo, -g[qo] + abb_term(q, drb, ux, uy, uz, usq));
+        }
+    }
+}
+
+// Mass flux through the ABB links of each cell in the next step, from the
+// newest buffer (positive = into the domain): per link, what arrives
+// (-f*_qbar + 2 w rho_b [...]) less what leaves (f*_qbar).
+extern "C" __global__ void abb_flux(
+    const store_t* __restrict__ f, int nq,
+    const int* __restrict__ lcell, const unsigned int* __restrict__ lmask,
+    const int* __restrict__ lpatch, int nl, const float* __restrict__ pdrho,
+    float* __restrict__ out)
+{
+    int t = blockIdx.x * blockDim.x + threadIdx.x;
+    if (t >= nl) return;
+    int i = lcell[t];
+    unsigned int m = lmask[t];
+    float g[Q];
+    float dr = 0.f, jx = 0.f, jy = 0.f, jz = 0.f;
+    #pragma unroll
+    for (int q = 0; q < Q; q++) {
+        g[q] = ld(f, q * nq + i, q);
+        dr += g[q]; jx += CX[q] * g[q]; jy += CY[q] * g[q]; jz += CZ[q] * g[q];
+    }
+    float r = 1.f + dr;
+    float ux = jx / r, uy = jy / r, uz = jz / r;
+    float usq = 1.5f * (ux * ux + uy * uy + uz * uz);
+    float drb = pdrho[lpatch[t]];
+    float net = 0.f;
+    #pragma unroll
+    for (int q = 1; q < Q; q++) {
+        if (m & (1u << q)) net += abb_term(q, drb, ux, uy, uz, usq) - 2.f * g[OPP[q]];
     }
     out[t] = net;
 }
@@ -356,4 +446,4 @@ extern "C" __global__ void macros(
 """
 
 SOURCES = {"step_dense": DENSE, "step_sparse": SPARSE, "boundary_neem": BOUNDARY,
-           "patch_flux": FLUX, "macros": MACROS}
+           "patch_flux": FLUX, "macros": MACROS, "abb_links": ABB, "abb_flux": ABB}

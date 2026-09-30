@@ -111,15 +111,15 @@ Re ≈ 45), 0 Pa at all 77 outlets, and no-slip walls. Scripts:
 | Solver | Cells | Hardware | Inlet pressure | Splits within 1 pp | Splits within 0.1 pp |
 |---|---:|---|---:|---:|---:|
 | OpenFOAM `simpleFoam` | 14,790,642 | 16 cores | 65.7 Pa | 9.3 min | 27.6 min |
-| zvCFD, 50 µm | 5,028,753 | 1 × RTX A2000 | 65.6 Pa | 0.4 min | 0.6 min |
-| zvCFD, 35 µm | 14,661,804 | 1 × RTX A2000 | 67.4 Pa | 1.6 min | 2.8 min |
+| zvCFD, 50 µm | 5,028,753 | 1 × RTX A2000 | 62.7 Pa | 0.4 min | 0.7 min |
+| zvCFD, 35 µm | 14,661,804 | 1 × RTX A2000 | 63.1 Pa | 1.7 min | 3.5 min |
 
 ![Convergence of the outlet flow splits](../_static/figures/coronary_convergence.png)
 
 **At the same cell count (35 µm voxels against the 14.8 M-cell mesh),
-zvCFD settles the 77 outlet splits to 0.1 pp in 2.8 min on one GPU,
-against 27.6 min for OpenFOAM on 16 cores: 10× sooner.** At 50 µm it takes
-36 s. OpenFOAM needs 11–12 s per SIMPLE iteration on this mesh (34.5 M
+zvCFD settles the 77 outlet splits to 0.1 pp in 3.5 min on one GPU,
+against 27.6 min for OpenFOAM on 16 cores: 8× sooner.** At 50 µm it takes
+39 s. OpenFOAM needs 11–12 s per SIMPLE iteration on this mesh (34.5 M
 faces, non-orthogonality up to 88°, so one non-orthogonal corrector).
 That is in line with the ~0.1 M cell-iterations per second per core
 reported for OpenFOAM elsewhere. The splits converged by iteration ~250,
@@ -128,9 +128,12 @@ and the run was stopped at 500, when they were changing by 0.0016 pp per
 splits.
 
 The answers are compared on [Against OpenFOAM](../validation/cross_code.md).
-In brief, the inlet pressure agrees within 0.2 % at 50 µm, and the splits
-agree to 0.08 pp on average, but the largest outlet differs by 2.0 pp
-(50 µm) and 4.6 pp (35 µm).
+In brief, the 77 splits agree to 0.01 pp on average and 0.1 pp at most,
+and the inlet pressure is 4–5 % lower in zvCFD. These are the numbers
+after the 2026-09-30 fix to zvCFD's pressure outlets
+([Against SimVascular](../validation/simvascular.md#pressure-outlets-on-oblique-caps-found-and-fixed)).
+Before it, the largest outlet differed by 2.0 pp (50 µm) and 4.6 pp
+(35 µm), and the times were 0.6 and 2.8 min.
 
 ---
 

@@ -46,6 +46,8 @@ amg = ["pyamg>=5.0"]
 # Transactional stores (optional backend; see docs/how_to/icechunk.md)
 icechunk = ["icechunk>=2; python_version >= '3.12'"]
 yaml = ["pyyaml>=6"]
+# The SimVascular comparison (benchmarks/simvascular): VTK I/O, renderings, figures
+simvascular = ["pyvista>=0.44", "vtk>=9.3", "scipy>=1.11", "matplotlib>=3.8"]
 all = ["zvcfd[amg,yaml]"]
 dev = [
     "pytest>=7.0",

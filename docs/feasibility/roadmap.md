@@ -27,8 +27,11 @@ with the codebase.
   digits that carry a slow flow; steady fluxes no longer drift with τ
 - [x] **Carreau–Yasuda rheology** by local relaxation time from the
   non-equilibrium stress (blood parameters from SI with `CarreauYasuda.from_si`)
-- [x] **Inlet/outlet patches** on arbitrary geometry: pressure and velocity
-  (Guo non-equilibrium extrapolation), plug or parabolic profiles, waveforms
+- [x] **Inlet/outlet patches** on arbitrary geometry: velocity inlets (Guo
+  non-equilibrium extrapolation), plug or parabolic profiles, waveforms;
+  pressure, RCR and coronary outlets on surface caps as anti-bounce-back
+  on the lattice links that cross the cap (exact for any cap orientation,
+  independent of τ)
 - [x] **Exact patch flux** (populations crossing the patch), used for flow
   splits, mass balance and **flow-rate control** of inlets
 - [x] **RCR (Windkessel) outlets**, integrated per check interval

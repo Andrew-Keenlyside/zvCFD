@@ -12,6 +12,7 @@ realistic:
 | Exact solutions | [Exact solutions](exact_solutions.md) | closed-form solutions of the Navier–Stokes equations | the equations are solved, and to what order of accuracy |
 | Standard benchmarks | [Standard benchmarks](benchmarks.md) | literature reference values (Sangani & Acrivos; Schäfer & Turek) | accuracy on porous-media drag and on forces on a curved body |
 | Cross-code comparison | [Against OpenFOAM](cross_code.md) | OpenFOAM v2506 on the same problems | the same answers on identical voxel geometries and on the HiP-CT coronary tree |
+| | [Against SimVascular](simvascular.md) | SimVascular's published results for a patient coronary model (VMR `0066_H_CORO_H`) | the same pulsatile flow, velocity and wall shear stress through a whole cardiac cycle |
 | Finite-volume solver (in development) | [Verification and validation](vv_plan.md) | the V&V evidence for the CFX-style solver, by ASME V&V 20 / 40 layer | what is established, prepared and missing |
 | | [Finite-volume solver](fv_solver.md) | exact, manufactured and benchmark solutions on unstructured meshes; OpenFOAM on the same mesh | the numbers: orders, errors, invariances, GPU agreement, defects found |
 
@@ -41,6 +42,7 @@ the test suite (`tests/test_validation.py`).
 | Cylinder in a channel, Re = 20 (DFG 2D-1) | Schäfer & Turek | drag, lift, Δp on a curved body | drag +0.9 to +1.9 %, lift ±2 %, Δp ±1.4 % (40–80 cells across) | — (staircase and Mach) |
 | Voxel ducts, pipes, porous sample, vessel network | OpenFOAM v2506, same voxels | whole solver, pressure-driven | fluxes agree within 1.1 % (2.6 % in the coarsest pipe) | — |
 | HiP-CT coronary tree, 77 outlets | OpenFOAM v2506, 14.8 M-cell body-fitted mesh | whole pipeline from the Fluent mesh | see [Against OpenFOAM](cross_code.md) | — |
+| VMR coronary trees, 24 outlets, pulsatile | SimVascular (svSolver), 3.8 M tetrahedra | whole pipeline from a SimVascular surface, a full cardiac cycle | outlet flows 1.3 % on average (4.2 % max), pressure drop +0.4 / +2.8 %, velocity 5.4 %, TAWSS 5.8 % (60 µm) | — (see [Against SimVascular](simvascular.md)) |
 
 Errors are relative L2 norms over the fluid (or over a period, for the
 pulsatile cases) unless stated. The Taylor–Green orders are the velocity
@@ -70,7 +72,7 @@ errors point by point.
 
 ## Defects the validation found
 
-Validation is only useful if it can fail. It did, four times, and each
+Validation is only useful if it can fail. It did, five times, and each
 defect is fixed in the numbers on these pages:
 
 | Found by | Defect | Symptom | Fix |
@@ -79,6 +81,7 @@ defect is fixed in the numbers on these pages:
 | Force-driven channel | velocity output added half the body force instead of subtracting it | a velocity offset of exactly F: 3 % at τ = 2 | `u = (Σ f* c − F/2)/ρ` from post-collision populations |
 | Carreau–Yasuda channel | 3 fixed-point iterations for the local viscosity | 0.6 % profile error that did not fall with resolution | iterate until ω settles (10⁻⁶, at most 12) |
 | Porous sample, τ scan | pressure patches cutting through a porous face | flux varied 7 % with τ | documented; open buffer layers at the ends bring it under 1 % |
+| SimVascular comparison; straight pipe | non-equilibrium-extrapolation pressure patches where the flow crosses them off the lattice axes, at low τ | a pressure jump at each coronary outlet (5–110 Pa); up to 17 % of Δp lost in an oblique pipe at τ = 0.55; the unexplained dominant-outlet gap against OpenFOAM | pressure outlets on caps as anti-bounce-back on the links that cross the cap: under 1.5 % per patch at any orientation and τ ([Against SimVascular](simvascular.md#pressure-outlets-on-oblique-caps-found-and-fixed)) |
 
 Two further problems were in the reference software or the test harness,
 not the solver. The conda-forge build of OpenFOAM v2412 under-predicts
@@ -93,11 +96,13 @@ pressure look first-order accurate.
   1982): zvCFD has no moving-wall boundary condition.
 - **Turbulence and transition** (the 3-D Taylor–Green vortex at Re = 1600,
   the DFG 2D-2 vortex street): outside the MVP's laminar scope.
-- **The coronary tree's dominant outlet**: zvCFD gives it 2–5 pp less
-  flow than OpenFOAM, and the gap grows with refinement. Four causes are
-  ruled out and three tests are planned ([Against OpenFOAM](cross_code.md)).
-- **Pulsatile flow through the coronary tree**: the Womersley cases
-  validate the physics, but the coronary comparison is steady.
+- **The HiP-CT coronary tree's total resistance**: zvCFD's inlet
+  pressure is 4–5 % below OpenFOAM's, closing slowly with refinement
+  ([Against OpenFOAM](cross_code.md)). The splits agree to 0.01 pp.
+- **Velocity inlets on oblique caps** still use non-equilibrium
+  extrapolation. Flow control makes their flow exact, and the
+  SimVascular comparison shows no inlet pressure step, but they are not
+  tested apart from that.
 - **Against Ansys CFX** on the collaborator's case: the cross-code
   comparison uses OpenFOAM; the CFX run is the next validation target.
 - **Double precision**: every case runs in fp32. Where a result reaches an
@@ -120,6 +125,7 @@ The cross-code comparison has its own instructions on
 exact_solutions
 benchmarks
 cross_code
+simvascular
 vv_plan
 fv_solver
 ```
