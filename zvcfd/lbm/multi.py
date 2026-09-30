@@ -9,7 +9,8 @@ layer). A step is:
 2. ghost bricks are refreshed from their owners (device-to-device copies,
    peer-to-peer over NVLink where the devices allow it);
 3. every partition writes its patch cells (the boundary kernel reads
-   interior neighbours, which may be ghosts);
+   interior neighbours, which may be ghosts). Patch links are set before
+   step 1, from each link cell's own populations;
 4. ghosts are refreshed again, so ghost copies of patch cells are current.
 
 The arithmetic per cell is identical to a single-partition run, and the
@@ -127,6 +128,7 @@ class MultiLBM:
         for _ in range(k):
             for d, s in zip(self.devices, self.solvers):
                 with cp.cuda.Device(d):
+                    s.apply_links()             # owned cells only: no ghost data needed
                     s.step_main()
             self.exchange()
             if has_boundary:

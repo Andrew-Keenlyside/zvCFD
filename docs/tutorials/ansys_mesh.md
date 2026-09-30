@@ -135,18 +135,22 @@ print(f"{len(outlets)} outlets, total {sum(-float(r['flow_m3s']) for r in outlet
 ```
 
 ```text
-inlet 0.1939 mL/s at 65.6 Pa
-cor_outlet_074  29.85 %   470 voxels
-cor_outlet_029   9.28 %   332 voxels
-cor_outlet_022   8.03 %   343 voxels
-cor_outlet_035   7.32 %   250 voxels
-77 outlets, total 0.1939 mL/s
+inlet 0.1940 mL/s at 62.7 Pa
+cor_outlet_074  31.87 %   553 voxels
+cor_outlet_029  10.28 %   383 voxels
+cor_outlet_022   7.82 %   319 voxels
+cor_outlet_035   7.60 %   259 voxels
+77 outlets, total 0.1940 mL/s
 ```
 
+For an outlet, `cells` counts the voxels whose lattice links cross the
+outlet's cap: the outlet's pressure is imposed on those links, at the cap
+([Boundary conditions](../spec/boundary_conditions.md#pressure-outlets-on-caps-patch-links)).
+
 At 35 µm (`examples/coronary_35um.yaml`: 14.7 M fluid voxels, about the
-Ansys mesh's own cell count), the run takes 20,000 steps and 6.3 min. The
-splits move by 0.07 percentage points on average, and by 2.6 points
-at the dominant outlet (29.8 % → 27.2 %).
+Ansys mesh's own cell count), the run takes 20,000 steps and 6.6 min. The
+splits move by 0.004 percentage points on average and by 0.06 at most;
+the dominant outlet takes 31.8 %.
 
 ## Comparing with other solvers
 

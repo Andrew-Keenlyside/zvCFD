@@ -11,5 +11,5 @@
 | Solver | Cells | Hardware | Inlet pressure | Time to 1 pp | Time to 0.1 pp | Splits vs OpenFOAM (mean / max abs, pp) |
 |---|---:|---|---:|---:|---:|---|
 | OpenFOAM simpleFoam | 14,790,642 | 16 cores | 65.7 Pa | 9.3 min | 27.6 min | — |
-| zvCFD 50 µm | 5,028,753 | RTX A2000 | 65.6 Pa | 0.4 min | 0.6 min | 0.08 / 2.01 |
-| zvCFD 35 µm | 14,661,804 | RTX A2000 | 67.4 Pa | 1.6 min | 2.8 min | 0.15 / 4.62 |
+| zvCFD 50 µm | 5,028,753 | RTX A2000 | 62.7 Pa | 0.4 min | 0.7 min | 0.01 / 0.11 |
+| zvCFD 35 µm | 14,661,804 | RTX A2000 | 63.1 Pa | 1.7 min | 3.5 min | 0.01 / 0.07 |

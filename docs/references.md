@@ -127,6 +127,18 @@ measurements. Retrieved September 2026.
 - Vascular Model Repository, <https://github.com/SimVascular/vascularmodel>
   (316 projects; 87 coronary).
 - Menon et al., coronary 3-D vs 0-D cost, arXiv 2409.02247.
+- Wilson, Ortiz & Johnson, "The Vascular Model Repository: A Public Resource
+  of Medical Imaging Data and Blood Flow Simulation Results", J. Med. Devices
+  7(4):040923 (2013), doi:10.1115/1.4025983. Model 0066_H_CORO_H and its
+  rigid-wall svSolver results: Stanford Digital Repository,
+  doi:10.25740/dh173bw0673. The data used herein was provided in whole or in
+  part with Federal funds from the National Library of Medicine under Grant
+  No. R01LM013120, and the National Heart, Lung, and Blood Institute,
+  National Institutes of Health, Department of Health and Human Services,
+  under Contract No. HHSN268201100035C.
+- Kim, Vignon-Clementel, Coogan, Figueroa, Jansen & Taylor, patient-specific
+  coronary outlet boundary conditions (the open-loop coronary model used by
+  svSolver), Ann. Biomed. Eng. 38:3195–3209 (2010).
 - Feiger et al., LBM boundary conditions for image-derived vessels, Int. J.
   Numer. Meth. Biomed. Eng., doi:10.1002/cnm.3198 (2019).
 

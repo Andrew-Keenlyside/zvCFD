@@ -1,0 +1,402 @@
+[
+ {
+  "scheme": "neem",
+  "axis": [
+   0.0,
+   0.0,
+   1.0
+  ],
+  "caps": "normal",
+  "tau": 0.55,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 33280,
+  "steps": 12000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 0.00010062980745198429,
+  "jump_in_pct": -0.31580504433482415,
+  "jump_out_pct": -0.3140024076494623,
+  "flux_vs_hp_at_felt_gradient_pct": 4.683659420134578,
+  "flux_vs_hp_at_imposed_dp_pct": 5.342964908172432
+ },
+ {
+  "scheme": "neem",
+  "axis": [
+   0.0,
+   0.0,
+   1.0
+  ],
+  "caps": "normal",
+  "tau": 0.8,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 33280,
+  "steps": 5000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 0.00010062821514290958,
+  "jump_in_pct": -0.3144572596165614,
+  "jump_out_pct": -0.3137578832930108,
+  "flux_vs_hp_at_felt_gradient_pct": 4.685580786371113,
+  "flux_vs_hp_at_imposed_dp_pct": 5.343231457313924
+ },
+ {
+  "scheme": "neem",
+  "axis": [
+   0.7071067811865475,
+   0.7071067811865475,
+   0.0
+  ],
+  "caps": "normal",
+  "tau": 0.55,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 32544,
+  "steps": 12000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 0.00010063471344970768,
+  "jump_in_pct": -0.1522302981634549,
+  "jump_out_pct": -0.4824831515442106,
+  "flux_vs_hp_at_felt_gradient_pct": -1.7091796432544881,
+  "flux_vs_hp_at_imposed_dp_pct": -1.0853145866222436
+ },
+ {
+  "scheme": "neem",
+  "axis": [
+   0.7071067811865475,
+   0.7071067811865475,
+   0.0
+  ],
+  "caps": "normal",
+  "tau": 0.8,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 32544,
+  "steps": 16000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 0.00010118305200108994,
+  "jump_in_pct": -0.5671018108160404,
+  "jump_out_pct": -0.6159501902738953,
+  "flux_vs_hp_at_felt_gradient_pct": -1.701178046771501,
+  "flux_vs_hp_at_imposed_dp_pct": -0.5382518666059877
+ },
+ {
+  "scheme": "neem",
+  "axis": [
+   0.5773502691896258,
+   0.5773502691896258,
+   0.5773502691896258
+  ],
+  "caps": "normal",
+  "tau": 0.55,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 32222,
+  "steps": 10000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 8.344502547608107e-05,
+  "jump_in_pct": 9.199283602053603,
+  "jump_out_pct": 7.355690921865326,
+  "flux_vs_hp_at_felt_gradient_pct": -3.291231307705933,
+  "flux_vs_hp_at_imposed_dp_pct": -19.30134332711092
+ },
+ {
+  "scheme": "neem",
+  "axis": [
+   0.5773502691896258,
+   0.5773502691896258,
+   0.5773502691896258
+  ],
+  "caps": "normal",
+  "tau": 0.8,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 32222,
+  "steps": 4000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 9.779605951810255e-05,
+  "jump_in_pct": 1.2702285240345275,
+  "jump_out_pct": 0.9337119578629303,
+  "flux_vs_hp_at_felt_gradient_pct": -3.2889684082471726,
+  "flux_vs_hp_at_imposed_dp_pct": -5.420421983958468
+ },
+ {
+  "scheme": "neem",
+  "axis": [
+   0.2672612419124244,
+   0.5345224838248488,
+   0.8017837257372732
+  ],
+  "caps": "normal",
+  "tau": 0.55,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 32177,
+  "steps": 10000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 9.34338445476707e-05,
+  "jump_in_pct": 4.004656538113979,
+  "jump_out_pct": 2.5614989142153317,
+  "flux_vs_hp_at_felt_gradient_pct": -4.716666781495304,
+  "flux_vs_hp_at_imposed_dp_pct": -10.973118560783258
+ },
+ {
+  "scheme": "neem",
+  "axis": [
+   0.2672612419124244,
+   0.5345224838248488,
+   0.8017837257372732
+  ],
+  "caps": "normal",
+  "tau": 0.8,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 32177,
+  "steps": 7000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 9.954452115790472e-05,
+  "jump_in_pct": 0.4341550336379893,
+  "jump_out_pct": 0.021323808457300468,
+  "flux_vs_hp_at_felt_gradient_pct": -4.717614263126013,
+  "flux_vs_hp_at_imposed_dp_pct": -5.151605370401091
+ },
+ {
+  "scheme": "neem",
+  "axis": [
+   0.5773502691896258,
+   0.5773502691896258,
+   0.5773502691896258
+  ],
+  "caps": "z",
+  "tau": 0.55,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 31832,
+  "steps": 11000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 9.143014678134474e-05,
+  "jump_in_pct": 4.2898377994034735,
+  "jump_out_pct": 4.280015419251799,
+  "flux_vs_hp_at_felt_gradient_pct": -4.077222621661347,
+  "flux_vs_hp_at_imposed_dp_pct": -12.297663846242447
+ },
+ {
+  "scheme": "neem",
+  "axis": [
+   0.5773502691896258,
+   0.5773502691896258,
+   0.5773502691896258
+  ],
+  "caps": "z",
+  "tau": 0.8,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 31832,
+  "steps": 10000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 0.00010602551857846496,
+  "jump_in_pct": -2.90513349459377,
+  "jump_out_pct": -3.120385083871187,
+  "flux_vs_hp_at_felt_gradient_pct": -4.07387455452125,
+  "flux_vs_hp_at_imposed_dp_pct": 1.706171955797675
+ },
+ {
+  "scheme": "abb",
+  "axis": [
+   0.0,
+   0.0,
+   1.0
+  ],
+  "caps": "normal",
+  "tau": 0.55,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 33280,
+  "steps": 12000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 0.00010091944195520147,
+  "jump_in_pct": -0.46146760917820673,
+  "jump_out_pct": -0.45797434602325565,
+  "flux_vs_hp_at_felt_gradient_pct": 4.683491846884635,
+  "flux_vs_hp_at_imposed_dp_pct": 5.645995791094793
+ },
+ {
+  "scheme": "abb",
+  "axis": [
+   0.0,
+   0.0,
+   1.0
+  ],
+  "caps": "normal",
+  "tau": 0.8,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 33280,
+  "steps": 5000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 0.0001009165968803959,
+  "jump_in_pct": -0.4586480828849798,
+  "jump_out_pct": -0.45794879751092793,
+  "flux_vs_hp_at_felt_gradient_pct": 4.6872385203548195,
+  "flux_vs_hp_at_imposed_dp_pct": 5.646798482805004
+ },
+ {
+  "scheme": "abb",
+  "axis": [
+   0.7071067811865475,
+   0.7071067811865475,
+   0.0
+  ],
+  "caps": "normal",
+  "tau": 0.55,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 32544,
+  "steps": 12000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 0.00010115170108735945,
+  "jump_in_pct": -0.5761871291064566,
+  "jump_out_pct": -0.5755139582529983,
+  "flux_vs_hp_at_felt_gradient_pct": -1.7227327590409791,
+  "flux_vs_hp_at_imposed_dp_pct": -0.590872403599707
+ },
+ {
+  "scheme": "abb",
+  "axis": [
+   0.7071067811865475,
+   0.7071067811865475,
+   0.0
+  ],
+  "caps": "normal",
+  "tau": 0.8,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 32544,
+  "steps": 5000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 0.00010112719639583793,
+  "jump_in_pct": -0.5607344323660054,
+  "jump_out_pct": -0.566461963471919,
+  "flux_vs_hp_at_felt_gradient_pct": -1.6996744789858576,
+  "flux_vs_hp_at_imposed_dp_pct": -0.5916367526160315
+ },
+ {
+  "scheme": "abb",
+  "axis": [
+   0.5773502691896258,
+   0.5773502691896258,
+   0.5773502691896258
+  ],
+  "caps": "normal",
+  "tau": 0.55,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 32222,
+  "steps": 12000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 0.00010110922326952835,
+  "jump_in_pct": -0.649853147993373,
+  "jump_out_pct": -0.45937012153497975,
+  "flux_vs_hp_at_felt_gradient_pct": -3.2933001497537195,
+  "flux_vs_hp_at_imposed_dp_pct": -2.2206069318218558
+ },
+ {
+  "scheme": "abb",
+  "axis": [
+   0.5773502691896258,
+   0.5773502691896258,
+   0.5773502691896258
+  ],
+  "caps": "normal",
+  "tau": 0.8,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 32222,
+  "steps": 5000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 0.00010111229028391956,
+  "jump_in_pct": -0.6506202697276181,
+  "jump_out_pct": -0.4616700141919292,
+  "flux_vs_hp_at_felt_gradient_pct": -3.297328778983122,
+  "flux_vs_hp_at_imposed_dp_pct": -2.2217143627010882
+ },
+ {
+  "scheme": "abb",
+  "axis": [
+   0.2672612419124244,
+   0.5345224838248488,
+   0.8017837257372732
+  ],
+  "caps": "normal",
+  "tau": 0.55,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 32177,
+  "steps": 12000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 0.00010109092648606608,
+  "jump_in_pct": -0.5489288716555587,
+  "jump_out_pct": -0.5419976144105146,
+  "flux_vs_hp_at_felt_gradient_pct": -4.717435483459786,
+  "flux_vs_hp_at_imposed_dp_pct": -3.677972750545877
+ },
+ {
+  "scheme": "abb",
+  "axis": [
+   0.2672612419124244,
+   0.5345224838248488,
+   0.8017837257372732
+  ],
+  "caps": "normal",
+  "tau": 0.8,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 32177,
+  "steps": 5000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 0.00010109136718096341,
+  "jump_in_pct": -0.5475805194966838,
+  "jump_out_pct": -0.543786661466719,
+  "flux_vs_hp_at_felt_gradient_pct": -4.717987078748731,
+  "flux_vs_hp_at_imposed_dp_pct": -3.6781104603648695
+ },
+ {
+  "scheme": "abb",
+  "axis": [
+   0.5773502691896258,
+   0.5773502691896258,
+   0.5773502691896258
+  ],
+  "caps": "z",
+  "tau": 0.55,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 31832,
+  "steps": 12000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 0.00010796849879958828,
+  "jump_in_pct": -3.905741971302646,
+  "jump_out_pct": -4.0627568282856386,
+  "flux_vs_hp_at_felt_gradient_pct": -4.079804156679822,
+  "flux_vs_hp_at_imposed_dp_pct": 3.5635954976578565
+ },
+ {
+  "scheme": "abb",
+  "axis": [
+   0.5773502691896258,
+   0.5773502691896258,
+   0.5773502691896258
+  ],
+  "caps": "z",
+  "tau": 0.8,
+  "radius": 8.0,
+  "length": 160.0,
+  "fluid_voxels": 31832,
+  "steps": 8000,
+  "dp_imposed": 0.0001,
+  "dp_felt": 0.00010796978623866739,
+  "jump_in_pct": -3.9223282590696593,
+  "jump_out_pct": -4.0474579795977235,
+  "flux_vs_hp_at_felt_gradient_pct": -4.077686143664206,
+  "flux_vs_hp_at_imposed_dp_pct": 3.567117225869376
+ }
+]

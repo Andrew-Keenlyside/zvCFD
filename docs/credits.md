@@ -38,6 +38,7 @@ implements.
 | TRT collision, magic parameter Λ = 3/16 | Ginzburg & d'Humières (2003); Ginzburg, Verhaeghe & d'Humières (2008) |
 | Body forcing | Guo, Zheng & Shi, Phys. Rev. E 65, 046308 (2002) |
 | Inlet and outlet patches (non-equilibrium extrapolation) | Guo, Zheng & Shi, Chinese Physics 11, 366 (2002) |
+| Pressure outlets on caps (anti-bounce-back on the crossing links) | Ginzburg, Verhaeghe & d'Humières, Commun. Comput. Phys. 3, 427 (2008); Krüger et al. (2017), ch. 5 |
 | Interpolated (sub-voxel) walls, on the roadmap | Bouzidi, Firdaouss & Lallemand (2001) |
 | Consistent initial conditions | Mei, Luo, Lallemand & d'Humières (2006) |
 | Carreau–Yasuda blood rheology, default parameters | Cho & Kensey (1991) |
