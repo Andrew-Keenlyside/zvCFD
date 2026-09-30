@@ -1,0 +1,83 @@
+{
+ "mesh": "/home/andrew/Downloads/mesh 1.msh",
+ "read_s": 142.66700506210327,
+ "reader": {
+  "c0_side": 1.0,
+  "faces": 34539621,
+  "interior_faces": 32867361,
+  "declared_cells": 14790642,
+  "parse_s": 58.348631381988525,
+  "elements_s": 62.01739168167114,
+  "total_s": 142.635751247406
+ },
+ "counts": {
+  "tet": 6546228,
+  "pyramid": 87,
+  "wedge": 8244327
+ },
+ "nodes": 5673949,
+ "zones": {
+  "pressure-outlet": 77,
+  "velocity-inlet": 1,
+  "wall": 4
+ },
+ "conforming": {
+  "faces": 34539621,
+  "boundary_faces": 1672260,
+  "zone_faces": 1672260,
+  "seconds": 69.42530679702759
+ },
+ "quality": {
+  "tet": {
+   "elements": 6546228,
+   "volume_min": 8.920880808584468e-08,
+   "volume_max": 0.0028219605151521853,
+   "non_positive": 0,
+   "edge_ratio_max": 185.2447735552325,
+   "edge_ratio_p99": 2.5504457704360144
+  },
+  "pyramid": {
+   "elements": 87,
+   "volume_min": 1.727220647265096e-07,
+   "volume_max": 5.5047658861580965e-06,
+   "non_positive": 0,
+   "edge_ratio_max": 299.3288225854489,
+   "edge_ratio_p99": 299.2772439098631
+  },
+  "wedge": {
+   "elements": 8244327,
+   "volume_min": 1.9806185364243207e-07,
+   "volume_max": 0.0003400704114820636,
+   "non_positive": 0,
+   "edge_ratio_max": 4994.578884330296,
+   "edge_ratio_p99": 61.37560501675335
+  }
+ },
+ "quality_s": 46.676613092422485,
+ "dual": {
+  "volume_nodes": 628.6101893713771,
+  "volume_elements": 628.6101893713761,
+  "volume_rel_diff": 1.6276884415725874e-15,
+  "closure_max_rel": 5.409274337104602e-11,
+  "min_node_volume": 6.3758943112542e-08,
+  "orthogonality_min_deg": 0.35665865570530764,
+  "seconds": 243.2969455718994
+ },
+ "couplings": {
+  "rows": 5673949,
+  "blocks": 106007787,
+  "mean": 18.683246359810425,
+  "p50": 18.0,
+  "p99": 27.0,
+  "max": 46,
+  "seconds": 41.85301470756531
+ },
+ "integration_points": 226954014,
+ "memory_gb": {
+  "fp64_ilu0": 38.8247224932,
+  "fp64_dilu": 24.7863030092,
+  "mixed_ilu0": 23.2203762468,
+  "mixed_dilu": 15.966455130800002
+ },
+ "peak_rss_gb": 13.798204
+}

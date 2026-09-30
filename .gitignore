@@ -24,3 +24,6 @@ runs/
 # Editor / OS
 .DS_Store
 Thumbs.db
+
+# H100 run collections: the flow fields are ~10 GB at 10 um
+benchmarks/results/h100/coronary/**/*.zarrvectors/

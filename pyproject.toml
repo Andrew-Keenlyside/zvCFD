@@ -88,3 +88,5 @@ filterwarnings = [
 [tool.ruff.lint.per-file-ignores]
 # CUDA C source is templated with %-formatting: its braces would all need escaping for str.format
 "zvcfd/lbm/_cuda.py" = ["UP031"]
+# CUDA C source strings: C line lengths
+"zvcfd/fv/_cuda.py" = ["E501"]

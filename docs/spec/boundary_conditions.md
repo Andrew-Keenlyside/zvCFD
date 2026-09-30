@@ -68,7 +68,8 @@ locally developed. Voxelised mesh inlets and outlets already are.
 | Kind | Flag | Prescribed | Updated each check from |
 |---|---:|---|---|
 | `pressure` | 3 | pressure (Pa) → density | the pressure × its waveform factor |
-| `rcr` | 3 | Windkessel pressure | `C dPd/dt = Q − (Pd − Pv)/Rd`, `P = Pd + Rp·Q` (explicit, over the check interval), with Q the measured outflow |
+| `rcr` | 3 | Windkessel pressure | `C dPd/dt = Q − (Pd − Pv)/Rd`, `P = Pd + Rp·Q`, with Q the measured outflow; advanced over each check interval by the trapezoidal rule (`zvcfd.lumped.RCR`) |
+| `coronary` | 3 | open-loop coronary pressure (Kim et al. 2010) | `Ra`, `Ca`, `Ram`, `Cim`, `Rv` (`coronary: [Ra, Ca, Ram, Cim, Rv]`, SI) and the intramyocardial pressure `pim` (Pa, or a periodic `[[t, Pa], ...]` table); venous pressure from `pressure`. `zvcfd.lumped.Coronary`, trapezoidal |
 | `velocity` | 4 | mean normal velocity or flow rate, plug or parabolic | the waveform; with `flow_rate` and flow control on, a gain that drives the **measured** flux to the target |
 
 ### Measuring flow
@@ -119,5 +120,26 @@ stress needs interpolated bounce-back ([Risks](../feasibility/risks.md#3-stairca
 - Backflow stabilisation at pressure outlets.
 - Patch tables persisted in the domain store (patches are rebuilt from the
   mesh or configuration on each run).
-- 0-D outlet models beyond RCR (open-loop coronary, closed loop), through
-  svZeroDSolver.
+- Closed-loop 0-D models (heart and systemic circulation).
+
+### Lumped outlet models
+
+`zvcfd.lumped` holds the 0-D outlet models for both solvers, as linear
+state-space systems `dx/dt = A x + Bq Q + Bu u(t)`, `P = Cx x + Dq Q`,
+with `u = [P_v, P_im(t)]`. A step of length `dt` ending at `t` gives the
+patch pressure as an affine function of that step's end flow,
+`P(t) = a + r Q(t)` (`coefficients`). An implicit solver enters `r` into
+its equations; the LBM patch controller measures `Q` and calls `advance`,
+which commits the step. The coronary state is `[P_1, P_2 − P_im]`, so
+`P_im` is never differentiated. `Coronary.from_svsolver` inverts
+svSolver's `cort.dat` ODE coefficients to the five circuit parameters
+(the redundant coefficient checks the inversion), and
+`read_svsolver_cort` / `read_svsolver_rcrt` read SimVascular's outlet
+files in SI.
+
+| Check (`tests/test_lumped.py`) | Result |
+|---|---|
+| steady state under constant flow | `P = P_v + (total resistance) Q` to 10⁻⁶ |
+| periodic flow against the exact impedance `Z(iω)`, dt = 4, 2, 1 ms | trapezoidal: max error 8.6 × 10⁻⁶ → 5.4 × 10⁻⁷, order **2.00**; backward Euler: order **1.00** |
+| zero flow, sinusoidal `P_im` against `b₁ s / (1 + p₁ s + p₂ s²)` | within 10⁻³ |
+| VMR 0066 `cort.dat` (24 outlets) | total resistance = svSolver's `q0` × 10⁵ to 10⁻⁹ |

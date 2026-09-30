@@ -1,0 +1,9 @@
+{'kind': 'tet', 'perturb': 0.0, 'hydrostatic_u': 4.4246752721954454e-16, 'hydrostatic_p': 3.682239698340102e-14, 'couette_u': 1.8844409424004203e-15}
+{'kind': 'tet', 'perturb': 0.2, 'hydrostatic_u': 1.3114579741609484e-16, 'hydrostatic_p': 8.564577618536921e-15, 'couette_u': 1.7070306013516843e-15}
+{'kind': 'pyramid', 'perturb': 0.0, 'hydrostatic_u': 1.8333953706101717e-16, 'hydrostatic_p': 1.9984014443252818e-14, 'couette_u': 7.37188088351104e-15}
+{'kind': 'pyramid', 'perturb': 0.2, 'hydrostatic_u': 1.3710573686013966e-05, 'hydrostatic_p': 0.00010646401881906458, 'couette_u': 4.5223647091696684e-05}
+{'kind': 'wedge', 'perturb': 0.0, 'hydrostatic_u': 9.171441195244373e-17, 'hydrostatic_p': 3.938648349265436e-15, 'couette_u': 1.865174681370263e-15}
+{'kind': 'wedge', 'perturb': 0.2, 'hydrostatic_u': 3.3604932048286318e-06, 'hydrostatic_p': 2.0214270562503496e-05, 'couette_u': 1.364333234620736e-05}
+{'kind': 'hex', 'perturb': 0.0, 'hydrostatic_u': 2.14509399826257e-16, 'hydrostatic_p': 2.1305708520187527e-14, 'couette_u': 7.993605777301127e-16}
+{'kind': 'hex', 'perturb': 0.2, 'hydrostatic_u': 0.00010067501279528147, 'hydrostatic_p': 0.00041601180419995976, 'couette_u': 0.00012550924933769637}
+exact: 2 s -> /home/andrew/scripts/zvCFD/benchmarks/results/validation/fv/exact.json

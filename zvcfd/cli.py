@@ -99,6 +99,8 @@ def cmd_mesh_info(args) -> int:
     from zvcfd.io.fluent_msh import read_fluent_boundary, voxel_estimate
     from zvcfd.perfmodel import estimate
 
+    if args.volume:
+        return _mesh_info_volume(args)
     s = read_fluent_boundary(args.mesh).summary()
     est = [voxel_estimate(s, h) for h in _floats(args.voxel_size)]
     if args.json:
@@ -126,6 +128,34 @@ def cmd_mesh_info(args) -> int:
               f"{100 * e['fluid_fraction']:>8.2f} {e['min_patch_diameter_voxels'] or 0:>16.1f} "
               f"{p.memory_per_gpu_gb:>8.1f} {'yes' if p.fits else 'NO':>5} "
               f"{p.updates_per_s / 1e9:>8.1f}")
+    return 0
+
+
+def _mesh_info_volume(args) -> int:
+    """The finite-volume view: elements, control volumes, couplings, GPU memory."""
+    from zvcfd.fv.geometry import dual_geometry, topology
+    from zvcfd.fv.pattern import coupling_stats, memory_estimate, node_graph
+    from zvcfd.mesh import read_fluent_mesh
+
+    mesh = read_fluent_mesh(args.mesh, unit=args.unit)
+    geo = dual_geometry(mesh, keep_areas=False).report
+    cpl = coupling_stats(node_graph(mesh)[0])
+    n_ip = sum(len(e) * topology(k).n_ip for k, e in mesh.elements.items())
+    mem = memory_estimate(cpl["blocks"], mesh.n_nodes, n_ip)
+    out = {"summary": mesh.summary(), "reader": mesh.meta, "dual": geo, "couplings": cpl,
+           "integration_points": n_ip, "memory_gb": mem}
+    if args.json:
+        print(json.dumps(out, indent=1, default=float))
+        return 0
+    u = args.unit
+    print(f"{mesh.source}  (read in {mesh.meta['total_s']:.0f} s)")
+    print(f"  {mesh.n_nodes:,} nodes; " + ", ".join(f"{n:,} {k}" for k, n in mesh.counts().items()))
+    print(f"  volume {geo['volume_elements']:.6g} {u}^3; control volumes sum to it within "
+          f"{geo['volume_rel_diff']:.1e}, close within {geo['closure_max_rel']:.1e}; "
+          f"min orthogonality {geo['orthogonality_min_deg']:.1f} deg")
+    print(f"  coupled system: {mesh.n_nodes:,} block rows, {cpl['blocks']:,} 4x4 blocks "
+          f"({cpl['mean']:.1f} per row, max {cpl['max']}); {n_ip:,} integration points")
+    print("  GPU memory: " + ", ".join(f"{k} {v:.1f} GB" for k, v in mem.items()))
     return 0
 
 
@@ -251,6 +281,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("mesh-info", help="summarise an ASCII Fluent .msh and size a voxel run")
     p.add_argument("mesh")
+    p.add_argument("--volume", action="store_true",
+                   help="read the volume mesh: elements, control volumes, couplings, FV memory")
     p.add_argument("--voxel-size", default="0.02,0.01,0.005", dest="voxel_size",
                    help="comma list, in mesh units")
     p.add_argument("--unit", default="mm")

@@ -1,0 +1,38 @@
+{
+ "delaunay": {
+  "nodes": 64,
+  "colours": 36,
+  "residual_rel": 4.664251820727008e-16,
+  "grad_rel": 2.7650000990952524e-15
+ },
+ "hex": {
+  "nodes": 64,
+  "colours": 8,
+  "residual_rel": 2.7509910189922847e-16,
+  "grad_rel": 7.561859454813478e-16
+ },
+ "mixed": {
+  "nodes": 100,
+  "colours": 34,
+  "residual_rel": 4.51559864888062e-16,
+  "grad_rel": 7.05460249048532e-16
+ },
+ "pyramid": {
+  "nodes": 35,
+  "colours": 24,
+  "residual_rel": 1.7123687027514267e-16,
+  "grad_rel": 5.975280563839424e-16
+ },
+ "tet": {
+  "nodes": 64,
+  "colours": 28,
+  "residual_rel": 2.349467592161859e-16,
+  "grad_rel": 6.223556767278376e-16
+ },
+ "wedge": {
+  "nodes": 64,
+  "colours": 13,
+  "residual_rel": 3.20358028886356e-16,
+  "grad_rel": 8.587301965740128e-16
+ }
+}

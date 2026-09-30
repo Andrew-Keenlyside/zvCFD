@@ -1,0 +1,11 @@
+read {'tet': 6546228, 'pyramid': 87, 'wedge': 8244327} 142.7 s
+faces {'faces': 34539621, 'boundary_faces': 1672260, 'zone_faces': 1672260, 'seconds': 69.42530679702759}
+dual {'volume_nodes': 628.6101893713771, 'volume_elements': 628.6101893713761, 'volume_rel_diff': np.float64(1.6276884415725874e-15), 'closure_max_rel': 5.409274337104602e-11, 'min_node_volume': 6.3758943112542e-08, 'orthogonality_min_deg': 0.35665865570530764, 'seconds': 243.2969455718994}
+couplings {'rows': 5673949, 'blocks': 106007787, 'mean': 18.683246359810425, 'p50': 18.0, 'p99': 27.0, 'max': 46, 'seconds': 41.85301470756531}
+{
+ "fp64_ilu0": 38.8247224932,
+ "fp64_dilu": 24.7863030092,
+ "mixed_ilu0": 23.2203762468,
+ "mixed_dilu": 15.966455130800002
+} 
+-> /home/andrew/scripts/zvCFD/benchmarks/results/fv/coronary_mesh.json
