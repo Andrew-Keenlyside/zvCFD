@@ -17,7 +17,10 @@ hit an edge or vertex exactly. Columns with an odd number of crossings
 
 Patches: each non-wall zone's triangles are sampled densely; the fluid
 voxel half a voxel inside each sample becomes a patch voxel, with the
-zone's area, outward normal and centroid.
+zone's area, outward normal and centroid. Each zone also gets its patch
+links (:func:`cap_links`): the lattice links from fluid voxels across the
+cap. Pressure-type patches use the links (an anti-bounce-back condition
+at the cap); velocity patches use the patch voxels.
 """
 
 from __future__ import annotations
@@ -173,6 +176,83 @@ def patch_cells(domain: BrickDomain, grid: VoxelGrid, tri: np.ndarray) -> tuple[
                    "centroid": tuple(grid.to_voxel(cent))}
 
 
+def _segments_hit(p0: np.ndarray, p1: np.ndarray, tri: np.ndarray, chunk: int = 4_000_000):
+    """For each segment ``p0 -> p1``, whether it crosses any of the triangles (Möller–Trumbore).
+
+    Inclusive at triangle edges and segment ends, so a segment through a
+    shared edge between two cap triangles still counts.
+    """
+    hit = np.zeros(len(p0), bool)
+    if not len(p0) or not len(tri):
+        return hit
+    v0, e1, e2 = tri[:, 0], tri[:, 1] - tri[:, 0], tri[:, 2] - tri[:, 0]
+    step = max(1, chunk // len(tri))
+    eps = 1e-9
+    for s in range(0, len(p0), step):
+        d = (p1[s:s + step] - p0[s:s + step])[:, None, :]                 # (S, 1, 3)
+        o = p0[s:s + step][:, None, :]
+        h = np.cross(d, e2[None])
+        a = (e1[None] * h).sum(-1)
+        ok = np.abs(a) > 1e-14
+        f = np.where(ok, 1.0 / np.where(ok, a, 1.0), 0.0)
+        sv = o - v0[None]
+        u = f * (sv * h).sum(-1)
+        qv = np.cross(sv, e1[None])
+        v = f * (d * qv).sum(-1)
+        t = f * (e2[None] * qv).sum(-1)
+        inside = ok & (u >= -eps) & (v >= -eps) & (u + v <= 1 + eps) & (t >= -eps) & (t <= 1 + eps)
+        hit[s:s + step] = inside.any(1)
+    return hit
+
+
+def cap_links(domain: BrickDomain, grid: VoxelGrid,
+              tri: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """The lattice links that cross a cap: ``(fluid cell ids, uint32 link masks)``.
+
+    ``tri`` is the cap's triangles, ``(T, 3, 3)`` in (z, y, x) mesh units.
+    A link runs from a fluid voxel centre along ``-c_q`` to a non-fluid
+    voxel (or none); it belongs to the cap when that segment crosses the
+    cap's triangles. Bit ``q`` of a cell's mask is set for each such link:
+    the population arriving along ``c_q`` then comes from across the cap,
+    and the solver applies the patch's anti-bounce-back pressure condition
+    to it. Links from voxels deeper than the first layer (diagonals that
+    cross a staircase patch layer) are found the same way.
+    """
+    from zvcfd.boundary import _DIRS
+
+    tv = grid.to_voxel(tri.reshape(-1, 3)).reshape(-1, 3, 3)
+    lo = np.floor(tv.reshape(-1, 3).min(0)).astype(np.int64) - 2
+    hi = np.ceil(tv.reshape(-1, 3).max(0)).astype(np.int64) + 2
+    axes = [np.arange(a, b + 1) for a, b in zip(lo, hi)]
+    zyx = np.stack(np.meshgrid(*axes, indexing="ij"), -1).reshape(-1, 3)
+    ids = cell_ids(domain, zyx)
+    b3 = domain.brick ** 3
+    fluid = ids >= 0
+    fluid[fluid] = domain.flags[ids[fluid] // b3, ids[fluid] % b3] == 0
+    zyx, ids = zyx[fluid], ids[fluid]
+    # candidates: within two voxels of a cap triangle's plane band
+    from scipy.spatial import cKDTree
+
+    cent = tv.mean(1)
+    rad = np.linalg.norm(tv - cent[:, None], axis=2).max()
+    d, _ = cKDTree(cent).query(zyx.astype(float), distance_upper_bound=rad + 2.0)
+    near = np.isfinite(d)
+    zyx, ids = zyx[near], ids[near]
+    mask = np.zeros(len(ids), np.uint32)
+    for k, dvec in enumerate(_DIRS):
+        src = zyx - dvec                                   # where population q = k+1 comes from
+        sid = cell_ids(domain, src)
+        solid = sid < 0
+        solid[~solid] = domain.flags[sid[~solid] // b3, sid[~solid] % b3] != 0
+        sel = np.flatnonzero(solid)
+        if not len(sel):
+            continue
+        hit = _segments_hit(zyx[sel].astype(float), src[sel].astype(float), tv)
+        mask[sel[hit]] |= np.uint32(1 << (k + 1))
+    keep = mask != 0
+    return ids[keep], mask[keep]
+
+
 def voxelize_mesh(tri_xyz: np.ndarray, zone_of_tri: np.ndarray, zone_kinds: dict[int, str],
                   voxel: float, *, zone_names: dict[int, str] | None = None,
                   unit_scale: float = 1.0, pad: int = 2):
@@ -193,7 +273,7 @@ def voxelize_mesh(tri_xyz: np.ndarray, zone_of_tri: np.ndarray, zone_kinds: dict
     grid = VoxelGrid.around(tri.reshape(-1, 3), voxel, pad=pad)
     zyx, rep = voxelize_surface(tri, grid)
     domain = domain_from_voxels(zyx, grid.shape)
-    groups = []
+    groups, links = [], []
     zone_of_tri = np.asarray(zone_of_tri)
     for z, kind in sorted(zone_kinds.items()):
         if kind == "wall" or kind == "interior":
@@ -202,12 +282,13 @@ def voxelize_mesh(tri_xyz: np.ndarray, zone_of_tri: np.ndarray, zone_kinds: dict
         if not sel.any():
             continue
         cells, geo = patch_cells(domain, grid, tri[sel])
+        links.append(cap_links(domain, grid, tri[sel]))
         pk = "velocity" if "inlet" in kind else "pressure"
         name = (zone_names or {}).get(z, f"zone-{z}")
         groups.append((Patch(name, pk, normal=geo["normal"],
                              area=geo["area"] * unit_scale ** 2, centroid=geo["centroid"]),
                        cells))
-    boundary = from_cells(domain, groups)
+    boundary = from_cells(domain, groups, links)
     rep.update({"shape": grid.shape, "voxel": voxel, "fluid_voxels": int(len(zyx)),
                 "bricks": domain.n_bricks, "fill": domain.fill,
                 "patches": len(groups), "patch_cells": boundary.counts().tolist(),
@@ -228,5 +309,5 @@ def voxelize_fluent(path: str, voxel: float, *, unit_scale: float = 1e-3, pad: i
                          unit_scale=unit_scale, pad=pad)
 
 
-__all__ = ["VoxelGrid", "domain_from_voxels", "patch_cells", "voxelize_fluent", "voxelize_mesh",
-           "voxelize_surface"]
+__all__ = ["VoxelGrid", "cap_links", "domain_from_voxels", "patch_cells", "voxelize_fluent",
+           "voxelize_mesh", "voxelize_surface"]

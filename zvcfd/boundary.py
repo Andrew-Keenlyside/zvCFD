@@ -131,12 +131,30 @@ class Patch:
         return m.advance(q_out, m.t + dt, dt)
 
 
+_NO_LINKS = (np.zeros(0, np.int64), np.zeros(0, np.uint32), np.zeros(0, np.int32))
+
+
 @dataclass
 class BoundarySet:
-    """Patch voxels of a domain, in the domain's global cell numbering.
+    """Patch voxels and patch links of a domain, in the domain's global cell numbering.
 
     A global cell id is ``brick * B³ + local`` with ``local`` the voxel's
     index in its brick (x fastest).
+
+    Two schemes carry a patch's condition:
+
+    - **patch cells** (``cells``): a layer of voxels flagged 3 or 4, written
+      each step by non-equilibrium extrapolation from an interior
+      neighbour. Velocity patches, and pressure patches on box faces.
+    - **patch links** (``link_cells``, ``link_mask``): lattice links from a
+      fluid cell across a surface cap to a non-fluid node, each carrying an
+      anti-bounce-back pressure condition. Pressure, RCR and coronary patches
+      on surface caps (:func:`zvcfd.geometry.cap_links`). Bit ``q`` of a
+      cell's mask is set when the population arriving along ``c_q`` crosses
+      the cap. The cells stay fluid.
+
+    A pressure-flagged patch that has links uses them, and its patch cells
+    (kept, in case the patch becomes a velocity patch) are not flagged.
     """
 
     patches: list[Patch]
@@ -144,17 +162,39 @@ class BoundarySet:
     nbr: np.ndarray            # (N,) int64, interior neighbour or -1
     patch: np.ndarray          # (N,) int32 patch index
     scale: np.ndarray          # (N,) float32 profile factor (velocity patches)
+    link_cells: np.ndarray = field(default_factory=lambda: _NO_LINKS[0].copy())   # (M,) int64
+    link_mask: np.ndarray = field(default_factory=lambda: _NO_LINKS[1].copy())    # (M,) uint32
+    link_patch: np.ndarray = field(default_factory=lambda: _NO_LINKS[2].copy())   # (M,) int32
 
     def __len__(self) -> int:
-        return len(self.cells)
+        return len(self.cells) + len(self.link_cells)
+
+    def uses_links(self) -> np.ndarray:
+        """Per patch: True where the condition is carried by links (a pressure-flagged
+        patch that has any)."""
+        has = np.bincount(self.link_patch, minlength=len(self.patches)) > 0
+        flag = np.array([p.flag for p in self.patches], np.uint8)
+        return has & (flag == PRESSURE_FLAG)
+
+    def cell_entries(self) -> np.ndarray:
+        """Mask of the patch-cell entries in use (those of patches not on links)."""
+        return ~self.uses_links()[self.patch] if len(self.patches) else np.zeros(0, bool)
+
+    def link_entries(self) -> np.ndarray:
+        """Mask of the link entries in use."""
+        return self.uses_links()[self.link_patch] if len(self.patches) else np.zeros(0, bool)
 
     def counts(self) -> np.ndarray:
-        return np.bincount(self.patch, minlength=len(self.patches))
+        """Cells carrying each patch's condition (patch cells, or link cells)."""
+        n = len(self.patches)
+        return (np.bincount(self.patch[self.cell_entries()], minlength=n)
+                + np.bincount(self.link_patch[self.link_entries()], minlength=n))
 
     def apply_flags(self, domain: BrickDomain) -> None:
-        """Set flags 3/4 on the patch voxels (in place)."""
+        """Set flags 3/4 on the patch cells in use, and fluid on the others (in place)."""
         b = domain.brick ** 3
         fl = np.array([p.flag for p in self.patches], np.uint8)[self.patch]
+        fl = np.where(self.cell_entries(), fl, FLUID).astype(np.uint8)
         domain.flags[self.cells // b, self.cells % b] = fl
 
     def localize(self, local: BrickDomain) -> BoundarySet:
@@ -176,7 +216,10 @@ class BoundarySet:
         lc, lid = to_local(self.cells)
         keep = (lid >= 0) & (lid < local.n_owned)
         nl, _ = to_local(self.nbr)
-        return BoundarySet(self.patches, lc[keep], nl[keep], self.patch[keep], self.scale[keep])
+        kc, klid = to_local(self.link_cells)
+        kkeep = (klid >= 0) & (klid < local.n_owned)
+        return BoundarySet(self.patches, lc[keep], nl[keep], self.patch[keep], self.scale[keep],
+                           kc[kkeep], self.link_mask[kkeep], self.link_patch[kkeep])
 
 
 def cell_ids(domain: BrickDomain, zyx: np.ndarray) -> np.ndarray:
@@ -240,8 +283,14 @@ def profile_scale(domain: BrickDomain, cells: np.ndarray, patch: Patch) -> np.nd
     return (s / max(s.mean(), 1e-12)).astype(np.float32)     # mean 1: flow rate preserved
 
 
-def from_cells(domain: BrickDomain, groups: list[tuple[Patch, np.ndarray]]) -> BoundarySet:
-    """Build a boundary set from explicit ``(patch, global cell ids)`` groups."""
+def from_cells(domain: BrickDomain, groups: list[tuple[Patch, np.ndarray]],
+               links: list | None = None) -> BoundarySet:
+    """Build a boundary set from explicit ``(patch, global cell ids)`` groups.
+
+    ``links``, if given, holds per group ``None`` or ``(cells, mask)``: the
+    group's patch links (:func:`zvcfd.geometry.cap_links`), used when the
+    patch is a pressure-flagged one.
+    """
     cells, pid, scale = [], [], []
     for k, (patch, c) in enumerate(groups):
         c = np.unique(np.asarray(c, np.int64))
@@ -254,10 +303,26 @@ def from_cells(domain: BrickDomain, groups: list[tuple[Patch, np.ndarray]]) -> B
     tmp = BoundarySet([g[0] for g in groups], allc, -np.ones(len(allc), np.int64),
                       np.concatenate(pid) if pid else np.zeros(0, np.int32),
                       np.concatenate(scale) if scale else np.zeros(0, np.float32))
-    tmp.apply_flags(domain)
+    if links is not None:
+        lc, lm, lp = [], [], []
+        for k, lk in enumerate(links):
+            if lk is None or not len(lk[0]):
+                continue
+            lc.append(np.asarray(lk[0], np.int64))
+            lm.append(np.asarray(lk[1], np.uint32))
+            lp.append(np.full(len(lk[0]), k, np.int32))
+        if lc:
+            tmp.link_cells, tmp.link_mask = np.concatenate(lc), np.concatenate(lm)
+            tmp.link_patch = np.concatenate(lp)
+    # interior neighbours never lie in any patch layer (as if every layer were
+    # flagged), whichever scheme each patch ends up using
+    b = domain.brick ** 3
+    domain.flags[allc // b, allc % b] = np.array([p.flag for p in tmp.patches],
+                                                  np.uint8)[tmp.patch]
     for k, (patch, _) in enumerate(groups):
         sel = tmp.patch == k
         tmp.nbr[sel] = inward_neighbours(domain, tmp.cells[sel], patch.normal)
+    tmp.apply_flags(domain)
     return tmp
 
 

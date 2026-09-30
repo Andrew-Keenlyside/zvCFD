@@ -27,3 +27,6 @@ Thumbs.db
 
 # H100 run collections: the flow fields are ~10 GB at 10 um
 benchmarks/results/h100/coronary/**/*.zarrvectors/
+
+# SimVascular comparison intermediates (svref.py; regenerated; svprobes.npz is ~0.5 GB)
+benchmarks/results/simvascular/*.npz

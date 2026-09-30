@@ -66,8 +66,11 @@ chapters 3, 5 and 6.
 - Walls: half-way bounce-back. If `x − cᵢ` is solid, the pulled value is
   `f*_{ī}(x)`, the post-collision population of the opposite direction at
   `x`.
-- Inlets and outlets: Guo non-equilibrium extrapolation, pressure (flag 3)
-  or velocity (flag 4), see [Boundary conditions](boundary_conditions.md).
+- Inlets and outlets: pressure outlets on surface caps by anti-bounce-back
+  on the links that cross the cap. If `x − cᵢ` lies across the cap, the
+  pulled value is `−f*_{ī}(x) + 2 wᵢ ρ_b [1 + 4.5 (cᵢ·u)² − 1.5 u²]`.
+  Velocity inlets, and patches on the box faces, by Guo non-equilibrium
+  extrapolation (flags 4 and 3). See [Boundary conditions](boundary_conditions.md).
 - Reservoirs (legacy): populations set to `wᵢ ρ_b` each step.
 
 **Layout.** Structure of arrays: population `i` of cell `n` at `i·N + n`,

@@ -199,7 +199,10 @@ class SparseLBM(_LBM):
 
     def _set_boundary(self, b: BoundarySet) -> None:
         self.boundary = b
-        self.bidx = cp.asarray(b.cells.astype(np.int32))
+        # patch-cell entries stay aligned with the boundary set (callers index them,
+        # e.g. to set per-cell profiles); entries of patches carried by links are -1
+        cells = np.where(b.cell_entries(), b.cells, -1)
+        self.bidx = cp.asarray(cells.astype(np.int32))
         self.bnbr = cp.asarray(b.nbr.astype(np.int32))
         self.bpid = cp.asarray(b.patch.astype(np.int32))
         self.bscale = cp.asarray(b.scale.astype(np.float32))
@@ -207,6 +210,13 @@ class SparseLBM(_LBM):
         self.pdrho = cp.zeros(n, cp.float32)         # patch density deviations rho - 1
         self.pu = cp.zeros((3, n), cp.float32)       # rows: ux, uy, uz (lattice)
         self._kb = kernel("boundary_neem", self.half)
+        le = b.link_entries()
+        self._lpatch = b.link_patch[le].astype(np.int32)
+        self.lidx = cp.asarray(b.link_cells[le].astype(np.int32))
+        self.lmask = cp.asarray(b.link_mask[le].astype(np.uint32))
+        self.lpid = cp.asarray(self._lpatch)
+        self._kl = kernel("abb_links", self.half)
+        self._klf = kernel("abb_flux", self.half)
 
     def set_patch(self, index: int, *, rho: float | None = None, u_zyx=None) -> None:
         """Set a patch's lattice density and/or velocity vector (z, y, x)."""
@@ -215,6 +225,21 @@ class SparseLBM(_LBM):
         if u_zyx is not None:
             uz, uy, ux = (float(v) for v in u_zyx)
             self.pu[:, index] = cp.asarray([ux, uy, uz], cp.float32)
+
+    def apply_links(self) -> None:
+        """Set the anti-bounce-back populations of the patch links in the newest buffer.
+
+        Runs just before a step: it rewrites only slots that the step's
+        bounce-back reads and nothing else does, so the step delivers the
+        pressure condition, and the buffer after the step is clean.
+        """
+        if self.boundary is None or len(self.lidx) == 0:
+            return
+        nl = len(self.lidx)
+        threads = 128
+        self._kl(((nl + threads - 1) // threads,), (threads,),
+                 (self.f0, np.int32(self.n), self.lidx, self.lmask, self.lpid, np.int32(nl),
+                  self.pdrho))
 
     def apply_boundary(self) -> None:
         """Write the patch cells of the newest buffer (after a step and its swap)."""
@@ -247,6 +272,7 @@ class SparseLBM(_LBM):
 
     def step(self, k: int = 1) -> None:
         for _ in range(k):
+            self.apply_links()
             self.step_main()
             self.apply_boundary()
 
@@ -263,28 +289,40 @@ class SparseLBM(_LBM):
             return np.zeros(0)
         nbnd = len(self.bidx)
         n = len(self.boundary.patches)
-        if nbnd == 0:
-            return np.zeros(n)
-        per = cp.empty(nbnd, cp.float32)
+        out = np.zeros(n)
         threads = 128
-        kernel("patch_flux", self.half)(((nbnd + threads - 1) // threads,), (threads,),
-                                        (self.f0, np.int32(self.n), self.flag, self.nbr,
-                                         self.bidx, np.int32(nbnd), per))
         # summed on the host in a fixed order: GPU atomics add in no fixed order, and
         # flow control feeds these sums back into the run (reruns must be bit-identical)
-        return np.bincount(self.boundary.patch, weights=per.get().astype(np.float64), minlength=n)
+        if nbnd:
+            per = cp.empty(nbnd, cp.float32)
+            kernel("patch_flux", self.half)(((nbnd + threads - 1) // threads,), (threads,),
+                                            (self.f0, np.int32(self.n), self.flag, self.nbr,
+                                             self.bidx, np.int32(nbnd), per))
+            out += np.bincount(self.boundary.patch, weights=per.get().astype(np.float64),
+                               minlength=n)
+        nl = len(self.lidx)
+        if nl:
+            per = cp.empty(nl, cp.float32)
+            self._klf(((nl + threads - 1) // threads,), (threads,),
+                      (self.f0, np.int32(self.n), self.lidx, self.lmask, self.lpid, np.int32(nl),
+                       self.pdrho, per))
+            out += np.bincount(self._lpatch, weights=per.get().astype(np.float64), minlength=n)
+        return out
 
     def patch_velocity(self) -> np.ndarray:
         """Per patch: summed velocity (z, y, x), summed density, and cell count, ``(P, 5)``."""
         if self.boundary is None:
             return np.zeros((0, 5))
         f = super().fields()
-        idx = self.bidx
-        pid = self.boundary.patch
+        use = self.bidx.get() >= 0
+        idx = np.concatenate([self.bidx.get()[use], self.lidx.get()]).astype(np.int64)
+        pid = np.concatenate([self.boundary.patch[use], self._lpatch])
         n = len(self.boundary.patches)
         out = np.zeros((n, 5), np.float64)
+        gidx = cp.asarray(idx)
         for c, key in enumerate(("uz", "uy", "ux", "rho")):          # fixed-order host sums
-            out[:, c] = np.bincount(pid, weights=f[key][idx].get().astype(np.float64), minlength=n)
+            out[:, c] = np.bincount(pid, weights=f[key][gidx].get().astype(np.float64),
+                                    minlength=n)
         out[:, 4] = np.bincount(pid, minlength=n)
         return out
 

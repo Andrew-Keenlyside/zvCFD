@@ -59,52 +59,51 @@ outflow to 10⁻⁴.
 
 | | OpenFOAM | zvCFD 50 µm | zvCFD 35 µm |
 |---|---:|---:|---:|
-| inlet pressure | 65.7 Pa | 65.6 Pa (−0.2 %) | 67.4 Pa (+2.5 %) |
-| mean \|split difference\| over 77 outlets | — | 0.08 pp | 0.15 pp |
-| largest outlet (cor_outlet_074) | 31.9 % | 29.9 % | 27.2 % |
-| next four outlets | 10.2, 7.7, 7.5, 6.8 % | 9.3, 8.0, 7.3, 7.2 % | 9.2, 8.5, 7.6, 7.6 % |
+| inlet pressure | 65.7 Pa | 62.7 Pa (−4.6 %) | 63.1 Pa (−4.0 %) |
+| mean \|split difference\| over 77 outlets | — | 0.009 pp | 0.007 pp |
+| largest \|split difference\| | — | 0.11 pp | 0.07 pp |
+| largest outlet (cor_outlet_074) | 31.9 % | 31.9 % | 31.8 % |
+| next four outlets | 10.2, 7.7, 7.5, 6.8 % | 10.3, 7.8, 7.6, 6.8 % | 10.2, 7.8, 7.6, 6.8 % |
 
 ![Outlet flow splits](../_static/figures/coronary_splits.png)
 
-The inlet pressure, which measures the tree's total resistance, agrees
-within 0.2 % at 50 µm. The 76 smaller outlets agree to a small fraction
-of a percentage point. The exception is the largest outlet, at the end of
-the main trunk: zvCFD gives it 2.0 pp less flow than OpenFOAM at 50 µm and
-4.6 pp less at 35 µm, and the other large branches take up the
-difference.
+**The two codes split the flow between the 77 outlets identically, to
+0.01 percentage points on average and 0.1 at most**, at both resolutions.
+zvCFD's own splits move by 0.004 pp on average between 50 and 35 µm.
 
-**This difference is not yet explained.** It grows with refinement, so it
-is not zvCFD's discretisation error shrinking towards OpenFOAM's answer.
-What has been ruled out:
+The inlet pressure, which measures the tree's total resistance, is 4–5 %
+lower in zvCFD. OpenFOAM's inlet pressure had settled, to 65.737 Pa from
+iteration 300 on, so the gap is not its convergence. zvCFD's closes
+slowly with refinement (62.7 → 63.1 Pa), which points to discretisation.
+The likely source is the staircase walls of the smallest branches, which
+are 5 voxels across at 50 µm. Finer runs on the H100 node, or
+interpolated bounce-back, would settle it.
 
-| Candidate | Test | Result |
-|---|---|---|
-| Outlet 074 badly voxelised | patch voxels × voxel area against the mesh's outlet area | 1.20 (50 µm) and 1.18 (35 µm), the same as the other large outlets |
-| Backflow at the outlet (OpenFOAM's `inletOutlet` blocks it, zvCFD's pressure patches allow it) | reversed normal velocity on every outlet's patch voxels | none, at any outlet |
-| Inlet profile | both codes impose a plug at the prescribed flow rate | same |
-| Compressibility (lattice Mach number) | 50 µm at τ = 0.55, 0.6, 0.7 (Mach 0.04, 0.08, 0.17) | outlet 074: 28.97, 29.85, 30.22 %; inlet pressure 67.9, 65.6, 64.7 Pa |
+### Before the outlet fix
 
-The τ runs show that zvCFD's answer at a fixed resolution moves by up to
-1.3 pp with τ, less than the gap. The change is not proportional to the
-Mach number squared (it saturates), so it is not compressibility. Its
-likely source is the same one that made a porous face τ-dependent: the
-non-equilibrium extrapolation at inlet and outlet patches that cut
-obliquely through voxels ([Boundary conditions](../spec/boundary_conditions.md)).
-Lowering the Mach number moves outlet 074 *away* from OpenFOAM.
+The numbers above are from 2026-09-30, after zvCFD's pressure outlets
+moved from non-equilibrium extrapolation on patch voxels to an
+anti-bounce-back condition on the lattice links that cross each cap
+([Against SimVascular](simvascular.md#pressure-outlets-on-oblique-caps-found-and-fixed)).
+Before that, this comparison had an unexplained difference at the
+dominant outlet:
 
-Three further tests would locate it:
+| | OpenFOAM | zvCFD 50 µm, before | zvCFD 35 µm, before |
+|---|---:|---:|---:|
+| inlet pressure | 65.7 Pa | 65.6 Pa | 67.4 Pa |
+| mean \|split difference\| | — | 0.08 pp | 0.15 pp |
+| largest outlet (cor_outlet_074) | 31.9 % | 29.9 % | 27.2 % |
 
-1. Compare the flow through cross-sections along the main trunk in both
-   codes, to find the bifurcation where the split first diverges.
-2. Add short straight flow extensions to the outlets (standard practice
-   in cardiovascular CFD, and used by SimVascular), in both codes, so the
-   pressure boundaries sit in developed flow.
-3. Refine further: 25 µm (40 M voxels) and 20 µm on the H100 node, and
-   interpolated bounce-back.
+The gap at outlet 074 grew with refinement and moved by up to 1.3 pp
+with τ. A badly voxelised outlet, backflow, the inlet profile and
+compressibility were ruled out.
 
-Until then, zvCFD's splits for this tree should be quoted as agreeing
-with OpenFOAM to 0.1–0.2 pp on average, with a 2–5 pp disagreement at
-the dominant outlet.
+The cause was the outlets. The old condition lost part of the imposed
+pressure wherever the flow crossed a patch off the lattice axes, the
+more so as τ approached ½. That added a different spurious resistance at
+each of the 77 outlets. The near-agreement of the inlet pressure at 50 µm
+was partly that extra resistance offsetting the lower resistance now
+measured.
 
 ## Reproducibility
 
