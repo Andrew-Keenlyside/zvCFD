@@ -8,7 +8,7 @@ exit status 0 on success. `python -m zvcfd` is the same command.
 |---|---|
 | `zvcfd probe [--require a,b] [--json]` | report capabilities; with `--require`, exit 1 naming what is missing |
 | `zvcfd plan …` | memory and time for a domain ([Plan a run](../how_to/plan_a_run.md)) |
-| `zvcfd mesh-info <file.msh> [--voxel-size …] [--unit mm]` | summarise an ASCII Fluent mesh and plan voxel runs of it |
+| `zvcfd mesh-info <file.msh> [--voxel-size …] [--unit mm] [--volume]` | summarise an ASCII Fluent mesh and plan voxel runs of it; with `--volume`, the finite-volume view |
 | `zvcfd voxelize <file.msh> --voxel-size UM [--unit mm] [--out domain.zarrvectors]` | voxelise a Fluent mesh into a sparse domain with inlet/outlet patches; report patch voxel counts |
 | `zvcfd phantom list` / `zvcfd phantom build <name> --out mask.npy` | synthetic geometries |
 | `zvcfd run <config> [--out DIR] [--steps N]` | run a configuration, on one GPU or several (`parallel.gpus`) |
@@ -35,6 +35,14 @@ exit status 0 on success. `python -m zvcfd` is the same command.
 
 Takes `--fill`, `--gpus`, `--gpu`, `--method` as `plan` does, and
 `--voxel-size` as a comma list in mesh units.
+
+With `--volume` it reads the whole volume mesh instead (ASCII or binary)
+and reports, for the finite-volume solver: element counts by type, the
+dual-geometry checks (control volumes against element volumes, closure,
+minimum orthogonality), blocks per row of the coupled system, flux
+points, and the GPU memory the solve would need in double, mixed and
+DILU variants. On the HiP-CT coronary mesh this takes about 4 minutes
+and 11 GB of host memory.
 
 ## `zvcfd run`
 

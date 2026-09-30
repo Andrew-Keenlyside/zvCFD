@@ -1,0 +1,44 @@
+{
+ "note": "Same meshes (wall wedges + tet core pipe), pressure-driven, zvCFD High Resolution vs OpenFOAM v2506 simpleFoam linearUpwind; flow rate Q.",
+ "Re0.5": {
+  "nc3": {
+   "zvcfd": 0.006914,
+   "openfoam": 0.006996,
+   "diff": -0.0118
+  },
+  "nc6": {
+   "zvcfd": 0.0076,
+   "openfoam": 0.007619,
+   "diff": -0.00244
+  }
+ },
+ "Re10": {
+  "nc3": {
+   "zvcfd": 0.138188,
+   "openfoam": 0.139279,
+   "diff": -0.00783
+  },
+  "nc6": {
+   "zvcfd": 0.15201,
+   "openfoam": 0.15191,
+   "diff": 0.00065
+  }
+ },
+ "Re50": {
+  "nc3": {
+   "zvcfd": 0.683122,
+   "openfoam": 0.662259,
+   "diff": 0.0315
+  },
+  "nc6": {
+   "zvcfd": 0.759836,
+   "openfoam": 0.72666,
+   "diff": 0.0457
+  },
+  "nc12": {
+   "openfoam": 0.74752,
+   "cells": 304128,
+   "iterations": 3379
+  }
+ }
+}

@@ -25,8 +25,10 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from zvcfd.domain import FLUID, SOLID, BrickDomain
+from zvcfd.lumped import RCR, Coronary, LumpedOutlet
 
 PRESSURE_FLAG, VELOCITY_FLAG = 3, 4
+KINDS = ("pressure", "velocity", "rcr", "coronary")
 
 # D3Q19 velocities as (z, y, x), excluding rest
 _DIRS = np.array([(cz, cy, cx) for cx, cy, cz in zip(
@@ -41,15 +43,20 @@ class Patch:
 
     Attributes:
         name: Patch name (e.g. the Fluent zone name).
-        kind: ``"pressure"``, ``"velocity"`` or ``"rcr"`` (a pressure patch
-            whose pressure follows a three-element Windkessel).
-        pressure: Pa. Fixed pressure, or the RCR distal (venous) pressure.
+        kind: ``"pressure"``, ``"velocity"``, ``"rcr"`` (a pressure patch
+            whose pressure follows a three-element Windkessel) or
+            ``"coronary"`` (an open-loop coronary outlet, Kim et al. 2010).
+            Both lumped kinds come from :mod:`zvcfd.lumped`.
+        pressure: Pa. Fixed pressure, or the venous pressure of a lumped outlet.
         velocity: m/s. Mean normal velocity *into* the domain (velocity kind).
         flow_rate: m³/s into the domain; overrides ``velocity`` when the area is known.
         normal: outward unit normal (z, y, x).
         area: m². Physical patch area (from the mesh); estimated from voxels if None.
         profile: ``"plug"`` or ``"parabolic"`` (circular patch, peak 2× mean).
         rcr: ``(Rp, C, Rd)`` in Pa·s/m³, m³/Pa, Pa·s/m³.
+        coronary: ``(Ra, Ca, Ram, Cim, Rv)`` in Pa·s/m³ and m³/Pa.
+        pim: intramyocardial pressure for ``coronary``: Pa, or ``[(t, Pa), ...]``
+            (periodic, period = last t).
         waveform: ``[(t, factor), ...]`` periodic multiplier on velocity/flow rate
             or pressure; linear interpolation, period = last t.
     """
@@ -65,15 +72,18 @@ class Patch:
     rcr: tuple[float, float, float] | None = None
     waveform: list[tuple[float, float]] | None = None
     centroid: tuple[float, float, float] | None = None   # voxel units (z, y, x)
-    # RCR state: distal pressure (Pa)
-    _pd: float = field(default=0.0, repr=False)
+    coronary: tuple[float, float, float, float, float] | None = None
+    pim: float | list[tuple[float, float]] | None = None
+    # lumped outlet model (rcr, coronary), built on first use
+    _model: LumpedOutlet | None = field(default=None, repr=False)
 
     def __post_init__(self):
-        if self.kind not in ("pressure", "velocity", "rcr"):
+        if self.kind not in KINDS:
             raise ValueError(f"patch kind {self.kind!r}")
         if self.kind == "rcr" and self.rcr is None:
             raise ValueError(f"patch {self.name}: rcr needs (Rp, C, Rd)")
-        self._pd = self.pressure
+        if self.kind == "coronary" and self.coronary is None:
+            raise ValueError(f"patch {self.name}: coronary needs (Ra, Ca, Ram, Cim, Rv)")
 
     @property
     def flag(self) -> int:
@@ -93,14 +103,32 @@ class Patch:
             return self.flow_rate / self.area * self.factor(t)
         return self.velocity * self.factor(t)
 
-    def rcr_pressure(self, q_out: float, dt: float) -> float:
-        """Advance the Windkessel by ``dt`` with outflow ``q_out`` (m³/s); return P (Pa).
+    @property
+    def lumped(self) -> bool:
+        return self.kind in ("rcr", "coronary")
 
-        C dPd/dt = Q - (Pd - P_venous)/Rd,  P = Pd + Rp Q  (explicit Euler).
-        """
-        rp, c, rd = self.rcr
-        self._pd += dt * (q_out - (self._pd - self.pressure) / rd) / c
-        return self._pd + rp * q_out
+    def outlet_model(self) -> LumpedOutlet:
+        """The patch's 0-D outlet model (:mod:`zvcfd.lumped`), at rest at first use."""
+        if not self.lumped:
+            raise ValueError(f"patch {self.name}: kind {self.kind!r} has no outlet model")
+        if self._model is None:
+            if self.kind == "rcr":
+                self._model = RCR.from_tuple(self.rcr, pv=self.pressure)
+            else:
+                ra, ca, ram, cim, rv = self.coronary
+                self._model = Coronary(ra=ra, ca=ca, ram=ram, cim=cim, rv=rv,
+                                       pim=self.pim or 0.0, pv=self.pressure)
+        return self._model
+
+    def outlet_pressure(self, q_out: float, t: float, dt: float) -> float:
+        """Commit the outlet model's step ending at ``t`` with outflow ``q_out`` (m³/s);
+        return the patch pressure (Pa) to hold until the next step."""
+        return self.outlet_model().advance(q_out, t, dt)
+
+    def rcr_pressure(self, q_out: float, dt: float) -> float:
+        """Advance the outlet model by ``dt`` with outflow ``q_out`` (m³/s); return P (Pa)."""
+        m = self.outlet_model()
+        return m.advance(q_out, m.t + dt, dt)
 
 
 @dataclass

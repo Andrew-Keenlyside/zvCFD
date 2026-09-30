@@ -58,8 +58,11 @@ def _flags_from_source(cfg: RunConfig):
 
 def _patch_from_spec(name: str, spec: dict, base: Patch | None = None) -> Patch:
     kw = {k: v for k, v in spec.items() if k != "match"}
-    if kw.get("rcr") is not None:
-        kw["rcr"] = tuple(kw["rcr"])
+    for key in ("rcr", "coronary"):
+        if kw.get(key) is not None:
+            kw[key] = tuple(kw[key])
+    if isinstance(kw.get("pim"), list):
+        kw["pim"] = [tuple(p) for p in kw["pim"]]
     if kw.get("waveform") is not None:
         kw["waveform"] = [tuple(p) for p in kw["waveform"]]
     kind = kw.pop("kind")
@@ -150,9 +153,11 @@ class PatchController:
         for i, p in enumerate(self.b.patches):
             if p.kind == "pressure":
                 self.sim.set_patch(i, rho=1.0 + self.lat.drho_lattice(p.pressure * p.factor(t)))
-            elif p.kind == "rcr":
-                q_out = 0.0 if q is None else -q[i]
-                pr = p.rcr_pressure(q_out, dt_check)
+            elif p.lumped:
+                if q is None:
+                    pr = p.outlet_model().pressure()
+                else:
+                    pr = p.outlet_pressure(-q[i], t, dt_check)
                 self.sim.set_patch(i, rho=1.0 + self.lat.drho_lattice(pr))
             else:
                 u = p.mean_velocity(t)

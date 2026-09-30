@@ -2,6 +2,7 @@
 
     python benchmarks/validation/run.py                       # every case
     python benchmarks/validation/run.py --cases womersley,taylor_green
+    python benchmarks/validation/run.py --out benchmarks/results/h100/validation
 
 Writes ``benchmarks/results/validation/<case>.json``; ``figures.py`` draws
 them and ``docs/benchmarks/validation.md`` discusses them.
@@ -34,13 +35,15 @@ def _fmt(v):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--cases", default=",".join(cases.CASES))
+    ap.add_argument("--out", default=str(OUT), help="directory for <case>.json")
     args = ap.parse_args()
-    OUT.mkdir(parents=True, exist_ok=True)
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
     for name in args.cases.split(","):
         t0 = time.time()
         res = cases.CASES[name]()
         res["total_s"] = time.time() - t0
-        (OUT / f"{name}.json").write_text(json.dumps(res, indent=1))
+        (out / f"{name}.json").write_text(json.dumps(res, indent=1))
         print(f"== {name} ({res['total_s']:.0f} s)")
         for key in ("rows", "plane", "pipe"):
             for r in res.get(key, []):

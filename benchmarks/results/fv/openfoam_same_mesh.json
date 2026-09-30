@@ -1,0 +1,78 @@
+[
+ {
+  "nc": 3,
+  "nodes": 1300,
+  "cells": 5328,
+  "elements": {
+   "tet": 4752,
+   "wedge": 576
+  },
+  "exact_q_circle": 0.7853981633974483,
+  "wall_polygon_area_ratio": 0.9549296585513719,
+  "zvcfd": {
+   "q": 0.6831217838373543,
+   "q_imbalance": -3.0879175524726553e-15,
+   "iterations": 82,
+   "seconds": 34.94015693664551
+  },
+  "openfoam": {
+   "q": 0.662259269,
+   "q_imbalance": -1.5099825982474373e-09,
+   "iterations": 287,
+   "converged": true,
+   "patches": [
+    "inlet",
+    "outlet",
+    "wall"
+   ],
+   "checkMesh_ok": true,
+   "checkMesh_failed": false,
+   "seconds": {
+    "import": {
+     "fluent3DMeshToFoam_s": 0.5570483207702637,
+     "transformPoints_s": 0.531904935836792
+    },
+    "solve": 1.8933181762695312
+   }
+  },
+  "q_difference": 0.03150203525102244
+ },
+ {
+  "nc": 6,
+  "nodes": 9457,
+  "cells": 38016,
+  "elements": {
+   "tet": 31104,
+   "wedge": 6912
+  },
+  "exact_q_circle": 0.7853981633974483,
+  "wall_polygon_area_ratio": 0.9886159294653691,
+  "zvcfd": {
+   "q": 0.7598355460401778,
+   "q_imbalance": -5.552316571081442e-15,
+   "iterations": 100,
+   "seconds": 2431.6816391944885
+  },
+  "openfoam": {
+   "q": 0.726659425,
+   "q_imbalance": 1.3761604643304097e-09,
+   "iterations": 888,
+   "converged": true,
+   "patches": [
+    "inlet",
+    "outlet",
+    "wall"
+   ],
+   "checkMesh_ok": true,
+   "checkMesh_failed": false,
+   "seconds": {
+    "import": {
+     "fluent3DMeshToFoam_s": 0.572211742401123,
+     "transformPoints_s": 0.5105428695678711
+    },
+    "solve": 21.702837228775024
+   }
+  },
+  "q_difference": 0.045655667426563344
+ }
+]

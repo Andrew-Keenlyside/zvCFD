@@ -12,6 +12,8 @@ realistic:
 | Exact solutions | [Exact solutions](exact_solutions.md) | closed-form solutions of the Navier–Stokes equations | the equations are solved, and to what order of accuracy |
 | Standard benchmarks | [Standard benchmarks](benchmarks.md) | literature reference values (Sangani & Acrivos; Schäfer & Turek) | accuracy on porous-media drag and on forces on a curved body |
 | Cross-code comparison | [Against OpenFOAM](cross_code.md) | OpenFOAM v2506 on the same problems | the same answers on identical voxel geometries and on the HiP-CT coronary tree |
+| Finite-volume solver (in development) | [Verification and validation](vv_plan.md) | the V&V evidence for the CFX-style solver, by ASME V&V 20 / 40 layer | what is established, prepared and missing |
+| | [Finite-volume solver](fv_solver.md) | exact, manufactured and benchmark solutions on unstructured meshes; OpenFOAM on the same mesh | the numbers: orders, errors, invariances, GPU agreement, defects found |
 
 All cases use the production kernels: D3Q19, TRT with Λ = 3/16, fp32
 arithmetic on shifted populations, half-way bounce-back walls, Guo forcing
@@ -118,4 +120,6 @@ The cross-code comparison has its own instructions on
 exact_solutions
 benchmarks
 cross_code
+vv_plan
+fv_solver
 ```

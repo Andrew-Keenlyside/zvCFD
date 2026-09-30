@@ -116,7 +116,8 @@ class RunConfig:
 
 _SECTIONS = {"source": Source, "physics": Physics, "boundaries": Boundaries, "solver": Solver,
              "domain": Domain, "parallel": Parallel, "output": Output}
-_PATCH_KEYS = {"match", "kind", "pressure", "velocity", "flow_rate", "profile", "rcr", "waveform"}
+_PATCH_KEYS = {"match", "kind", "pressure", "velocity", "flow_rate", "profile", "rcr", "waveform",
+               "coronary", "pim"}
 
 
 def from_dict(d: dict[str, Any]) -> RunConfig:
@@ -166,7 +167,7 @@ def _validate(cfg: RunConfig) -> None:
         bad = set(spec) - _PATCH_KEYS
         if bad:
             raise ValueError(f"unknown patch keys: {sorted(bad)}")
-        if spec.get("kind") not in ("pressure", "velocity", "rcr"):
+        if spec.get("kind") not in ("pressure", "velocity", "rcr", "coronary"):
             raise ValueError(f"patch kind {spec.get('kind')!r}")
     for face in cfg.boundaries.faces:
         if face not in ("xmin", "xmax", "ymin", "ymax", "zmin", "zmax"):

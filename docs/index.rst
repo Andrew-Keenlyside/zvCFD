@@ -87,4 +87,5 @@ Where to start
    how_to/index
    benchmarks/index
    api/index
+   credits
    references

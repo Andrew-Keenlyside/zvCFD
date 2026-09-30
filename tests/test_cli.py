@@ -28,3 +28,17 @@ def test_phantom_list(capsys):
 def test_probe_json(capsys):
     assert main(["probe", "--json"]) == 0
     assert "cupy" in json.loads(capsys.readouterr().out)
+
+
+def test_mesh_info_volume(tmp_path, capsys):
+    from zvcfd.mesh import write_fluent_mesh
+    from zvcfd.mesh.generate import tube
+
+    path = tmp_path / "t.msh"
+    write_fluent_mesh(tube(0.5, 2.0, kind="mixed", n_axial=4), path)
+    assert main(["mesh-info", str(path), "--volume", "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["summary"]["elements"] == {"tet": 1152, "wedge": 256}
+    assert out["dual"]["volume_rel_diff"] < 1e-13
+    assert out["couplings"]["rows"] == out["summary"]["nodes"]
+    assert out["memory_gb"]["fp64_ilu0"] > out["memory_gb"]["mixed_dilu"] > 0

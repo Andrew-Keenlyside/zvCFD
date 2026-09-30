@@ -126,7 +126,8 @@ html_theme_options = {
     ],
 }
 
-html_logo = "_static/zvcfd-logo.png"
+html_logo = "_static/zvcfd-icon.png"
+html_favicon = "_static/favicon.ico"
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
 

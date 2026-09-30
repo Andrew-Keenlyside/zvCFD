@@ -1,0 +1,9 @@
+ethier space hex {'n': 4, 'nodes': 125, 'eu': 0.026035274713880244, 'ep': 0.6122918995973202, 'loops_per_step': 5.125, 'seconds': 3.756566047668457}
+ethier space hex {'n': 8, 'nodes': 729, 'eu': 0.006015943472779608, 'ep': 0.14998174954955415, 'loops_per_step': 6.0, 'seconds': 43.16203331947327}
+ethier space hex {'n': 16, 'nodes': 4913, 'eu': 0.0011382350067906325, 'ep': 0.03480588410677674, 'loops_per_step': 6.0, 'seconds': 1911.7691462039948}
+ethier space tet {'n': 4, 'nodes': 125, 'eu': 0.044516314553633675, 'ep': 0.9294557935757786, 'loops_per_step': 5.825, 'seconds': 3.859142780303955}
+ethier space tet {'n': 8, 'nodes': 729, 'eu': 0.012480929691126425, 'ep': 0.39663276214647214, 'loops_per_step': 6.0, 'seconds': 37.827523708343506}
+ethier space tet {'n': 16, 'nodes': 4913, 'eu': 0.0036915227264888027, 'ep': 0.1575480851714523, 'loops_per_step': 6.0, 'seconds': 1531.2020943164825}
+ethier time bdf1 [{'steps': 5, 'et': 0.000825801032350091, 'order_et': None}, {'steps': 10, 'et': 0.00041127823565660567, 'order_et': 1.0056794938630549}, {'steps': 20, 'et': 0.00019479872954424954, 'order_et': 1.0781304598399877}]
+ethier time bdf2 [{'steps': 5, 'et': 0.00013289530204742348, 'order_et': None}, {'steps': 10, 'et': 2.6817315385751214e-05, 'order_et': 2.3090533801227586}, {'steps': 20, 'et': 6.048046458324343e-06, 'order_et': 2.14862369304814}]
+ethier_steinman: 3871 s -> /home/andrew/scripts/zvCFD/benchmarks/results/validation/fv/ethier_steinman.json

@@ -30,7 +30,23 @@ measurements. Retrieved September 2026.
 ## Methods
 
 - T. Krüger et al., *The Lattice Boltzmann Method: Principles and Practice*,
-  Springer, 2017.
+  Springer, 2017, doi:10.1007/978-3-319-44649-3.
+- P. L. Bhatnagar, E. P. Gross, M. Krook, *A model for collision processes
+  in gases*, Phys. Rev. 94, 511 (1954) (BGK collision).
+- Y. H. Qian, D. d'Humières, P. Lallemand, *Lattice BGK models for
+  Navier–Stokes equation*, Europhys. Lett. 17, 479 (1992) (D3Q19).
+- I. Ginzburg, F. Verhaeghe, D. d'Humières, *Two-relaxation-time lattice
+  Boltzmann scheme: about parametrization, velocity, pressure and mixed
+  boundary conditions*, Commun. Comput. Phys. 3, 427 (2008) (TRT, Λ = 3/16).
+- Z. Guo, C. Zheng, B. Shi, *Non-equilibrium extrapolation method for
+  velocity and pressure boundary conditions in the lattice Boltzmann
+  method*, Chinese Physics 11, 366 (2002) (inlet and outlet patches).
+- R. Mei, L.-S. Luo, P. Lallemand, D. d'Humières, *Consistent initial
+  conditions for lattice Boltzmann simulations*, Comput. Fluids 35, 855
+  (2006).
+- Y. I. Cho, K. R. Kensey, *Effects of the non-Newtonian viscosity of blood
+  on flows in a diseased arterial vessel. Part 1: Steady flows*,
+  Biorheology 28, 241 (1991) (Carreau–Yasuda blood parameters).
 - Z. Guo, C. Zheng, B. Shi, *Discrete lattice effects on the forcing term in
   the lattice Boltzmann method*, Phys. Rev. E 65, 046308 (2002).
 - Q. Zou, X. He, *On pressure and velocity boundary conditions for the
@@ -114,8 +130,38 @@ measurements. Retrieved September 2026.
 - Feiger et al., LBM boundary conditions for image-derived vessels, Int. J.
   Numer. Meth. Biomed. Eng., doi:10.1002/cnm.3198 (2019).
 
+## Software
+
+zvCFD depends on, or is compared against, these packages. Please cite them
+too where your work relies on them.
+
+- zarr-vectors-py, A. Keenlyside, F. Collman, Allen Institute (BSD-3),
+  <https://github.com/AllenInstitute/zarr-vectors-py>.
+- zarr-python, Zarr Developers, <https://zarr.dev> (Zenodo
+  doi:10.5281/zenodo.3773449).
+- CuPy: R. Okuta et al., *CuPy: A NumPy-compatible library for NVIDIA GPU
+  calculations*, LearningSys workshop, NeurIPS 2017.
+- NumPy: C. R. Harris et al., Nature 585, 357 (2020),
+  doi:10.1038/s41586-020-2649-2.
+- SciPy: P. Virtanen et al., Nat. Methods 17, 261 (2020),
+  doi:10.1038/s41592-019-0686-2.
+- PyAMG: N. Bell, L. N. Olson, J. Schroder, J. Open Source Softw. 7(72),
+  4142 (2022), doi:10.21105/joss.04142.
+- OpenFOAM: H. G. Weller, G. Tabor, H. Jasak, C. Fureby, Comput. Phys. 12,
+  620 (1998), doi:10.1063/1.168744; ESI OpenFOAM v2506 by OpenCFD Ltd.
+- SimVascular: A. Updegrove et al., Ann. Biomed. Eng. 45, 525 (2017),
+  doi:10.1007/s10439-016-1762-8.
+- PyVista: C. B. Sullivan, A. Kaszynski, J. Open Source Softw. 4(37), 1450
+  (2019), doi:10.21105/joss.01450; Matplotlib: J. D. Hunter, Comput. Sci.
+  Eng. 9, 90 (2007).
+- Documentation: Sphinx, Furo and MyST-Parser.
+
 ## Data
 
+- Hierarchical phase-contrast tomography: C. L. Walsh, P. Tafforeau et al.,
+  *Imaging intact human organs with local resolution of cellular
+  structures using hierarchical phase-contrast tomography*, Nat. Methods
+  18, 1532 (2021), doi:10.1038/s41592-021-01317-x.
 - HiP-CT coronary lumen mesh: Simpleware ScanIP+FE X-2025.06 Fluent export,
   14,790,642 cells, 1 velocity inlet, 77 pressure outlets; provided by a
   collaborator (not redistributed).

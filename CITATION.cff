@@ -1,0 +1,105 @@
+cff-version: 1.2.0
+message: >-
+  If you use zvCFD, please cite it as below, and cite the methods and data
+  your results depend on (see "Credits and citing" in the documentation).
+title: "zvCFD: GPU-based computational fluid dynamics backed by Zarr Vectors"
+type: software
+authors:
+  - family-names: Keenlyside
+    given-names: Andrew
+version: 0.0.1.dev0
+repository-code: "https://github.com/Andrew-Keenlyside/zvCFD"
+url: "https://zvcfd.readthedocs.io"
+keywords:
+  - computational fluid dynamics
+  - lattice Boltzmann
+  - GPU
+  - zarr
+  - OME-Zarr
+  - HiP-CT
+references:
+  - type: software
+    title: zarr-vectors-py
+    authors:
+      - family-names: Keenlyside
+        given-names: Andrew
+      - family-names: Collman
+        given-names: Forrest
+    repository-code: "https://github.com/AllenInstitute/zarr-vectors-py"
+    license: BSD-3-Clause
+  - type: book
+    title: "The Lattice Boltzmann Method: Principles and Practice"
+    authors:
+      - family-names: Krüger
+        given-names: Timm
+      - family-names: Kusumaatmaja
+        given-names: Halim
+      - family-names: Kuzmin
+        given-names: Alexandr
+      - family-names: Shardt
+        given-names: Orest
+      - family-names: Silva
+        given-names: Goncalo
+      - family-names: Viggen
+        given-names: Erlend Magnus
+    publisher:
+      name: Springer
+    year: 2017
+    doi: 10.1007/978-3-319-44649-3
+  - type: article
+    title: "Two-relaxation-time lattice Boltzmann scheme: about parametrization, velocity, pressure and mixed boundary conditions"
+    authors:
+      - family-names: Ginzburg
+        given-names: Irina
+      - family-names: Verhaeghe
+        given-names: Frederik
+      - family-names: d'Humières
+        given-names: Dominique
+    journal: Communications in Computational Physics
+    volume: 3
+    start: 427
+    end: 478
+    year: 2008
+  - type: article
+    title: "Discrete lattice effects on the forcing term in the lattice Boltzmann method"
+    authors:
+      - family-names: Guo
+        given-names: Zhaoli
+      - family-names: Zheng
+        given-names: Chuguang
+      - family-names: Shi
+        given-names: Baochang
+    journal: Physical Review E
+    volume: 65
+    start: "046308"
+    year: 2002
+    doi: 10.1103/PhysRevE.65.046308
+  - type: article
+    title: "Imaging intact human organs with local resolution of cellular structures using hierarchical phase-contrast tomography"
+    authors:
+      - family-names: Walsh
+        given-names: Claire L.
+      - family-names: Tafforeau
+        given-names: Paul
+      - name: "et al."
+    journal: Nature Methods
+    volume: 18
+    start: 1532
+    end: 1541
+    year: 2021
+    doi: 10.1038/s41592-021-01317-x
+  - type: article
+    title: "The Vascular Model Repository: A Public Resource of Medical Imaging Data and Blood Flow Simulation Results"
+    authors:
+      - family-names: Wilson
+        given-names: Nathan M.
+      - family-names: Ortiz
+        given-names: Ana K.
+      - family-names: Johnson
+        given-names: Allison B.
+    journal: Journal of Medical Devices
+    volume: 7
+    issue: 4
+    start: "040923"
+    year: 2013
+    doi: 10.1115/1.4025983
