@@ -37,6 +37,11 @@ for args in "--voxel 100" "--voxel 80" "--voxel 60" "--voxel 100 --u-lat 0.07" \
   $PY benchmarks/simvascular/run_zvcfd.py $args --cycles 2 --snapshots 160,265,530,800
 done
 
+# 3b. The finite-volume solver on SimVascular's own mesh (cropped, through a Zarr
+#     Vectors mesh collection): one cycle, ~1.4 h on an RTX A2000; needs AmgX
+#     (ZVCFD_AMGX_LIB) and ~8.5 GB of GPU memory
+PYTHONPATH=. $PY benchmarks/simvascular/run_fv.py --linear-rtol 0.01
+
 # 4. Compare, draw, render
 $PY benchmarks/simvascular/compare.py
 $PY benchmarks/simvascular/figures.py --best vmr0066-60um-sv

@@ -2,8 +2,11 @@
 
 **Status (30 September 2026).** These cases verify and validate
 `zvcfd.fv.reference`, the double-precision CPU reference solver, and the
-GPU kernels that exist so far (`zvcfd.fv.gpu`). The GPU solver will be held
-to the same cases, and to the reference solver itself. The evidence is
+GPU solver (`zvcfd.fv.solver`, its kernels `zvcfd.fv.gpu`, its linear
+solvers `zvcfd.fv.linear`, and the partitioned form `zvcfd.fv.multi`). The
+GPU solver is held to the reference solver itself, on the same discrete
+equations, and to exact statements for the boundary conditions only it
+has. The evidence is
 organised on [Verification and validation](vv_plan.md); this page has the
 numbers. See also the [plan](../feasibility/fv_plan.md) and
 [numerics](../spec/fv_numerics.md).
@@ -41,10 +44,18 @@ cylinder channel; and the FDA nozzle.
 | Womersley pipe, α = 4 | exact | transient, BDF1/BDF2 | **second order** in space; BDF1 order 1, BDF2 order 2 |
 | Ethier–Steinman | exact | unsteady 3-D Navier–Stokes | hex **second order** in space, BDF1/BDF2 orders 1/2 in time; tets 1.8 (sliding-velocity boundaries) |
 | Invariances and balances | the transformed solution | rotation, reflection, renumbering, similarity, time-step independence | round-off (High Resolution limiter: 8 × 10⁻⁴ under rotation) |
-| GPU kernels | the CPU reference | gradients, momentum diagonal, residual | **3 × 10⁻¹⁶** relative on every element type |
+| GPU kernels | the CPU reference | gradients, momentum diagonal, residual, block matrix, mass flows | **3 × 10⁻¹⁶** relative on every element type |
+| GPU solver | the CPU reference | whole steady and transient solves, Carreau–Yasuda, symmetry, forces | **10⁻¹¹** with host-direct, ACM and AmgX linear solves |
+| Flow-rate inlet; lumped outlets | exact: `ρ Q`; `p = a + r Q`; the standalone 0-D model | implicit RCR coupling, steady and transient, two stiff outlets | round-off; to the solver tolerance |
+| Backflow stabilisation, openings, average pressure | the CPU reference; exact relations | pressure-zone options | 10⁻⁸ |
+| Variable time step | exact for quadratics; the CPU reference | BDF2 at step ratios 0.6–1.7 | **order 1.9–2.0**; GPU = CPU to 10⁻⁹ |
+| Wall shear stress | affine fields; Poiseuille; stagnation flow | velocity gradients at the wall integration points (CFX); consistent reactions as an option | exact for affine fields on every element type; first order in the wall cell, within 2 % with prism layers at R/32 ([numerics](../spec/fv_numerics.md#wall-shear-stress)); reactions close the force balance to 5 × 10⁻⁴ |
+| Partitions | the one-GPU solver | halo exchange, global FGMRES | one partition: round-off; 2–4: 10⁻⁸ |
+| DFG 2D-2 cylinder | Schäfer & Turek (1996) | vortex shedding, Re = 100 | *(results pending)* |
 | DFG 2D-1 cylinder | Schäfer & Turek (1996) | drag, lift, Δp | c_D +0.23 %, Δp +0.35 % at 21,680 nodes |
 | Lid-driven cavity, Re = 100, 400 | Ghia et al. (1982) | recirculation, moving wall | centreline RMS 0.003–0.007 at 64² |
-| Same mesh as OpenFOAM | OpenFOAM v2506 | the whole solver; the Fluent writer | writer passes `checkMesh`; flow rates converge together at Re = 0.5, 10 (0.24 %, 0.07 %); at Re = 50 a 4.6 % gap on pre-asymptotic meshes, **open** |
+| Developed pipe, pressure inflow | exact (Re-independent) | momentum entering through pressure boundaries | **converging** on extruded (+0.12 % at 18 cells across, order 1.2–1.5) and Delaunay tetrahedral meshes (−0.23 % at 24); a 0.5 % floor on structured tetrahedra; the opt-in full reconstruction unstable on coarse meshes |
+| Same mesh as OpenFOAM | OpenFOAM v2506 | the whole solver; the Fluent writer | writer passes `checkMesh`; at Re = 50 zvCFD is 0.5–0.7 % below the exact flow rate and OpenFOAM 5.8–6.8 % (nc = 6, 12) |
 
 ---
 
@@ -246,6 +257,109 @@ coronary mesh, is as accurate as the pure ones.
 
 ---
 
+## Developed pipe flow through pressure boundaries
+
+Radius 0.5, length 4, ρ = 1, μ = 0.02, fixed pressure 2.56 at the inlet and
+0 at the outlet, natural velocity at both ends, no-slip walls: Re = 50 on
+the developed mean velocity. Developed Poiseuille flow satisfies the
+Navier–Stokes equations and both boundary conditions, so the flow rate does
+not depend on Re. Its exact value is Poiseuille's on the wall polygon
+(`exact.polygon_poiseuille_flux`). The advective error is the flow rate
+against the discrete Stokes solution on the same mesh, which converges to
+the exact rate at second order. The case tests momentum entering through a
+pressure boundary, where the inflow profile is free
+([numerics](../spec/fv_numerics.md)).
+
+Three mesh families, all with the same wall polygon of `4 nc` sides and
+`8 nc` layers:
+
+- **extruded**: triangles extruded along the axis, rings graded toward the
+  wall, so every edge is axial or in a cross-section;
+- **mixed**: wedge layers graded toward the wall around a structured
+  tetrahedral core, built like the coronary mesh. This is the mesh of the
+  OpenFOAM comparison below. Its tetrahedra come from splitting hexahedra,
+  so their diagonals all lean the same way;
+- **Delaunay**: the Delaunay tetrahedralisation of a jittered lattice in the
+  same prism, with no wall layers. Its connectivity is unstructured, as in
+  vessel meshes.
+
+Flow rate against Stokes at Re = 50, with outer iterations to 10⁻⁹ in brackets:
+
+| Mesh | nc | Nodes | High Resolution (default) | Blend 1 | Upwind | Second-order reconstruction (opt-in) |
+|---|---:|---:|---:|---:|---:|---:|
+| extruded | 6 | 9,457 | +0.560 % (36) | +0.560 % | 0 (round-off) | diverges |
+| | 12 | 72,265 | +0.204 % (32) | +0.204 % | 0 | −0.026 % (107) |
+| | 18 | 240,265 | +0.124 % (31) | +0.124 % | 0 | +0.003 % (57) |
+| mixed | 3 | 1,300 | +0.60 % (42) | +2.23 % | −21.6 % | −0.52 % (not converged in 400) |
+| | 6 | 9,457 | +0.08 % (34) | +0.14 % | −14.9 % | +0.25 % (stalls at 10⁻¹⁰) |
+| | 12 | 72,265 | −0.44 % (32) | −0.44 % | −14.5 % | +0.51 % (124) |
+| | 18 | 240,265 | −0.58 % (33) | −0.57 % | −15.3 % | +0.43 % (69) |
+| Delaunay | 6 | 3,035 | −7.84 % (41) | −5.73 % | −49.6 % | −8.49 % (90) |
+| | 12 | 22,567 | −0.59 % (37) | −0.58 % | −34.7 % | −0.84 % (46) |
+| | 18 | 72,624 | −0.46 % (36) | −0.47 % | −28.1 % | −0.24 % (38) |
+| | 24 | 168,050 | −0.23 % (30) | −0.22 % | −23.9 % | −0.14 % (32) |
+
+**On the extruded mesh the default is consistent and converges**, at an
+observed order of 1.46 (nc 6 → 12) and 1.23 (12 → 18). Against the exact
+rate it is within 0.19 %, 0.015 % and 0.006 %. Upwind is exact there to
+round-off, because every edge is either along the developed flow or across
+it. The inflow shows no jet: the centreline speed at the inlet is within
+10⁻⁴ of mid-pipe.
+
+**On the Delaunay mesh it converges too:** −0.59, −0.46 and −0.23 % with
+12, 18 and 24 cells across, an observed order of 1.4 over that range (the
+random meshes make the step-to-step order noisy). Against the exact rate:
+−1.05, −0.66 and −0.35 %. The reconstruction converges as well. Upwind
+converges there, slowly (order 0.5).
+
+**On the mixed mesh about 0.5 % does not shrink**, for every second-order
+treatment of the inflow: −0.44 % and −0.58 % for the default at 12 and 18
+cells across, +0.51 % and +0.43 % for the full reconstruction. Against the
+exact rate the default stays at −0.66 to −0.70 % from 6 to 18 cells across.
+The floor comes from the mesh's structured tetrahedra, not from the inflow
+treatment: the Delaunay mesh has none. Randomly moving the mixed mesh's
+interior nodes by up to 20 % of the local edge does not remove it (−0.09,
+−0.54, −0.64 %), because the split pattern stays. Upwind shows the same bias
+at full strength. On the developed flow its advection residual stays at
+0.4 ρU²/R RMS at every level, and its flow rate at −15 %. The second-order
+schemes reduce that residual to 0.01–0.03 ρU²/R, where the square core meets
+the rings, but it does not shrink.
+
+How the inflow treatment was chosen, with the flow rate against Stokes:
+
+| Inflow treatment | extruded, nc 6 | 12 | mixed, nc 6 | 12 | 18 | stable |
+|---|---:|---:|---:|---:|---:|---|
+| corrections on faces leaving an inflow node, none at its boundary face (before 1 October) | not converged | — | +3.4 % | +3.8 % | — | yes |
+| no correction at inflow nodes (`β = 0`) | +1.30 % | +1.25 % | −4.09 % | −2.93 % | −2.36 % | yes |
+| corrections out of the inflow node's own row, carried by its boundary flux | +0.56 % | +0.20 % | −1.71 % | −1.46 % | −1.33 % | yes |
+| **the same, plus the cross-stream part of the faces' offset from the boundary (default)** | **+0.56 %** | **+0.20 %** | **+0.08 %** | **−0.44 %** | **−0.58 %** | **yes** |
+| full second-order boundary reconstruction | diverges | −0.03 % | +0.25 % | +0.51 % | +0.43 % | no, on coarse meshes |
+
+- **Dropping the corrections only moved the inconsistency one row in.**
+  The inflow from the boundary nodes then arrived uncorrected and left
+  corrected, which reversed the jet.
+- **The full reconstruction keeps the part of the correction along the
+  boundary normal.** The faces leaving an inflow node lie half a cell
+  downstream, and its gradient there is one-sided, so the half-cell is
+  differenced centrally. That is unstable at cell Péclet numbers above
+  about 2: it diverges on the extruded mesh at 6 cells across (Péclet about
+  8) and converges at 12 and 18. Developed flow has no gradient along the
+  normal, so the default keeps only the cross-stream part.
+- **On the Delaunay mesh the mirrored treatment alone gives −0.55, −0.54
+  and −0.18 %** at 12, 18 and 24 cells across. The cross-stream term
+  matters where the tetrahedra are structured: it takes the mixed mesh from
+  −1.5 % to about −0.5 %.
+
+GPU (fused and classic kernels) and CPU solvers agree on the default to
+2 × 10⁻¹¹ with a fixed blend, and the CPU reference's momentum balance
+closes to 10⁻¹². Tests: `tests/test_fv_developed_pipe.py`. Script:
+`benchmarks/validation/fv_gpu_cases.py developed_pipe [mixed|wedge|delaunay]`.
+Results: `benchmarks/results/validation/fv/developed_pipe{,_wedge,_delaunay}.json`
+(the perturbed mixed mesh and the mirrored treatment alone were one-off
+runs on 2 October and are not in the results files).
+
+---
+
 ## Exact Navier–Stokes flows
 
 ### Kovasznay flow (steady, Re = 40)
@@ -384,7 +498,76 @@ without advection and the transpose stress):
 
 Agreement is at machine precision. Element colouring (no two elements of
 a colour share a node) keeps the kernels free of atomics, and repeated runs
-are bit-identical.
+are bit-identical. The block matrix, right-hand side, limiter and mass
+flows of the GPU assembly match the reference's lagged form to 10⁻¹¹ of
+their scale, with and without a time term and for Carreau–Yasuda fluid.
+
+---
+
+## The GPU solver against the reference
+
+The GPU solver lags the Rhie–Chow gradient and solves each linear system
+only to a tenfold residual reduction, as CFX does. At convergence it must
+reach the reference's discrete solution (`tests/test_fv_solver_gpu.py`):
+
+| Case | Linear solver | Agreement with the reference |
+|---|---|---|
+| Mixed tet–wedge pipe, fixed blend | host direct, ACM, AmgX | `u` 10⁻⁹, `p` 10⁻⁹ of its range; mass 10⁻¹² |
+| Same, High Resolution (reference lagged too, same path) | host direct | 10⁻⁸ |
+| Hexahedral half channel, symmetry planes, false time step | ACM | 10⁻⁹ |
+| Carreau–Yasuda manufactured solution crossing an outlet with traction | host direct | 10⁻⁸ |
+| Womersley pipe, BDF2 | host direct | 10⁻⁹ |
+| Womersley pipe, variable steps (ratios 0.5–1.6) | host direct | 10⁻⁹ |
+| Zone forces (walls, inlet, outlet) from consistent reactions | host direct | 10⁻⁸ of the largest |
+
+With the pressure level initialised from the boundaries, shifting every
+pressure by 1000 changes the GPU velocities by 7 × 10⁻¹³, as it does the
+reference's. Gate B timings are on the [plan](../feasibility/fv_plan.md#progress).
+
+---
+
+## Boundary conditions of the GPU solver
+
+Each is checked against an exact statement (`tests/test_fv_boundaries.py`):
+
+| Check | Exact statement | Result |
+|---|---|---|
+| Developed profile of a circular cap | `1 − (r/R)²` | 0.03 at the nodes of a 6 × 6 O-grid face |
+| Flow-rate inlet, tabulated `Q(t)` | discrete inflow `= ρ Q(t)` | 10⁻¹³ relative |
+| Steady RCR outlet (host direct, ACM, AmgX) | `p_out = P_v + (R_p + R_d) Q`; the field equals the fixed-pressure solution at that pressure | 10⁻⁹ |
+| Transient RCR outlet, sinusoidal inflow | outflow = inflow; `p_out(t)` = the standalone RCR driven by that outflow | 10⁻⁹ |
+| Two outlets at 1000× and 2000× the domain's resistance (ACM, AmgX) | `p_i = r_i Q_i`; `Q_a/Q_b → 2` | 10⁻⁸; 2.000 ± 0.002, in < 80 outer iterations |
+| Backflow stabilisation (β = 0.5), outlet with backflow | GPU = CPU reference; momentum identity | 10⁻⁸; 10⁻¹⁰ |
+| Average static pressure | area mean = the value; ≈ the fixed-pressure drop in developed flow | 10⁻¹⁰; within 5 % |
+| Opening driven by total pressure | `p = p₀ − ½ρ|u|²` at inflow nodes; mass balance | 10⁻⁹; 10⁻¹⁰ |
+| Wall shear in developed pipe flow, reactions | `τ P = −(dp/dz) A`; Poiseuille `4μQ/(πR³)` | 5 × 10⁻⁴; 5.6 % on a 16-sided section, 1.5 % on 32 (the section's area deficit, `A/πR²` = 0.974, 0.994) |
+| Wall shear, wall-ip gradients (default) | affine velocity on perturbed and warped tet, wedge, hex, pyramid meshes; Poiseuille against the section's force balance | 10⁻¹²; 7.4 → 3.2 → 1.2 % as the wall cell shrinks (first order) |
+| BDF2, variable steps (ratios 0.6 and 1.67 alternating), Womersley | observed temporal order | 1.9–2.0 |
+| Time-step study helper on BDF2 decay | order 2; the extrapolate beats the fine run | 2.00 |
+
+## Linear solvers on thin cells
+
+`tests/test_fv_linear.py` holds the linear solvers to a direct solve on
+systems where point-block smoothing struggles: the DFG slab (one cell
+deep, Δt = 0.005 s) and a tube with strongly graded wall layers. The
+default AmgX configuration (`gs`: symmetric multicolour Gauss–Seidel,
+aggregation weighted on the pressure entry) needs 17 iterations to 10⁻⁶
+on each, in double and mixed precision alike. The `robust` preset (ILU(0), pairwise
+aggregation) needs 11 on the slab, where the usual DILU set-up stalls. The
+SIMPLE block preconditioner solves the layered tube, and the `auto` ladder
+switches to a working solver when one fails (`gs` → `robust` → DILU →
+SIMPLE, checked with a 3-iteration limit that no rung can meet). The numbers and the reason are
+on [numerics](../spec/fv_numerics.md#linear-solvers-on-thin-cells-zvcfdfvlinear).
+
+## Partitions
+
+`tests/test_fv_multi.py` runs the partitioned solver as 1–4 partitions of
+one GPU. After the halo exchange, nodal gradients equal the global ones
+at every local node to 10⁻¹²; one partition reproduces the one-GPU ACM
+solver's iteration history to 10⁻⁹; with two to four, the converged
+fields match it to 10⁻⁸ (fixed blend), to 10⁻³ with High Resolution (the
+frozen limiter's path dependence), for two lumped outlets and for a
+transient with variable steps, whose wall shear matches to 10⁻⁸.
 
 ---
 
@@ -411,6 +594,17 @@ reference. Lift is small and converges non-monotonically, as in most
 codes. An early run gave −7.7 % drag at m = 16: the cylinder nodes' x and
 y reactions were being shared with the symmetry planes, which fix only z
 (see defects).
+
+### DFG 2D-2: vortex shedding (Re = 100)
+
+The same channel at `U_max = 1.5` m/s: periodic shedding. GPU solver, High
+Resolution, BDF2 at Δt = 0.005 s, from the inflow profile with a small
+asymmetric kick in the wake, marched to 6 s; the maximum drag and lift
+coefficients over the last periods, the Strouhal number from the lift
+period, and Δp half a period after maximum lift, against the benchmark's
+intervals (`benchmarks/validation/fv_gpu_cases.py`):
+
+*(results pending)*
 
 ### Lid-driven cavity (Re = 100, 400)
 
@@ -439,36 +633,53 @@ A wall-wedge / tet-core pipe written by zvCFD's Fluent writer and imported
 with `fluent3DMeshToFoam` (OpenFOAM v2506, official image). Pressure-driven
 flow at Re = 50, with fixed pressure at both ends and natural velocity there,
 in both codes. OpenFOAM is cell-centred (`simpleFoam`, `linearUpwind`),
-zvCFD vertex-centred (High Resolution).
+zvCFD vertex-centred (High Resolution). It is the mixed mesh of the
+[developed pipe](#developed-pipe-flow-through-pressure-boundaries), whose
+exact flow rate is developed Poiseuille flow on the polygonal section.
 
-| nc | Nodes | Cells | zvCFD Q | OpenFOAM Q | difference | zvCFD mass imbalance | OpenFOAM checkMesh |
-|---|---|---|---|---|---|---|---|
-| 3 | 1,300 | 5,328 | 0.68312 | 0.66226 | +3.15 % | 3e-15 | Mesh OK |
-| 6 | 9,457 | 38,016 | 0.75984 | 0.72666 | +4.57 % | 6e-15 | Mesh OK |
+zvCFD measured on 2 October, after the fix to momentum entering through
+pressure boundaries; OpenFOAM on 1 October, after the fix to the tube
+generator (its `growth` had graded the wall layers toward the core).
+
+| nc | Nodes | Cells | zvCFD Q | OpenFOAM Q | difference | exact Q | zvCFD vs exact | OpenFOAM vs exact | checkMesh |
+|---|---|---|---|---|---|---|---|---|---|
+| 3 | 1,300 | 5,328 | 0.69746 (CPU reference) | 0.65988 | +5.7 % | 0.71267 | −2.1 % | −7.4 % | Mesh OK |
+| 6 | 9,457 | 38,016 | 0.76175 (CPU reference) | 0.71498 | +6.5 % | 0.76711 | −0.70 % | −6.8 % | Mesh OK |
+| 12 | 72,265 | 304,128 | 0.77668 (GPU) | 0.73530 | +5.6 % | 0.78085 | −0.53 % | −5.8 % | Mesh OK |
 
 OpenFOAM's `checkMesh` passes every mesh the writer produces: an
-independent check of the Fluent export.
+independent check of the Fluent export. "Exact" is developed Poiseuille
+flow on the wall polygon (`4 nc` sides), from a converged finite-element
+solution of `−Δw = 1` on it (`exact.polygon_poiseuille_flux`, which
+reproduces the square-duct series to 2 × 10⁻⁶): 0.9074, 0.97671 and
+0.99421 of the circle's 0.78540. That is not the circle's rate times the
+area ratio squared, which holds only for similar sections (0.9119, 0.9774,
+0.9943). zvCFD's Stokes solutions converge to it at second order: −0.77,
+−0.22 and −0.12 % at nc = 6, 12 and 18.
 
-**At Re = 50 the two codes do not yet converge together.** The gap grows
-from 3.2 % to 4.6 % between the two levels. Neither code is in its
-asymptotic range there: each changes its flow rate by about 10 % between
-nc = 3 and 6. OpenFOAM alone at nc = 12 (304,128 cells) gives 0.7475, an
-observed order of 1.6, and an extrapolated limit of about 0.757.
-zvCFD's nc = 6 value, 0.7598, is 0.3 % above that, but with two levels
-zvCFD's own limit cannot be placed. At lower Reynolds numbers the same meshes **agree
-and converge together**:
+**Both codes lie below the exact rate and converge toward it, and zvCFD is
+much the closer: −0.5 to −0.7 % at nc = 6 and 12, against OpenFOAM's −5.8
+to −6.8 %.** The gap between them is now almost all OpenFOAM's
+discretisation error. zvCFD's remainder is the Stokes solution's own error
+(0.2–0.8 %) and this mesh's structured-tetrahedron floor of about 0.5 %
+(see the developed pipe). The GPU value at nc = 12 differs from the
+developed-pipe run's by 0.13 %, because the two use different linear solvers
+(`auto` here, AmgX `gs` there). High Resolution freezes its limiter after
+10 iterations, so the answer depends slightly on the iteration path.
 
-| Re | nc = 3 | nc = 6 |
-|---|---|---|
-| 0.5 | −1.18 % | −0.24 % |
-| 10 | −0.78 % | +0.07 % |
-| 50 | +3.15 % | +4.57 % |
-
-(`benchmarks/results/fv/openfoam_same_mesh_re_scan.json`). So the
-discretisations agree, and the Re = 50 gap is advection on meshes too
-coarse for the developing entrance flow. There, zvCFD's High Resolution
-and OpenFOAM's `linearUpwind` differ most. It stays **open** until a third
-zvCFD level is possible (the GPU solver, or an iterative CPU solve).
+Before 2 October the codes differed by 10 % at nc = 6 and 12, with zvCFD
+3.4–3.8 % *above* the exact rate and an inflow jet 14–28 % faster on the
+axis than Poiseuille. The cause was the deferred High Resolution correction
+on the faces leaving inflow-boundary nodes. Momentum entering through the
+pressure boundary carried no counterpart, so in the first row of control
+volumes the correction moved momentum toward the faster fluid. Switching it
+off at the inlet nodes alone removed the excess; switching it off at outlet
+or wall nodes changed nothing. Both zvCFD solvers showed it, so it was in
+the shared discretisation, not in the speed work. On the earlier,
+wall-coarse meshes, a scan in Reynolds number had shown the codes agreeing
+at Re = 0.5 and 10 (−0.24 % and +0.07 % at nc = 6) and parting at Re = 50
+(`benchmarks/results/fv/openfoam_same_mesh_re_scan.json`), as an advective
+inflow error would.
 
 ---
 
@@ -507,7 +718,8 @@ level, as momentum conservation requires in Stokes flow.
   published on the FDA's hub, `nciphub.org`, which no longer resolves; a
   copy is needed.
 - **The coronary tree**: the same cases on the real mesh (OpenFOAM, CFX,
-  GCI by refinement) wait for the GPU solver.
+  GCI by refinement, the time-step study) wait for the H100 run: its
+  106 M blocks need about 25–39 GB.
 
 ---
 
@@ -515,7 +727,7 @@ level, as momentum conservation requires in Stokes flow.
 
 | Found by | Defect | Symptom | Fix |
 |---|---|---|---|
-| Hydrostatic case | the lagged Rhie–Chow gradient converges slowly for smooth pressure (≈ 0.7 per iteration) | pressure not converged after 50 iterations | the reference solver takes it implicitly; the GPU solver will lag it, as CFX does, and needs the outer iterations for it |
+| Hydrostatic case | the lagged Rhie–Chow gradient converges slowly for smooth pressure (≈ 0.7 per iteration) | pressure not converged after 50 iterations | the reference solver takes it implicitly; the GPU solver lags it, as CFX does, and spends outer iterations on it |
 | Pyramid gradient check | integration points placed by averaging parametric points of the collapsed-hex pyramid | 8 % gradient error on undistorted pyramids | place each point physically on the reference element, then map back |
 | Couette flow | boundary mass flows evaluated with each node's own velocity | velocity error 3.7 % of the maximum, spurious pressures up to 7–10 where the exact pressure is zero | interpolate on the face to each sub-face's area centroid (11/18, 7/36 on triangles; 9/16, 3/16, 1/16 on quadrilaterals) |
 | Couette flow, tetrahedra | one flux point per non-planar ip face | boundary continuity error 6 × 10⁻⁵ on undistorted tetrahedra | two flux points per ip face, one per planar half (a deviation from the plan) |
@@ -530,6 +742,19 @@ level, as momentum conservation requires in Stokes flow.
 | Transient balances | the momentum check evaluated after the time state was cleared | a spurious 0.4 imbalance | keep the last time terms with the assembled system |
 | No-slip manufactured solution | wrong curl in the manufactured velocity (a test defect) | divergence 0.19 | corrected; every exact solution is now checked against finite differences |
 | Manufactured solution, slip walls | tetrahedral boundary pressure with prescribed sliding velocity | see above | **characterised, open** |
+| Gate B | AmgX reusing its whole hierarchy (`structure_reuse_levels: −1`) | 200 iterations at 0.96 per iteration from the second outer iteration | rebuild per matrix (`0`) |
+| Gate B | outer convergence tested on the change only | "converged" after 5 outer iterations while the linear solve stalled | also require the linear solve to have met its tolerance |
+| Gate B | FGMRES residuals reported against ‖b‖ by one back end and against the initial residual by the other; `rtol=0` read as the default | inconsistent reports; a round-off start never "converged" | both relative to the initial residual, with a round-off floor |
+| Two stiff lumped outlets | lagged Rhie–Chow gradient of a zero interior next to outlets at 1600 Pa | fixed-pressure outlets at that level diverged; the GPU solver was not level-invariant | start from the boundaries' pressure level |
+| Two stiff lumped outlets (AmgX) | lumped rows of size `r Q` dominating the Krylov norm | residual 10⁻⁷ with the solution 0.25 off | scale the rows (then all rows dimensionless, next) |
+| RCR pipe in SI units | rows in SI units: one equation's units dominate the 2-norm | transient coefficient loops drifted apart; one Krylov step per solve | dimensionless rows; steady RCR 130 → 38 outer iterations |
+| RCR pipe, transient | each step reset lumped zones' pressure to 0 | NaN in the first coefficient loops | keep the solver's own pressure there |
+| Two partitions | a halo node's local control volume used in `V/a_P` | mass imbalance stuck at 1.7 × 10⁻⁵ | use the whole control volume |
+| Gate B at 329 k nodes | a second AmgX hierarchy and a whole-matrix copy each iteration | out of memory (AmgX code 5) | release the handle; keep only the needed raw rows |
+| DFG 2D-2 run | block-Jacobi and DILU smoothing of the coupled saddle-point system on thin cells (the smoother alone diverges: more sweeps, faster) | every linear solve stalled at 200 iterations; c_D 17 instead of 3.2 | ILU(0) with pressure-weighted aggregation by default; SIMPLE; the `auto` ladder |
+| Smoother sweep | ILU(1)'s fill on tetrahedral rows (about 20 blocks) | AmgX setup error (shared memory per row) | ILU(0) as the default |
+| SimVascular segment (zvcfd-be) | wall shear at inlet rims took part of the inlet's pressure force, tangential to the wall | up to 3,950 Pa against a median 4.4 Pa at cut rims | subtract the inlet sub-faces' pressure force and momentum explicitly |
+| Same mesh as OpenFOAM; developed pipe | deferred corrections on the faces leaving a pressure-inflow node, with nothing for them in its boundary momentum `ṁ_b u_node` | an inflow jet; the flow rate 3.4–3.8 % above the exact one, not converging; 10 % from OpenFOAM | the corrections stay out of the inflow node's own row and its boundary flux carries them, plus the cross-stream part of the faces' offset (`β = 0` there only moved the mismatch one row in; the full reconstruction is unstable on coarse meshes) |
 
 ## Reproducing
 
@@ -537,5 +762,8 @@ level, as momentum conservation requires in Stokes flow.
 PYTHONPATH=. python benchmarks/validation/fv_cases.py            # every case, hours on one core each
 PYTHONPATH=. python benchmarks/validation/fv_cases.py kovasznay  # one case
 FOAM_SIF=esi2506.sif PYTHONPATH=. python benchmarks/fv/openfoam_same_mesh.py
-pytest tests/test_fv_validation.py tests/test_fv_properties.py tests/test_fv_gpu.py
+ZVCFD_AMGX_LIB=.../libamgxsh.so PYTHONPATH=. python benchmarks/validation/fv_gpu_cases.py dfg2d2 16 32
+ZVCFD_AMGX_LIB=.../libamgxsh.so PYTHONPATH=. python benchmarks/fv/gate_b.py 8 12 16 20
+pytest tests/test_fv_validation.py tests/test_fv_properties.py tests/test_fv_gpu.py \
+       tests/test_fv_solver_gpu.py tests/test_fv_boundaries.py tests/test_fv_multi.py tests/test_fv_run.py
 ```

@@ -115,6 +115,13 @@ domain (1336, 1184, 1176): 21849 bricks (0.60% active), 5,028,753 fluid cells, f
 done: 16000 steps, 727 MLUPS incl. checks/output, 128.1 s total -> runs/coronary-50um-b1ee088e1393.zvcfd
 ```
 
+`zvcfd run` does not voxelise the Fluent file itself. On first use it
+imports the file's boundary into a Zarr Vectors mesh collection under
+`runs/meshes/` (27 s), and it voxelises that collection's boundary store
+([Meshes in Zarr Vectors](zarr_vectors_meshes.md)). Later runs reuse the
+collection, and the result is byte for byte the same as a direct
+voxelisation. The output above is from a direct voxelisation.
+
 Voxelising takes 15 s. The solve takes under two minutes on one RTX
 A2000, which is 0.38 s of flow at a time step of 23.8 µs. Convergence
 requires two things: the flows must stop changing (10⁻⁴ between checks),

@@ -14,7 +14,12 @@ RES = Path(__file__).resolve().parents[2] / "benchmarks" / "results" / "simvascu
 
 
 def label(run: dict) -> str:
-    s = f"{run['voxel_um']:g} µm"
+    if run.get("code") == "fv":
+        s = "finite volume, SimVascular's mesh"
+        if run.get("backflow"):
+            s += f", backflow {run['backflow']:g}"
+        return s
+    s = f"zvCFD {run['voxel_um']:g} µm"
     if run["inlet"] != "sv":
         s += ", parabolic inlet"
     if abs(run.get("u_lat", 0.05) - 0.05) > 1e-9:
@@ -23,9 +28,10 @@ def label(run: dict) -> str:
 
 
 def order(runs: dict) -> list:
-    return sorted(runs, key=lambda k: (runs[k]["run"]["inlet"] != "sv",
-                                       -runs[k]["run"]["voxel_um"],
-                                       runs[k]["run"].get("u_lat", 0.05)))
+    return sorted(runs, key=lambda k: (runs[k]["run"].get("code") == "fv",
+                                       runs[k]["run"]["inlet"] != "sv",
+                                       -(runs[k]["run"]["voxel_um"] or 0),
+                                       runs[k]["run"].get("u_lat") or 0.05))
 
 
 def main():
@@ -38,6 +44,10 @@ def main():
     for k in keys:
         r = runs[k]["run"]
         per = r["solve_s"] / r["cycles"]
+        if r.get("code") == "fv":
+            print(f"| {label(r)} | {r['nodes'] / 1e6:.2f} M nodes | — | {r['dt_s'] * 1e6:.0f} | "
+                  f"{int(round(1 / r['dt_s'])):,} | {per / 60:.0f} min | — |")
+            continue
         print(f"| {label(r)} | {r['fluid_voxels'] / 1e6:.2f} M | {r['tau']:.4f} | "
               f"{r['dt_s'] * 1e6:.2f} | {int(round(1 / r['dt_s'])):,} | {per / 60:.0f} min | "
               f"{r['mlups']:.0f} |")

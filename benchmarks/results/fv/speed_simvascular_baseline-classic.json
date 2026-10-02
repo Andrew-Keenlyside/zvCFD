@@ -1,0 +1,43 @@
+{
+ "nodes": 398814,
+ "elements": {
+  "tet": 2069840
+ },
+ "blocks": 5548406,
+ "kernels": "classic",
+ "linear": "amgx",
+ "preset": "robust",
+ "precision": "mixed",
+ "rtol": 0.01,
+ "steps": 3,
+ "loops": 5,
+ "case_s": 388.2244050502777,
+ "setup_s": 57.49700665473938,
+ "wall_s": 473.56814551353455,
+ "s_per_step": 157.8560485045115,
+ "outer_iterations": 15,
+ "per_outer": {
+  "seconds": 30.720783042907716,
+  "assemble_s": 2.083454465866089,
+  "linear_setup_s": 0.9371229807535807,
+  "linear_solve_s": 24.209259557724,
+  "other_s": 3.4909460385640436
+ },
+ "linear_iterations_mean": 200.0,
+ "linear_iterations_max": 200,
+ "not_converged": 15,
+ "final_rms": {
+  "rms_u": 0.02077864572638038,
+  "rms_v": 0.025363674968603644,
+  "rms_w": 0.020382772460538726,
+  "rms_p": 0.0026272052679225644
+ },
+ "imbalance_last": 0.0811725886783167,
+ "device_pool_gb": 6.244558848,
+ "store_mode": true,
+ "captured": [
+  "/hdd/data/zvcfd_vmr/linear_capture/system_0.npz",
+  "/hdd/data/zvcfd_vmr/linear_capture/system_1.npz",
+  "/hdd/data/zvcfd_vmr/linear_capture/system_2.npz"
+ ]
+}

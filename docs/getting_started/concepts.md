@@ -1,14 +1,46 @@
 # Concepts
 
-This page is the mental model: what a zvCFD run is made of, from the voxel
-up to the run collection, and which of those things you choose.
+This page is the mental model: what a zvCFD run is made of, and which of
+those things you choose. The finite-volume solver works on a mesh and the
+lattice-Boltzmann solver on voxels; both write the same kind of run
+collection.
 
 ---
 
+## Meshes and control volumes
+
+The finite-volume solver, the main one, solves on a mesh's own cells:
+tetrahedra, prisms (wedges), pyramids and hexahedra, in any mix. The
+unknowns (u, v, w, p) live at the mesh's **nodes**. Each node owns a
+**control volume** cut from the elements around it (the median dual),
+and fluxes cross its faces at **integration points**. The scheme is
+element-based, as in Ansys CFX: values and gradients at those points come
+from each element's shape functions
+([Finite-volume numerics](../spec/fv_numerics.md)).
+
+The mesh's boundary is split into named **zones**, such as `wall`,
+`inlet` and `outlet_12`, as a Fluent or SimVascular mesh defines them. In
+the configuration, `boundaries.patches` rules match zones by name and give
+each one a condition. Walls need no rule.
+
+A mesh enters zvCFD once, as a **mesh collection** (`<name>.zvmesh`): a
+Zarr Vectors volume store of nodes and elements, and a boundary store of
+the zones' faces, in metres. `zvcfd import-mesh` writes one, and
+`zvcfd run` writes one by itself for a raw mesh file. The solver runs on
+the mesh read back from it ([Mesh stores](../spec/mesh_store.md)).
+Snapshots are node fields that point at that volume store. Wall results
+(wall shear stress, TAWSS, OSI, RRT) are vertex attributes of the run's
+boundary store.
+
+`solver.method: auto`, the default, picks the finite-volume solver for a
+mesh. Giving the mesh a `source.voxel_size` voxelises it for the
+lattice-Boltzmann solver instead, and `solver.method: lbm` says so
+explicitly.
+
 ## Voxels and flags
 
-zvCFD solves on the voxel grid of the image, in OME-Zarr axis order
-`(z, y, x)`. Every voxel carries a flag:
+The lattice-Boltzmann solver works on the voxel grid of an image, in
+OME-Zarr axis order `(z, y, x)`. Every voxel carries a flag:
 
 | Flag | Meaning |
 |---:|---|
@@ -17,9 +49,9 @@ zvCFD solves on the voxel grid of the image, in OME-Zarr axis order
 | `2` | fixed-density boundary: a reservoir that sets the pressure |
 
 Flags come from a segmentation (a label value or a threshold on an
-OME-Zarr level), from a synthetic phantom, or — for Ansys users — from
-voxelising the wall surface of a Fluent mesh. There is no body-fitted mesh
-and no meshing step.
+OME-Zarr level), from a synthetic phantom, or from voxelising the wall
+surface of a mesh collection. There is no body-fitted mesh and no meshing
+step.
 
 ## Bricks
 

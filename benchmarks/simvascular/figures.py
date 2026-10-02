@@ -87,7 +87,7 @@ def boundary_and_pressure(zv, ref):
     plt.close(fig)
 
 
-def outlet_flows(zv, ref):
+def outlet_flows(zv, ref, label="zvCFD", out="simvascular_outlets.png"):
     om = cmp.outlet_metrics(zv, ref)
     t = ref["t"] * 1e3
     fig = plt.figure(figsize=(12.4, 4.4))
@@ -107,7 +107,7 @@ def outlet_flows(zv, ref):
     a.set_ylim(lim)
     a.set_aspect("equal")
     a.set_xlabel("SimVascular, cycle-mean outlet flow (mL/s)")
-    a.set_ylabel("zvCFD, cycle-mean outlet flow (mL/s)")
+    a.set_ylabel(f"{label}, cycle-mean outlet flow (mL/s)")
     a.legend(loc="upper left", fontsize=8.5)
     a.set_title("24 outlets", loc="left", fontsize=10, color=INK)
     show = ["LAD", "LCX", "RCA", "LAD_b3_b1", "RCA_b3", "LCX_b4_b1"]
@@ -124,9 +124,9 @@ def outlet_flows(zv, ref):
         if k // 2 == 0:
             b.set_ylabel("mL/s")
     handles = [plt.Line2D([], [], color=SV, lw=2), plt.Line2D([], [], color=ZV, lw=1.5)]
-    fig.legend(handles, ["SimVascular", "zvCFD"], loc="upper right", ncol=2, fontsize=8.5)
+    fig.legend(handles, ["SimVascular", label], loc="upper right", ncol=2, fontsize=8.5)
     fig.tight_layout(rect=(0, 0, 1, 0.94))
-    fig.savefig(FIG / "simvascular_outlets.png", dpi=160)
+    fig.savefig(FIG / out, dpi=160)
     plt.close(fig)
 
 
@@ -167,7 +167,8 @@ def convergence(summary):
     plt.close(fig)
 
 
-def sections(zv, ref, ms=530, which=("LM", "LAD proximal", "RCA proximal")):
+def sections(zv, ref, ms=530, which=("LM", "LAD proximal", "RCA proximal"), label="zvCFD",
+             out="simvascular_sections.png"):
     pr = np.load(RES / "probes.npz", allow_pickle=True)
     labels = [str(s) for s in pr["section_labels"]]
     sec = pr["kind"] == 3
@@ -177,16 +178,16 @@ def sections(zv, ref, ms=530, which=("LM", "LAD proximal", "RCA proximal")):
     uz = zv["probe_u"][iz][sec]
     us = ref["probe_u"][isv][sec]
     fig, axes = plt.subplots(len(which), 3, figsize=(8.2, 2.6 * len(which)))
-    for r, label in enumerate(which):
-        k = labels.index(label)
+    for r, name in enumerate(which):
+        k = labels.index(name)
         m = sid == k
         g = uv[m] * 10                                    # mm
         tvec = pr["section_t"][k]
         sz, ss = uz[m] @ tvec, us[m] @ tvec               # axial velocity (m/s)
         vmax = np.nanmax(ss)
         for c, (vals, title, cmap, lim) in enumerate((
-                (ss, "SimVascular", SEQ, (0, vmax)), (sz, "zvCFD", SEQ, (0, vmax)),
-                (sz - ss, "zvCFD − SimVascular", DIV, (-0.25 * vmax, 0.25 * vmax)))):
+                (ss, "SimVascular", SEQ, (0, vmax)), (sz, label, SEQ, (0, vmax)),
+                (sz - ss, f"{label} − SimVascular", DIV, (-0.25 * vmax, 0.25 * vmax)))):
             a = axes[r, c]
             sc = a.scatter(g[:, 0], g[:, 1], c=vals, s=7, marker="s", cmap=cmap, vmin=lim[0],
                            vmax=lim[1], lw=0)
@@ -198,7 +199,7 @@ def sections(zv, ref, ms=530, which=("LM", "LAD proximal", "RCA proximal")):
             if r == 0:
                 a.set_title(title, fontsize=10, color=INK)
             if c == 0:
-                a.text(-0.08, 0.5, label, transform=a.transAxes, rotation=90, va="center",
+                a.text(-0.08, 0.5, name, transform=a.transAxes, rotation=90, va="center",
                        ha="right", color=INK, fontsize=10)
             cb = fig.colorbar(sc, ax=a, shrink=0.8, pad=0.02)
             cb.outline.set_visible(False)
@@ -207,7 +208,7 @@ def sections(zv, ref, ms=530, which=("LM", "LAD proximal", "RCA proximal")):
     fig.suptitle(f"Axial velocity at {ms} ms (peak LCA flow)", color=INK, fontsize=10.5, x=0.02,
                  ha="left")
     fig.tight_layout()
-    fig.savefig(FIG / "simvascular_sections.png", dpi=160)
+    fig.savefig(FIG / out, dpi=160)
     plt.close(fig)
 
 
@@ -239,6 +240,42 @@ def tawss(zv, ref):
                color=INK2, fontsize=8.5, va="top")
     fig.tight_layout()
     fig.savefig(FIG / "simvascular_tawss.png", dpi=160)
+    plt.close(fig)
+
+
+def tawss_fv(zv, ref, label="zvCFD finite volume", out="simvascular_fv_tawss.png"):
+    """TAWSS of the finite-volume run: the shared near-wall estimate, and each code's own
+    method (wall-ip gradients against SimVascular's P1 gradients), at the shared wall nodes."""
+    wm = cmp.wall_metrics(zv, ref)
+    ow = cmp.own_wall_metrics(zv, ref)
+    if wm is None or ow is None:
+        return
+    pr = np.load(RES / "probes.npz", allow_pickle=True)
+    own_fv = zv["tawss_fv_own"][pr["wall_node"]]
+    a_zv, a_sv, own_sv = wm["tawss_zv"], wm["tawss_sv"], wm["tawss_own"]
+    ok = np.isfinite(a_zv) & np.isfinite(a_sv) & np.isfinite(own_fv) & np.isfinite(own_sv)
+    fig, axes = plt.subplots(1, 2, figsize=(9.2, 4.2))
+    top = np.percentile(np.r_[a_sv[ok], a_zv[ok], own_sv[ok], own_fv[ok]], 99.5)
+    for a, x, y, xl, yl, title in (
+            (axes[0], a_sv[ok], a_zv[ok], "SimVascular (Pa)", f"{label} (Pa)",
+             "TAWSS, same near-wall estimate for both codes"),
+            (axes[1], own_sv[ok], own_fv[ok], "SimVascular, its own P1 gradients (Pa)",
+             f"{label}, wall-ip gradients (Pa)", "TAWSS, each code's own method")):
+        a.hexbin(x, y, gridsize=70, extent=(0, top, 0, top), cmap=SEQ, mincnt=1, bins="log",
+                 linewidths=0)
+        a.plot([0, top], [0, top], color=MUTED, lw=1)
+        a.set_xlim(0, top)
+        a.set_ylim(0, top)
+        a.set_aspect("equal")
+        a.set_xlabel(xl)
+        a.set_ylabel(yl)
+        a.set_title(title, loc="left", fontsize=10, color=INK)
+        r = np.corrcoef(x, y)[0, 1]
+        e = np.sqrt(((y - x) ** 2).sum() / (x ** 2).sum()) * 100
+        a.text(0.04, 0.93, f"r = {r:.3f}\nrelative L2 {e:.1f} %", transform=a.transAxes,
+               color=INK2, fontsize=8.5, va="top")
+    fig.tight_layout()
+    fig.savefig(FIG / out, dpi=160)
     plt.close(fig)
 
 
@@ -340,6 +377,8 @@ def oblique_pipe():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--best", default="vmr0066-60um-sv")
+    ap.add_argument("--fv", default="fv-gpu-rtol0.01",
+                    help="the finite-volume run, drawn as simvascular_fv_*.png")
     ap.add_argument("--runs", default=str(cmp.RUNS))
     ap.add_argument("--before", default=str(vc.VMR_DIR / "runs_neem" / "vmr0066-100um-sv"),
                     help="a run from before the outlet fix, for the before/after centreline")
@@ -359,6 +398,13 @@ def main():
         centreline_pressure(cmp.load_run(Path(args.before)),
                             out="simvascular_centreline_pressure_before.png",
                             note=", 100 µm, before the fix")
+    fv = Path(args.runs) / args.fv
+    if args.fv and (fv / "monitors.npz").exists():
+        zf = cmp.load_run(fv)
+        outlet_flows(zf, ref, label="zvCFD finite volume", out="simvascular_fv_outlets.png")
+        if "probe_u" in zf and "probe_u" in ref:
+            sections(zf, ref, label="zvCFD FV", out="simvascular_fv_sections.png")
+            tawss_fv(zf, ref)
     oblique_pipe()
     summary = json.loads((RES / "summary.json").read_text())
     convergence(summary)

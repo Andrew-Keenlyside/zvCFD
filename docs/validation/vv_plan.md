@@ -68,7 +68,8 @@ GPU linear solve and outer loop do not exist yet, so they are unverified.
 
 | Comparison | Result | Status |
 |---|---|---|
-| OpenFOAM v2506 on the same mesh (pressure-driven pipe, wall wedges and tet core) | OpenFOAM reads zvCFD's Fluent files (`checkMesh`: Mesh OK). Re = 0.5 and 10: the codes converge together (−0.24 % and +0.07 % at 9,457 nodes). Re = 50: the gap grows from 3.2 % to 4.6 % on pre-asymptotic meshes, **open** | done for pipes; the Re = 50 gap needs a finer zvCFD level |
+| OpenFOAM v2506 on the same mesh (pressure-driven pipe, wall wedges and tet core) | OpenFOAM reads zvCFD's Fluent files (`checkMesh`: Mesh OK). At Re = 50, against the exact flow rate (developed Poiseuille on the polygon): zvCFD −0.70 % and −0.53 %, OpenFOAM −6.8 % and −5.8 % at nc = 6 and 12. The earlier 10 % gap, zvCFD above the exact rate, was zvCFD's momentum entering through the pressure inlet, fixed on 2 October | done |
+| Developed pipe through pressure boundaries (exact at every Re) | converges on extruded meshes (+0.56, +0.20, +0.12 % against Stokes at nc = 6, 12, 18) and Delaunay tetrahedra (−0.59, −0.46, −0.23 % at 12, 18, 24); structured tetrahedra leave a 0.5 % floor for every second-order treatment; the opt-in full reconstruction is unstable on coarse meshes (central differencing along the normal) | done; the structured-tetrahedron floor is a property of that mesh |
 | OpenFOAM on the coronary mesh | the OpenFOAM run exists ([OpenFOAM](../benchmarks/openfoam.md)) | **pending the GPU solver** |
 | Ansys CFX (collaborator), same mesh and boundary table | — | **pending**: the GPU solver, the CFX `.out` file |
 | svMultiPhysics on VMR 0066, same `.vtu` | mesh reader built (`zvcfd.mesh.vtk`) | pending: svMultiPhysics is not installed |

@@ -18,11 +18,11 @@ import numpy as np
 
 from zvcfd import collection as col
 from zvcfd.boundary import BoundarySet, Patch, face_patches, profile_scale
-from zvcfd.config import RunConfig
+from zvcfd.config import RunConfig, resolve_method
 from zvcfd.domain import FLUID, SOLID, BrickDomain
 from zvcfd.units import Lattice
 
-_UNIT_UM = {"m": 1e6, "mm": 1e3, "um": 1.0, "micrometer": 1.0, "millimeter": 1e3}
+_UNIT_UM = {"m": 1e6, "cm": 1e4, "mm": 1e3, "um": 1.0, "micrometer": 1.0, "millimeter": 1e3}
 
 
 # ---------------------------------------------------------------- geometry
@@ -71,16 +71,23 @@ def _patch_from_spec(name: str, spec: dict, base: Patch | None = None) -> Patch:
     return Patch(name, kind, **kw)
 
 
-def build_geometry(cfg: RunConfig, log=print):
+def build_geometry(cfg: RunConfig, log=print, *, out: str | None = None):
     """``(domain, boundary, voxel_um, image, report)`` for a configuration."""
     report: dict = {}
     if cfg.source.kind == "mesh":
-        from zvcfd.geometry import voxelize_fluent
+        # always through Zarr Vectors: the boundary store of a mesh collection (.zvmesh),
+        # imported once from a raw mesh file if need be, is what gets voxelised
+        from zvcfd.io.mesh_collection import resolve, voxelize_collection
 
-        unit_um = _UNIT_UM[cfg.source.unit]
+        zvm = resolve(cfg.source.path, Path(out or cfg.output.path) / "meshes",
+                      unit=cfg.source.unit, surface_only=True, log=log)
         voxel_um = float(cfg.source.voxel_size)
-        domain, boundary, grid, report = voxelize_fluent(
-            cfg.source.path, voxel_um / unit_um, unit_scale=unit_um * 1e-6)
+        t0 = time.time()
+        domain, boundary, grid, report = voxelize_collection(zvm, voxel_um * 1e-6)
+        log(f"voxelised {zvm.name} (Zarr Vectors boundary store) at {voxel_um:g} um: "
+            f"{time.time() - t0:.1f} s")
+        report |= {"mesh_collection": str(zvm.resolve()),
+                   "origin_m": grid.origin[::-1].tolist(), "voxel": voxel_um * 1e-6}
         rules = cfg.boundaries.patches
         patches = []
         for p in boundary.patches:
@@ -194,11 +201,16 @@ def run(cfg: RunConfig, *, out: str | None = None, steps: int | None = None,
         log=print) -> Path:
     from zvcfd.io import fields as zf
 
+    cfg.solver.method = resolve_method(cfg)        # a RunConfig built without from_dict
+    if cfg.solver.method == "fv":
+        from zvcfd.fv.run import run_fv
+
+        return run_fv(cfg, out=out, steps=steps, log=log)
     if cfg.solver.method != "lbm":
         raise NotImplementedError(
-            "`zvcfd run` drives the LBM solver; use zvcfd.solvers.lubrication directly")
+            "`zvcfd run` drives the LBM and FV solvers; use zvcfd.solvers.lubrication directly")
     t0 = time.time()
-    domain, boundary, voxel_um, image, report = build_geometry(cfg, log)
+    domain, boundary, voxel_um, image, report = build_geometry(cfg, log, out=out)
     lat = lattice_for(cfg, voxel_um, log)
     npatch = len(boundary.patches) if boundary is not None else 0
     log(f"domain {domain.shape}: {domain.n_bricks} bricks ({100 * domain.active_fraction:.2f}% "
@@ -216,6 +228,15 @@ def run(cfg: RunConfig, *, out: str | None = None, steps: int | None = None,
                                        "solver": cfg.solver.method})
     if image:
         col.add_image(doc, run_dir, image)
+    if report.get("mesh_collection"):
+        from zvcfd.io.mesh_collection import collection_info
+
+        zvm = report["mesh_collection"]
+        doc["attributes"][f"{col.PREFIX}:run"] |= {"mesh_collection": zvm,
+                                                   "grid_origin_m": report["origin_m"]}
+        col.add_node(doc, col.node(f"{col.PREFIX}:mesh", "mesh-collection",
+                                   col.rel(zvm, run_dir),
+                                   attributes={f"{col.PREFIX}:mesh": collection_info(zvm)}))
     domain_path = run_dir / "domain.zarrvectors"
     lv = zf.create_brick_store(domain_path, domain, voxel_size=voxel_um, fields={},
                                chunk_bricks=cfg.domain.chunk_bricks, flags=True,

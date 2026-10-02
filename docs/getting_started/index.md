@@ -2,9 +2,9 @@
 
 | Page | What it covers |
 |---|---|
-| [Installation](installation.md) | zvCFD, zarr-vectors' GPU backend and CuPy; checking a machine with `zvcfd probe` |
-| [Quickstart](quickstart.md) | Build a domain, solve on the GPU, write and read a brick store, publish a run collection |
-| [Concepts](concepts.md) | Bricks, chunks, patches, snapshots and the run collection |
+| [Installation](installation.md) | zvCFD, zarr-vectors' GPU backend, CuPy and AmgX; checking a machine with `zvcfd probe` |
+| [Quickstart](quickstart.md) | A mesh solved with the finite-volume solver; then a voxel domain with the lattice-Boltzmann solver, its brick store and run collection |
+| [Concepts](concepts.md) | Meshes, control volumes and mesh collections; bricks, chunks, patches, snapshots and the run collection |
 | [FAQ](faq.md) | Short answers to common questions |
 
 ```{toctree}

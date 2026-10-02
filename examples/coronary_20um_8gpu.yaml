@@ -7,7 +7,7 @@ boundaries:
   patches:
     - {match: inlet, kind: velocity, flow_rate: 1.9396e-7}
     - {match: outlet, kind: pressure, pressure: 0.0}
-solver: {collision: trt, tau: 0.6, steps: 300000, check_every: 5000, tolerance: 1.0e-4}
+solver: {method: lbm, collision: trt, tau: 0.6, steps: 300000, check_every: 5000, tolerance: 1.0e-4}
 domain: {chunk_bricks: 16}
 parallel: {gpus: 8}
 output: {path: runs, every: 0, fields: [rho, ux, uy, uz]}

@@ -182,6 +182,33 @@ def wall_metrics(zv: dict, ref: dict) -> dict | None:
                         "section_velocity_rel_l2_pct_by_section": per_section}}
 
 
+def own_wall_metrics(zv: dict, ref: dict) -> dict | None:
+    """The finite-volume solver's own TAWSS (``wall_shear()``, the run's method: wall-ip
+    gradients by default, as CFX) against SimVascular's own (P1 gradients), node by node: the
+    two codes share the mesh, so the wall nodes coincide."""
+    f = zv["path"] / "wss.npz"
+    if not f.exists():
+        return None
+    from scipy.spatial import cKDTree
+
+    w = np.load(f)
+    pr = np.load(RES / "probes.npz", allow_pickle=True)
+    pts_cm = ref["points"] / 1e-2
+    d, idx = cKDTree(pts_cm).query(w["xyz"])
+    ok = d < 5e-4
+    own = np.full(len(pts_cm), np.nan)
+    own[idx[ok]] = w["tawss"][ok]
+    keep = np.zeros(len(pts_cm), bool)
+    keep[pr["wall_node"]] = True                    # the same wall nodes as the other codes
+    sv = ref["tawss_own"]
+    m = keep & np.isfinite(own) & np.isfinite(sv)
+    zv["tawss_fv_own"] = own
+    return {"tawss_own_vs_sv_own_rel_l2_pct": float(rel_l2(own[m], sv[m]) * 100),
+            "tawss_own_vs_sv_own_corr": float(np.corrcoef(own[m], sv[m])[0, 1]),
+            "tawss_own_median_abs_err_pct": float(np.median(np.abs(own[m] - sv[m]) / sv[m]) * 100),
+            "nodes_compared": int(m.sum())}
+
+
 def field_metrics(zv: dict) -> dict:
     """Whole-volume velocity error at each snapshot phase (SimVascular sampled at voxel centres)."""
     from svref import SVVolume
@@ -261,7 +288,9 @@ def main():
                   for tr in ("LCA", "RCA")]
         summary["sv"]["cut_vs_outlets_rel_l2_pct"] = [
             float(rel_l2(ref["cut_q"][k], tree_q[k]) * 100) for k in range(2)]
-    for path in sorted(Path(args.runs).glob("vmr0066-*")):
+    for path in sorted([*Path(args.runs).glob("vmr0066-*"), *Path(args.runs).glob("fv-*")]):
+        if path.name.endswith("-segment"):
+            continue
         if not (path / "monitors.npz").exists():
             continue
         zv = load_run(path)
@@ -275,6 +304,9 @@ def main():
         wm = wall_metrics(zv, ref)
         if wm:
             rec["wall"] = wm["summary"]
+        ow = own_wall_metrics(zv, ref)
+        if ow:
+            rec["wall_own"] = ow
         if not args.no_fields:
             rec["fields"] = field_metrics(zv)
         summary["runs"][path.name] = rec

@@ -1,0 +1,39 @@
+{
+ "case": "tube",
+ "nodes": 169377,
+ "elements": {
+  "tet": 589824,
+  "wedge": 131072
+ },
+ "kernels": "classic",
+ "setup_s": 7.393904685974121,
+ "per_outer_s": 0.6210533618927002,
+ "stages_s": {
+  "asm.gradient": 0.02329928289529764,
+  "asm.diagonal": 0.01527793999412097,
+  "asm.limiter": 0.0887226722552441,
+  "_assemble_stage1": 0.14367501676315442,
+  "asm.assemble": 0.19227976523688994,
+  "_dirichlet": 0.007153436221415177,
+  "_assemble_stage2": 0.20071304077282548,
+  "_lumped_pieces": 2.384738763794303e-06,
+  "_finish_lumped": 3.2284879125654697e-06,
+  "_residuals": 0.007753992744255811,
+  "_scale_rows": 0.004787313722772524,
+  "linear.solve": 0.1906432587420568,
+  "asm.massflow": 0.04731486944365315,
+  "update_mass_flows": 0.05789338526665233,
+  "zone_flows": 0.000762342766392976
+ },
+ "linear_iterations": [
+  2,
+  3,
+  3,
+  2,
+  2
+ ],
+ "linear_options": {
+  "preset": "robust"
+ },
+ "device_pool_gb": 1.798976512
+}

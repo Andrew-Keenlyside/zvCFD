@@ -58,6 +58,25 @@ def _bounds(zyx: np.ndarray, chunk: float):
     return lo.tolist(), hi.tolist()
 
 
+def vertex_rows(chunks: np.ndarray, vi: np.ndarray, start: dict) -> np.ndarray:
+    """Global rows of link endpoints: ``start[chunk key] + vertex index in chunk``.
+
+    ``chunks`` ``(..., 3)`` holds each endpoint's chunk coordinates, ``start``
+    the first row of each chunk in the concatenated vertices. Flat chunk keys
+    replace a row-wise unique, which takes minutes on 10^8 endpoints.
+    """
+    c = chunks.reshape(-1, 3).astype(np.int64)
+    keys = np.array(list(start), np.int64).reshape(-1, 3)
+    lo = np.minimum(c.min(0), keys.min(0)) if len(c) else keys.min(0)
+    dims = np.maximum(c.max(0) if len(c) else keys.max(0), keys.max(0)) - lo + 1
+    lut = np.full(int(np.prod(dims)), -1, np.int64)
+    lut[np.ravel_multi_index((keys - lo).T, dims)] = list(start.values())
+    off = lut[np.ravel_multi_index((c - lo).T, dims)]
+    if (off < 0).any():
+        raise ValueError("a link endpoint names a chunk with no vertices")
+    return off.reshape(vi.shape) + vi
+
+
 def _metadata(path, values: dict) -> None:
     import zarr_vectors as zv
 
@@ -149,9 +168,7 @@ def read_mesh_store(path) -> UnstructuredMesh:
     nodes[gids] = np.concatenate(xyz)[:, ::-1]
     chunks, vi = zb.read_link_arrays(level)
     kind = zb.read_link_attributes(level, "kind", dtype="uint8").reshape(-1)
-    uc, inv = np.unique(chunks.reshape(-1, 3), axis=0, return_inverse=True)
-    off = np.array([start[tuple(int(c) for c in row)] for row in uc], np.int64)
-    glob = gids[off[inv.reshape(-1)] + vi.reshape(-1)].reshape(vi.shape)
+    glob = gids[vertex_rows(chunks, vi, start)]
     elem = zb.read_link_attributes(level, "element", dtype="int64").reshape(-1)
     order = np.lexsort((kind, elem))
     glob, kind, elem = glob[order], kind[order], elem[order]
@@ -170,8 +187,13 @@ def read_mesh_store(path) -> UnstructuredMesh:
 
 
 def write_boundary_store(path, mesh: UnstructuredMesh, *, chunk: float,
-                         compressor: Any = None) -> dict:
-    """Write the boundary triangles as a ZV ``mesh`` store, one object per zone."""
+                         compressor: Any = None,
+                         node_fields: dict[str, np.ndarray] | None = None) -> dict:
+    """Write the boundary triangles as a ZV ``mesh`` store, one object per zone.
+
+    ``node_fields`` are per-mesh-node arrays ``(N,)`` or ``(N, k)`` (such as
+    TAWSS, or WSS with NaN off the wall) stored as vertex attributes.
+    """
     from zarr_vectors.types.meshes import write_mesh
 
     verts, faces, obj, node, zid_v = [], [], [], [], []
@@ -190,11 +212,18 @@ def write_boundary_store(path, mesh: UnstructuredMesh, *, chunk: float,
                       "faces": int(z.n_faces)})
     zyx = np.concatenate(verts)
     bounds = _bounds(zyx, chunk)
+    nodes = np.concatenate(node)
+    attrs = {"node": nodes, "zone": np.concatenate(zid_v)}
+    for name, a in (node_fields or {}).items():
+        a = np.asarray(a)
+        if len(a) != mesh.n_nodes:
+            raise ValueError(f"node field {name!r} has {len(a)} rows, the mesh {mesh.n_nodes}")
+        attrs[name] = a[nodes]
     write_mesh(str(path), zyx, np.concatenate(faces), chunk_shape=(float(chunk),) * 3,
                bounds=bounds, dtype="float64", object_ids=np.concatenate(obj),
-               vertex_attributes={"node": np.concatenate(node), "zone": np.concatenate(zid_v)},
-               compressor=compressor)
-    _metadata(path, {"kind": "fv-boundary", "unit": mesh.unit, "zones": zones})
+               vertex_attributes=attrs, compressor=compressor)
+    _metadata(path, {"kind": "fv-boundary", "unit": mesh.unit, "zones": zones,
+                     "fields": sorted(node_fields or {})})
     return {"vertices": int(len(zyx)), "triangles": int(sum(len(f) for f in faces)),
             "zones": len(zones)}
 
@@ -217,37 +246,50 @@ def read_boundary_store(path) -> dict:
         total += len(g)
     node, zone = np.concatenate(node), np.concatenate(zone)
     chunks, vi = zb.read_link_arrays(level)
-    uc, inv = np.unique(chunks.reshape(-1, 3), axis=0, return_inverse=True)
-    off = np.array([start[tuple(int(c) for c in row)] for row in uc], np.int64)
-    v = off[inv.reshape(-1)].reshape(vi.shape) + vi
+    v = vertex_rows(chunks, vi, start)
     return {"triangles": node[v], "zone": zone[v[:, 0]], "zones": meta["zones"]}
 
 
 def zones_from_boundary(mesh: UnstructuredMesh, boundary: dict) -> dict[int, BoundaryZone]:
     """Rebuild boundary zones on ``mesh`` from :func:`read_boundary_store` output.
 
-    Triangles of quadrilateral faces are merged back by matching the mesh's
-    own boundary faces.
+    Only elements with three or more nodes on the stored boundary can own a
+    boundary face, so faces are built for those alone. Triangles of
+    quadrilateral faces are merged back by matching the mesh's own faces.
     """
     from zvcfd.mesh.fluent import match_rows
 
-    fx = mesh.faces()
-    b = fx["c1"] < 0
-    faces, owner = fx["faces"][b], fx["c0"][b]
-    pad = -np.ones((len(boundary["triangles"]), 1), np.int64)
-    stored = np.concatenate([boundary["triangles"], pad], 1)
+    tri = boundary["triangles"]
+    on = np.zeros(mesh.n_nodes, bool)
+    on[tri.reshape(-1)] = True
+    sub, gid = {}, []
+    off = mesh.element_offsets()
+    for k, e in mesh.elements.items():
+        idx = np.flatnonzero(on[e].sum(1) >= 3)
+        sub[k] = e[idx]
+        gid.append(off[k] + idx)
+    part = UnstructuredMesh(mesh.nodes, sub)
+    gid = np.concatenate(gid)            # mesh.elements, like part's, is in KINDS order
+    fx = part.faces()
+    b = fx["c1"] < 0                     # the mesh's boundary faces, and faces cut by the selection
+    faces, owner = fx["faces"][b], gid[fx["c0"][b]]
+    pad = -np.ones((len(tri), 1), np.int64)
+    stored = np.concatenate([tri, pad], 1)
     zone = np.full(len(faces), -1)
+    hit_any = np.zeros(len(tri), bool)
     # a triangle matches itself; a quad matches through one of its four 3-node subsets
-    for sub in ((0, 1, 2), (1, 2, 3), (2, 3, 0), (3, 0, 1)):
-        cand = faces[:, list(sub)]
+    for s in ((0, 1, 2), (1, 2, 3), (2, 3, 0), (3, 0, 1)):
+        cand = faces[:, list(s)]
         cand = np.concatenate([cand, -np.ones((len(cand), 1), np.int64)], 1)
-        if sub != (0, 1, 2):
+        if s != (0, 1, 2):
             cand[faces[:, 3] < 0] = -2                     # triangles: first subset only
         hit = match_rows(stored, cand)
         new = (hit >= 0) & (zone < 0)
         zone[new] = boundary["zone"][hit[new]]
-    if (zone < 0).any():
-        raise ValueError(f"{int((zone < 0).sum())} boundary faces have no zone in the store")
+        hit_any[hit[hit >= 0]] = True
+    if not hit_any.all():
+        raise ValueError(f"{int((~hit_any).sum())} stored boundary triangles match no face "
+                         "of the mesh")
     out = {}
     for z in boundary["zones"]:
         sel = zone == z["zone"]

@@ -11,25 +11,31 @@ arteries of VMR model `0066_H_CORO_H`.
 
 As on [Against OpenFOAM](cross_code.md), two methods cannot give
 byte-identical answers. SimVascular's svSolver is a stabilised
-finite-element method on tetrahedra; zvCFD is a lattice-Boltzmann method
-on voxels. Agreement is judged against tolerances, and each code's own
-discretisation error has to be kept in view. SimVascular is the
-established code here, not the exact answer.
+finite-element method on tetrahedra. zvCFD has two solvers: a
+lattice-Boltzmann method on voxels, and a finite-volume method on the mesh
+itself (CFX-style, element-based). Both are compared here. Agreement is
+judged against tolerances, and each code's own discretisation error has
+to be kept in view. SimVascular is the established code here, not the
+exact answer.
 
-**Summary.** At 60 µm, zvCFD and SimVascular agree as follows (relative
-L2 unless stated):
+**Summary.** zvCFD's two solvers and SimVascular agree as follows
+(relative L2 unless stated):
 
-| Quantity | Difference from SimVascular |
-|---|---|
-| The 24 outlet flows, cycle mean | 1.3 % on average, 4.2 % at most |
-| Outlet flow waveforms through the cycle | 1.9 % (median) |
-| Each tree's flow split | 0.08 (left) and 0.16 (right) percentage points on average |
-| Pressure drop across the trees | +0.4 % (left), +2.8 % (right) |
-| Velocity field, over the whole volume at four phases | 5.4 % |
-| Time-averaged wall shear stress | 5.8 % (r = 0.995) |
+| Quantity | Lattice Boltzmann, 60 µm voxels | Finite volume, SimVascular's mesh |
+|---|---|---|
+| The 24 outlet flows, cycle mean | 1.3 % on average, 4.2 % at most | 0.5 % on average, 2.2 % at most |
+| Outlet flow waveforms through the cycle | 1.9 % (median) | 0.6 % (median) |
+| Each tree's flow split, mean difference | 0.08 (left) and 0.16 (right) percentage points | 0.03 (left) and 0.06 (right) percentage points |
+| Pressure drop across the trees | +0.4 % (left), +2.8 % (right) | +1.0 % (left), +1.9 % (right) |
+| Velocity field, over the whole volume at four phases | 5.4 % | 1.6 % |
+| Time-averaged wall shear stress, the same near-wall estimate | 5.8 % (r = 0.995) | 3.1 % (r = 0.998) |
+| Time-averaged wall shear stress, each code's own method | — | 3.7 % (r = 0.997) |
 
-Every difference shrinks as the voxels are refined, and zvCFD's own
-answers change by less than the remaining gap. The comparison also found
+The lattice-Boltzmann differences shrink as the voxels are refined, and
+its own answers change by less than the remaining gap. The finite-volume
+solver runs on SimVascular's own mesh, read from a Zarr Vectors store, so
+the geometry is shared and only the discretisations differ
+([The finite-volume solver](#the-finite-volume-solver)). The comparison also found
 a defect in zvCFD's pressure outlets, and it has been fixed. The
 [section on it](#pressure-outlets-on-oblique-caps-found-and-fixed) shows
 the defect, how a straight pipe isolated it, the fix, and the numbers
@@ -259,6 +265,162 @@ and its TAWSS 3.4 %, about half as much as from 100 µm. Every difference
 from SimVascular shrinks with it. The remaining velocity and TAWSS
 differences are within SimVascular's own gradient error at its
 published resolution.
+
+## The finite-volume solver
+
+zvCFD's [finite-volume solver](fv_solver.md) runs the same submodel on
+SimVascular's own mesh. The two codes then share the geometry, the mesh
+and the boundary data, and differ only in their discretisation:
+SimVascular's stabilised finite elements against zvCFD's element-based,
+vertex-centred finite volumes (coupled, AmgX on the GPU).
+
+### Finite-volume setup
+
+`benchmarks/simvascular/fvcase.py` crops SimVascular's
+`mesh-complete.mesh.vtu` to the two trees, the same way the surface is
+cut for the voxel runs. At each cut it removes the tetrahedra whose
+centroid lies in a 3 mm slab just upstream of the plane, within the cut
+disc. That splits the mesh into three pieces, and the crop keeps the two
+that carry coronary outlet caps. The faces exposed at the planes become
+the two inlet zones, and every one of them lies within 0.25 mm of its
+plane (the build checks this).
+
+The cropped mesh is written as a Zarr Vectors
+[mesh collection](../tutorials/zarr_vectors_meshes.md), and the solver
+runs on the mesh read back from it.
+
+| | |
+|---|---|
+| Mesh | 398,105 nodes, 2,089,669 tetrahedra (SimVascular's own, cropped), 27 zones |
+| Inlets | SimVascular's velocity at the cut nodes, every 5 ms, linear in time |
+| Outlets | SimVascular's pressure at the 24 cap nodes, the same way; backflow stabilisation 0.2 |
+| Initial state | SimVascular's solution at the start of the saved cycle |
+| Time | one cycle, BDF2, dt = 1 ms (SimVascular's step), 5 coefficient loops per step |
+| Linear solves | AmgX, Gauss–Seidel aggregation preset, mixed precision, relative tolerance 0.01: 10.5 iterations on average, 21 at most, all 5,000 converged |
+| Run time | 4,873 s for the cycle (4.87 s per step) on the RTX A2000 |
+| Mass balance | inflow and outflow agree to 0.75 % at every step, 0.32 % at the end |
+
+`benchmarks/simvascular/run_fv.py` runs it. Wall shear stress comes from
+the 5 ms samples, as for the voxel runs.
+
+The numbers below are from the solver's final treatment of momentum
+entering through pressure boundaries
+([numerics](../spec/fv_numerics.md)). The case barely depends on it: no
+outlet's net flow reverses during the cycle, so it touches only scattered
+nodes with local backflow. Against a run made before it, the inlet and
+outlet flows moved by at most 3.7 × 10⁻⁴ of their mean, the pressures by
+0.7 Pa and the TAWSS by 2 × 10⁻⁴.
+
+### Finite-volume results
+
+![Outlet flows: the finite-volume solver against SimVascular](../_static/figures/simvascular_fv_outlets.png)
+
+![Axial velocity on cross-sections: the finite-volume solver against SimVascular](../_static/figures/simvascular_fv_sections.png)
+
+| Quantity | Finite volume | Lattice Boltzmann, 60 µm |
+|---|---:|---:|
+| Outlet mean flow, mean / max \|diff\| | 0.5 / 2.2 % | 1.3 / 4.2 % |
+| Outlet waveform, median / max | 0.6 / 3.2 % | 1.9 / 6.0 % |
+| Split, mean \|diff\| LCA / RCA | 0.03 / 0.06 pp | 0.08 / 0.16 pp |
+| Inlet pressure LCA / RCA | +1.0 / +1.9 % | +0.4 / +2.8 % |
+| Velocity, six sections | 2.3 % | 11.9 % |
+| Velocity, whole volume at 160 / 265 / 530 / 800 ms | 1.5 / 1.3 / 1.8 / 1.6 % | 5.5 / 5.3 / 4.9 / 5.8 % |
+| Peak speed at 530 ms (SimVascular 0.549 m/s) | 0.545 m/s | 0.548 m/s |
+| TAWSS, same near-wall estimate (r) | 3.1 % (0.998) | 5.8 % (0.995) |
+| TAWSS, median point difference | 0.9 % | 4.3 % |
+| TAWSS, each code's own method, node by node (r) | 3.7 % (0.997) | — |
+
+On the shared mesh the finite-volume solver reproduces SimVascular more
+closely than the voxel runs do, on every measure except the left-tree
+inlet pressure. This is not a fully independent test: the two codes share
+the mesh's representation of the geometry, so geometric error drops out,
+and what remains is the difference between the two discretisations.
+In the left main, the voxel runs differ by 18 % but the finite-volume
+solver by 1.3 %. That supports the explanation given for the voxel runs
+([What is not tested here](#what-is-not-tested-here)): the gap there
+comes from the inlet, not the solver. The other sections differ by
+0.7–5.8 %.
+
+### Wall shear stress, each code's own
+
+The finite-volume solver computes its own wall shear stress as Ansys
+CFX does for laminar walls: the viscous traction from the owning
+element's shape-function velocity gradients at each wall integration
+point, area-averaged to the node ([numerics](../spec/fv_numerics.md#wall-shear-stress)).
+SimVascular's own here comes from its P1 velocity gradients. Node by node,
+at the 83,674 wall nodes the two meshes share, the two TAWSS fields agree
+to 3.7 % (r = 0.997, median 0.8 %).
+
+![TAWSS of the finite-volume solver: the shared near-wall estimate, and each code's own method](../_static/figures/simvascular_fv_tawss.png)
+
+That close agreement is partly built in. On linear tetrahedra the CFX
+gradient is the element's constant gradient, which is SimVascular's P1
+gradient, so the two codes are using the same estimator. Both read low
+against the true wall shear, by an amount set by the near-wall
+resolution. On the exact solutions below, all-tetrahedral meshes put that
+at 10–13 % in pipe flow at 3–8 elements per radius, and 20–50 % at a
+coarsely resolved stagnation point. SimVascular's mesh is finer than that
+next to the wall (about 0.1 mm wall-normal against 0.4 mm along it), but
+it has no prism layers.
+
+The solver first used a different method, consistent reactions, and
+differed from SimVascular by 31.6 % (r = 0.90). That method reads the
+wall force from each wall node's momentum balance. It absorbs the
+discretisation error of the advective flux into the wall control volumes:
+momentum enters from interior nodes but leaves at the wall node's zero
+velocity. So it read high where near-wall cells are coarse, about twice
+the truth at the carinas, and 1 % of the wall nodes carried 86 % of the
+difference. It is still available as `wall_shear("reaction")` and is
+what the zone forces use, since it closes the momentum balance exactly.
+
+Exact solutions on unstructured tetrahedra and on boundary-layer meshes
+(`benchmarks/fv/wall_shear_estimators.py`) measure both methods. Errors
+are biases in the mean, and δ = √(ν/a) is the stagnation-flow
+boundary-layer thickness:
+
+| Case | Mesh | Gradient (CFX, the default) | Reaction |
+|---|---|---:|---:|
+| Poiseuille, Re 106 | tetrahedra, R/h = 2.8 / 5.6 / 8.3 | −13.3 / −10.8 / −9.8 % | +44.7 / +4.5 / +2.2 % |
+| | prism layers, wall cell R/10 / R/32 / R/129 | −5.6 / −2.1 / −1.5 % | +0.4 / −0.2 / −1.0 % |
+| Stagnation flow (a carina) | tetrahedra, h = 1.5 / 0.5 / 0.25 δ | −48 / −19 / −9.5 % | +108 / +3.6 / +0.7 % |
+| | hexahedral layers, wall cell 0.5 / 0.2 / 0.1 δ | −14.8 / −5.9 / −3.0 % | +3.1 / +1.2 / +0.8 % |
+
+The CFX method is first order in the wall cell and always reads low. It
+converges once the boundary layer is resolved, to within 2–3 % at a wall
+cell of R/30 in a vessel or 0.1 δ at a stagnation point, which is why
+CFX meshes carry inflation layers. On meshes with layers the reaction is
+more accurate still, because thin wall cells carry almost no advective
+flux. Without layers the two bracket the truth from opposite sides.
+Absolute TAWSS on SimVascular's tet-only mesh should therefore be read as
+a lower bound, most of all at branch points. The comparison between the
+codes is like for like.
+
+---|---:|---:|---:|
+| Poiseuille, Re 106, R/h = 2.8 | +45 % | +14 % | −13 % |
+| Poiseuille, R/h = 5.6 | +4.5 % | −0.1 % | −11 % |
+| Poiseuille, Stokes flow, R/h = 2.8 | −1.6 % | −1.6 % | −15 % |
+| Stagnation flow (a carina), h = 1.5 δ | +110 % | +71 % | −48 % |
+| Stagnation flow, h = 0.5 δ | +3.6 % | +1.3 % | −19 % |
+| Stagnation flow, h = 0.25 δ | +0.7 % | +0.4 % | −9.5 % |
+
+With upwind advection the reaction is 3–5 times too large in the pipe.
+With the default high-resolution scheme it converges quickly as the mesh
+is refined. P1 converges at first order and always under-predicts.
+"Stokes operator" is the reaction with the advection term left out:
+the viscous and pressure operator applied to the Navier–Stokes
+solution.
+
+So where the boundary layer is under-resolved, the two estimators
+bracket the true wall shear stress from opposite sides. At SimVascular's
+resolution that happens only at the impingement nodes. There the
+reaction runs high and P1 low, each by tens of percent, so neither code's
+TAWSS is reliable at those nodes. Elsewhere the two agree to about 6 %.
+Resolving those regions takes about two elements across the local
+stagnation boundary layer (h ≤ 0.5 δ). Leaving advection out of the
+reaction removes most of the pipe error, but only a third of the
+stagnation-flow error.
+
+---
 
 ## Pressure outlets on oblique caps: found and fixed
 

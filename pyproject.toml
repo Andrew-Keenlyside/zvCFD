@@ -46,6 +46,8 @@ amg = ["pyamg>=5.0"]
 # Transactional stores (optional backend; see docs/how_to/icechunk.md)
 icechunk = ["icechunk>=2; python_version >= '3.12'"]
 yaml = ["pyyaml>=6"]
+# More mesh formats for `zvcfd import-mesh` (Gmsh, Abaqus, Exodus, MED, Nastran, ...)
+meshio = ["meshio>=5"]
 # The SimVascular comparison (benchmarks/simvascular): VTK I/O, renderings, figures
 simvascular = ["pyvista>=0.44", "vtk>=9.3", "scipy>=1.11", "matplotlib>=3.8"]
 all = ["zvcfd[amg,yaml]"]
@@ -92,3 +94,5 @@ filterwarnings = [
 "zvcfd/lbm/_cuda.py" = ["UP031"]
 # CUDA C source strings: C line lengths
 "zvcfd/fv/_cuda.py" = ["E501"]
+"zvcfd/fv/_cuda_fast.py" = ["E501"]
+"zvcfd/fv/_cuda_bc.py" = ["E501"]

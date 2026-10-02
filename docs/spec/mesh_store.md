@@ -18,6 +18,10 @@
 : A named set of boundary faces with one kind (`wall`,
   `velocity-inlet`, `pressure-outlet`, …), as in a Fluent mesh.
 
+**Mesh collection**
+: A directory `<name>.zvmesh` that groups a mesh's volume and boundary
+  stores, in metres. Both solvers take their geometry from one.
+
 ---
 
 ## Introduction
@@ -39,6 +43,14 @@ added to it as vertex attributes.
 Neither store needs an addition to Zarr Vectors: the volume store is a
 custom geometry type (spec §12.5), and the boundary store is a standard
 one.
+
+A **mesh collection** groups the two, so that Zarr Vectors is the input
+of every mesh run as well as its output. `zvcfd import-mesh` writes one
+from a Fluent, VTK, SimVascular or meshio mesh, and `zvcfd run` imports a
+raw mesh into one before it starts. The finite-volume solver then solves
+on the mesh read back from the volume store, and the voxel solver
+voxelises the boundary store. Neither solver reads the original mesh
+file.
 
 ---
 
@@ -96,6 +108,60 @@ kind, name, faces}]`. To rebuild zones on a volume mesh, a reader matches
 the mesh's boundary faces against the stored triangles: a triangle
 matches itself, and a quadrilateral matches through one of its four
 three-node subsets.
+
+### Mesh collections
+
+A mesh collection is a Zarr v3 group whose `attributes.ome` is an RFC-8
+collection document, like a run collection:
+
+```text
+coronary.zvmesh/
+  zarr.json                 collection document; attributes.zvcfd:mesh
+  volume.zarrvectors/       node "volume"   (zvcfd:fv-mesh), absent if surface-only
+  boundary.zarrvectors/     node "boundary" (zvcfd:fv-boundary)
+```
+
+`attributes.zvcfd:mesh` holds `unit` (always `meter`), `source`, `chunk`
+(the chunk edge of both stores, m), `volume` (whether the volume store
+exists), `nodes`, `elements` (counts by type), `zones` (`zone`, `kind`,
+`name`, `faces`), `bounds_m` and `write_s`.
+
+The two stores share the chunk edge, so a boundary chunk and a volume
+chunk with the same key cover the same box. A **surface-only** collection
+(`--surface-only`) has no volume store. The voxel solver needs only the
+boundary; the finite-volume solver refuses such a collection.
+
+A run collection that solved on a mesh collection names it in
+`zvcfd:run.mesh_collection` and links it as node `mesh-collection` (type
+`zvcfd:mesh`). A finite-volume run's `mesh` node and its snapshots'
+`mesh` attribute point into the collection's volume store rather than a
+copy. The run keeps its own boundary store, which carries the wall
+fields.
+
+Reading one back (`zvcfd.io.mesh_collection`):
+
+| Function | Returns |
+|---|---|
+| `read_mesh(path)` | the volume mesh with its zones rebuilt from the boundary store |
+| `read_surface(path)` | boundary triangles `(T, 3, 3)` in metres, zone per triangle, zone table |
+| `voxelize_collection(path, voxel_m)` | the voxel solver's domain and patches |
+| `collection_info(path)` | `attributes.zvcfd:mesh` |
+
+The imported mesh is the source mesh exactly: `tests/test_mesh_collection.py`
+checks node coordinates, element connectivity and zone faces after a round
+trip. It also checks that a voxelisation of the boundary store equals the
+direct voxelisation of the Fluent file, voxel for voxel, patch cell for
+patch cell and link for link.
+
+Measured on the HiP-CT coronary mesh (RTX A2000 workstation, `/hdd`
+spinning disk):
+
+| | |
+|---|---|
+| Source | `mesh 1.msh`, 1.9 GB ASCII |
+| Import | 64 s read + 71 s write; 17 GB peak host memory |
+| Collection | 1.05 GB: volume store 983 MB, boundary store 72 MB |
+| Chunks | 16.6 mm edge: 36 non-empty volume chunks; 127,983 elements (0.9 %) cross a chunk boundary and are stored as cross-chunk links |
 
 ### Local orders
 
