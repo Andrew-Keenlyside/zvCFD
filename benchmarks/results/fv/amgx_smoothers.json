@@ -1,0 +1,873 @@
+{
+ "rtol": 1e-06,
+ "maxiter": 300,
+ "gpu": "RTX A2000 12GB (shared)",
+ "configs": {
+  "dilu 1/2 (old default)": "MULTICOLOR_DILU 1 pre / 2 post, relax 0.75, SIZE_4, AmgX strength",
+  "dilu-p 0/1": "MULTICOLOR_DILU 0 pre / 1 post, SIZE_4, pressure-weighted strength",
+  "gs-sym p SIZE_4": "MULTICOLOR_GS symmetric, 1 pre / 2 post, relax 0.9, SIZE_4, pressure-weighted strength (the 'gs' preset)",
+  "gs-sym SIZE_4": "as gs-sym p SIZE_4 with AmgX's strength",
+  "gs-sym p SIZE_2": "as gs-sym p SIZE_4, pairwise aggregation",
+  "gs-sym p 1/1": "as gs-sym p SIZE_4, 1 pre / 1 post",
+  "gs-sym p dense-coarse": "as gs-sym p SIZE_4, dense LU on the coarsest level",
+  "gs p": "MULTICOLOR_GS forward only",
+  "robust": "multicolour ILU(0), SIZE_2, pressure-weighted strength, dense LU coarsest (the 'robust' preset)",
+  "robust smooth-coarse": "as robust, smoothed coarsest level"
+ },
+ "note": "the gs and dilu variants smooth the coarsest level (MULTICOLOR_DILU, 4 sweeps) unless dense-coarse; system_0/2 are 399k-node SimVascular systems captured from a cropped mesh later found defective (isolated pieces, singular systems): not representative of the coronary case; v2-system_* are captured from the corrected crop (398,105 nodes, 2,089,669 tets); keys ending -mixed ran in mixed precision",
+ "systems": {
+  "system_0": {
+   "dilu 1/2 (old default)": {
+    "iterations": 87,
+    "reduction": 0.099,
+    "setup_s": 1.35,
+    "solve_s": 13.74,
+    "converged": true
+   },
+   "dilu-p 0/1": {
+    "iterations": 18,
+    "reduction": 0.097,
+    "setup_s": 1.43,
+    "solve_s": 1.63,
+    "converged": true
+   },
+   "gs-sym p SIZE_4": {
+    "iterations": 2,
+    "reduction": 0.037,
+    "setup_s": 1.39,
+    "solve_s": 0.24,
+    "converged": true
+   },
+   "gs-sym SIZE_4": {
+    "iterations": 2,
+    "reduction": 0.037,
+    "setup_s": 1.37,
+    "solve_s": 0.25,
+    "converged": true
+   },
+   "gs-sym p SIZE_2": {
+    "iterations": 2,
+    "reduction": 0.026,
+    "setup_s": 1.94,
+    "solve_s": 0.3,
+    "converged": true
+   },
+   "gs-sym p 1/1": {
+    "iterations": 2,
+    "reduction": 0.067,
+    "setup_s": 1.36,
+    "solve_s": 0.21,
+    "converged": true
+   },
+   "gs-sym p dense-coarse": {
+    "error": "ERR AmgX setup failed (code 15)"
+   },
+   "gs p": {
+    "iterations": 2,
+    "reduction": 0.037,
+    "setup_s": 1.37,
+    "solve_s": 0.25,
+    "converged": true
+   }
+  },
+  "system_2": {
+   "dilu 1/2 (old default)": {
+    "iterations": 57,
+    "reduction": 0.094,
+    "setup_s": 1.47,
+    "solve_s": 9.26,
+    "converged": true
+   },
+   "dilu-p 0/1": {
+    "iterations": 15,
+    "reduction": 0.1,
+    "setup_s": 1.41,
+    "solve_s": 1.36,
+    "converged": true
+   },
+   "gs-sym p SIZE_4": {
+    "iterations": 4,
+    "reduction": 0.041,
+    "setup_s": 1.17,
+    "solve_s": 0.42,
+    "converged": true
+   },
+   "gs-sym SIZE_4": {
+    "iterations": 4,
+    "reduction": 0.046,
+    "setup_s": 1.44,
+    "solve_s": 0.44,
+    "converged": true
+   },
+   "gs-sym p SIZE_2": {
+    "iterations": 3,
+    "reduction": 0.036,
+    "setup_s": 2.0,
+    "solve_s": 0.43,
+    "converged": true
+   },
+   "gs-sym p 1/1": {
+    "iterations": 4,
+    "reduction": 0.078,
+    "setup_s": 1.36,
+    "solve_s": 0.38,
+    "converged": true
+   },
+   "gs-sym p dense-coarse": {
+    "error": "ERR AmgX setup failed (code 15)"
+   },
+   "gs p": {
+    "iterations": 4,
+    "reduction": 0.041,
+    "setup_s": 1.18,
+    "solve_s": 0.42,
+    "converged": true
+   }
+  },
+  "dfg_slab": {
+   "dilu 1/2 (old default)": {
+    "iterations": 300,
+    "reduction": 0.742,
+    "setup_s": 0.75,
+    "solve_s": 21.24,
+    "converged": false
+   },
+   "dilu-p 0/1": {
+    "iterations": 56,
+    "reduction": 0.099,
+    "setup_s": 0.7,
+    "solve_s": 3.42,
+    "converged": true
+   },
+   "gs-sym p SIZE_4": {
+    "iterations": 2,
+    "reduction": 0.051,
+    "setup_s": 0.34,
+    "solve_s": 0.03,
+    "converged": true
+   },
+   "gs-sym SIZE_4": {
+    "iterations": 2,
+    "reduction": 0.083,
+    "setup_s": 0.7,
+    "solve_s": 0.1,
+    "converged": true
+   },
+   "gs-sym p SIZE_2": {
+    "iterations": 1,
+    "reduction": 0.089,
+    "setup_s": 1.12,
+    "solve_s": 0.07,
+    "converged": true
+   },
+   "gs-sym p 1/1": {
+    "iterations": 2,
+    "reduction": 0.09,
+    "setup_s": 0.66,
+    "solve_s": 0.1,
+    "converged": true
+   },
+   "gs-sym p dense-coarse": {
+    "iterations": 2,
+    "reduction": 0.078,
+    "setup_s": 0.65,
+    "solve_s": 0.08,
+    "converged": true
+   },
+   "gs p": {
+    "iterations": 2,
+    "reduction": 0.051,
+    "setup_s": 0.69,
+    "solve_s": 0.1,
+    "converged": true
+   }
+  },
+  "gateb_tube12": {
+   "dilu 1/2 (old default)": {
+    "iterations": 2,
+    "reduction": 0.074,
+    "setup_s": 1.13,
+    "solve_s": 0.2,
+    "converged": true
+   },
+   "dilu-p 0/1": {
+    "iterations": 4,
+    "reduction": 0.074,
+    "setup_s": 1.11,
+    "solve_s": 0.28,
+    "converged": true
+   },
+   "gs-sym p SIZE_4": {
+    "iterations": 3,
+    "reduction": 0.067,
+    "setup_s": 1.08,
+    "solve_s": 0.26,
+    "converged": true
+   },
+   "gs-sym SIZE_4": {
+    "iterations": 3,
+    "reduction": 0.08,
+    "setup_s": 1.02,
+    "solve_s": 0.25,
+    "converged": true
+   },
+   "gs-sym p SIZE_2": {
+    "iterations": 2,
+    "reduction": 0.056,
+    "setup_s": 1.57,
+    "solve_s": 0.22,
+    "converged": true
+   },
+   "gs-sym p 1/1": {
+    "iterations": 4,
+    "reduction": 0.073,
+    "setup_s": 1.07,
+    "solve_s": 0.31,
+    "converged": true
+   },
+   "gs-sym p dense-coarse": {
+    "iterations": 3,
+    "reduction": 0.067,
+    "setup_s": 1.08,
+    "solve_s": 0.17,
+    "converged": true
+   },
+   "gs p": {
+    "iterations": 3,
+    "reduction": 0.067,
+    "setup_s": 1.1,
+    "solve_s": 0.26,
+    "converged": true
+   }
+  },
+  "layered_tube": {
+   "dilu 1/2 (old default)": {
+    "iterations": 166,
+    "reduction": 0.1,
+    "setup_s": 0.95,
+    "solve_s": 14.46,
+    "converged": true
+   },
+   "dilu-p 0/1": {
+    "iterations": 8,
+    "reduction": 0.077,
+    "setup_s": 0.79,
+    "solve_s": 0.48,
+    "converged": true
+   },
+   "gs-sym p SIZE_4": {
+    "iterations": 4,
+    "reduction": 0.077,
+    "setup_s": 0.76,
+    "solve_s": 0.28,
+    "converged": true
+   },
+   "gs-sym SIZE_4": {
+    "iterations": 5,
+    "reduction": 0.08,
+    "setup_s": 0.94,
+    "solve_s": 0.35,
+    "converged": true
+   },
+   "gs-sym p SIZE_2": {
+    "iterations": 3,
+    "reduction": 0.071,
+    "setup_s": 1.2,
+    "solve_s": 0.28,
+    "converged": true
+   },
+   "gs-sym p 1/1": {
+    "iterations": 5,
+    "reduction": 0.1,
+    "setup_s": 0.83,
+    "solve_s": 0.35,
+    "converged": true
+   },
+   "gs-sym p dense-coarse": {
+    "iterations": 4,
+    "reduction": 0.077,
+    "setup_s": 0.85,
+    "solve_s": 0.18,
+    "converged": true
+   },
+   "gs p": {
+    "iterations": 4,
+    "reduction": 0.077,
+    "setup_s": 0.87,
+    "solve_s": 0.32,
+    "converged": true
+   }
+  },
+  "thin_slab": {
+   "dilu 1/2 (old default)": {
+    "iterations": 300,
+    "reduction": 0.999,
+    "setup_s": 0.54,
+    "solve_s": 15.95,
+    "converged": false
+   },
+   "dilu-p 0/1": {
+    "iterations": 300,
+    "reduction": 0.999,
+    "setup_s": 0.54,
+    "solve_s": 21.03,
+    "converged": false
+   },
+   "gs-sym p SIZE_4": {
+    "iterations": 300,
+    "reduction": 0.929,
+    "setup_s": 0.52,
+    "solve_s": 20.71,
+    "converged": false
+   },
+   "gs-sym SIZE_4": {
+    "iterations": 300,
+    "reduction": 0.995,
+    "setup_s": 0.52,
+    "solve_s": 17.11,
+    "converged": false
+   },
+   "gs-sym p SIZE_2": {
+    "iterations": 300,
+    "reduction": 0.997,
+    "setup_s": 0.77,
+    "solve_s": 20.32,
+    "converged": false
+   },
+   "gs-sym p 1/1": {
+    "error": "CRASH"
+   },
+   "gs-sym p dense-coarse": {
+    "error": "CRASH"
+   },
+   "gs p": {
+    "error": "CRASH"
+   }
+  },
+  "v2-system_0-mixed": {
+   "gs-sym p SIZE_4": {
+    "iterations": 1,
+    "reduction": 0.0644683149730289,
+    "setup_s": 0.07623791694641113,
+    "solve_s": 0.1152336597442627,
+    "total_s": 0.2034437656402588,
+    "converged": true
+   },
+   "robust": {
+    "iterations": 1,
+    "reduction": 0.045787233425916084,
+    "setup_s": 0.1736607551574707,
+    "solve_s": 0.13192296028137207,
+    "total_s": 0.31838488578796387,
+    "converged": true
+   },
+   "robust smooth-coarse": {
+    "iterations": 1,
+    "reduction": 0.0644683149730289,
+    "setup_s": 0.07607054710388184,
+    "solve_s": 0.11369490623474121,
+    "total_s": 0.20165705680847168,
+    "converged": true
+   },
+   "dilu 1/2 (old default)": {
+    "iterations": 13,
+    "reduction": 0.09830575730227535,
+    "setup_s": 0.11391925811767578,
+    "solve_s": 1.0171575546264648,
+    "total_s": 1.1429944038391113,
+    "converged": true
+   },
+   "dilu-p 0/1": {
+    "iterations": 5,
+    "reduction": 0.08131337655426561,
+    "setup_s": 0.10868477821350098,
+    "solve_s": 0.2578895092010498,
+    "total_s": 0.37857580184936523,
+    "converged": true
+   }
+  },
+  "v2-system_1-mixed": {
+   "gs-sym p SIZE_4": {
+    "iterations": 2,
+    "reduction": 0.07959531171166624,
+    "setup_s": 0.07465529441833496,
+    "solve_s": 0.16784405708312988,
+    "total_s": 0.25458407402038574,
+    "converged": true
+   },
+   "robust": {
+    "iterations": 2,
+    "reduction": 0.05055222337135898,
+    "setup_s": 0.17960572242736816,
+    "solve_s": 0.1943376064300537,
+    "total_s": 0.38672637939453125,
+    "converged": true
+   },
+   "robust smooth-coarse": {
+    "iterations": 2,
+    "reduction": 0.07959531171166624,
+    "setup_s": 0.07269549369812012,
+    "solve_s": 0.17473959922790527,
+    "total_s": 0.2593955993652344,
+    "converged": true
+   },
+   "dilu 1/2 (old default)": {
+    "iterations": 23,
+    "reduction": 0.09731528385891401,
+    "setup_s": 0.11375832557678223,
+    "solve_s": 1.810680866241455,
+    "total_s": 1.9363634586334229,
+    "converged": true
+   },
+   "dilu-p 0/1": {
+    "iterations": 10,
+    "reduction": 0.09485877302714801,
+    "setup_s": 0.10879707336425781,
+    "solve_s": 0.4972507953643799,
+    "total_s": 0.6180016994476318,
+    "converged": true
+   }
+  },
+  "v2-system_2-mixed": {
+   "gs-sym p SIZE_4": {
+    "iterations": 4,
+    "reduction": 0.07348761877458161,
+    "setup_s": 0.07264065742492676,
+    "solve_s": 0.2918384075164795,
+    "total_s": 0.3764958381652832,
+    "converged": true
+   },
+   "robust": {
+    "iterations": 3,
+    "reduction": 0.06585976296928318,
+    "setup_s": 0.17975568771362305,
+    "solve_s": 0.23812294006347656,
+    "total_s": 0.429840087890625,
+    "converged": true
+   },
+   "robust smooth-coarse": {
+    "iterations": 4,
+    "reduction": 0.07348761877458161,
+    "setup_s": 0.07547211647033691,
+    "solve_s": 0.2828340530395508,
+    "total_s": 0.37033724784851074,
+    "converged": true
+   },
+   "dilu 1/2 (old default)": {
+    "iterations": 53,
+    "reduction": 0.09724857975598486,
+    "setup_s": 0.11796975135803223,
+    "solve_s": 4.087217569351196,
+    "total_s": 4.217124700546265,
+    "converged": true
+   },
+   "dilu-p 0/1": {
+    "iterations": 17,
+    "reduction": 0.09134267277536222,
+    "setup_s": 0.10760045051574707,
+    "solve_s": 0.8067383766174316,
+    "total_s": 0.9263660907745361,
+    "converged": true
+   }
+  },
+  "v2-system_0": {
+   "gs-sym p SIZE_4": {
+    "iterations": 1,
+    "reduction": 0.0644683145761004,
+    "setup_s": 0.08633232116699219,
+    "solve_s": 0.06494975090026855,
+    "total_s": 0.17853355407714844,
+    "converged": true
+   },
+   "robust": {
+    "iterations": 1,
+    "reduction": 0.04577630098872567,
+    "setup_s": 0.22238397598266602,
+    "solve_s": 0.06789708137512207,
+    "total_s": 0.3153660297393799,
+    "converged": true
+   },
+   "robust smooth-coarse": {
+    "iterations": 1,
+    "reduction": 0.04577630098872567,
+    "setup_s": 0.21914100646972656,
+    "solve_s": 0.07038545608520508,
+    "total_s": 0.3154489994049072,
+    "converged": true
+   },
+   "dilu 1/2 (old default)": {
+    "iterations": 13,
+    "reduction": 0.09830572572480503,
+    "setup_s": 0.1164853572845459,
+    "solve_s": 0.7719924449920654,
+    "total_s": 0.9152147769927979,
+    "converged": true
+   },
+   "dilu-p 0/1": {
+    "iterations": 5,
+    "reduction": 0.0813133511799751,
+    "setup_s": 0.11168074607849121,
+    "solve_s": 0.16120433807373047,
+    "total_s": 0.2976996898651123,
+    "converged": true
+   }
+  },
+  "v2-system_1": {
+   "gs-sym p SIZE_4": {
+    "iterations": 2,
+    "reduction": 0.07959531194386998,
+    "setup_s": 0.08321428298950195,
+    "solve_s": 0.11030745506286621,
+    "total_s": 0.21965694427490234,
+    "converged": true
+   },
+   "robust": {
+    "iterations": 2,
+    "reduction": 0.050552224077575876,
+    "setup_s": 0.22373032569885254,
+    "solve_s": 0.11980938911437988,
+    "total_s": 0.36918115615844727,
+    "converged": true
+   },
+   "robust smooth-coarse": {
+    "iterations": 2,
+    "reduction": 0.050552224077575876,
+    "setup_s": 0.21701407432556152,
+    "solve_s": 0.12099027633666992,
+    "total_s": 0.3623371124267578,
+    "converged": true
+   },
+   "dilu 1/2 (old default)": {
+    "iterations": 23,
+    "reduction": 0.09731539942742949,
+    "setup_s": 0.12086796760559082,
+    "solve_s": 1.4129061698913574,
+    "total_s": 1.5596139430999756,
+    "converged": true
+   },
+   "dilu-p 0/1": {
+    "iterations": 10,
+    "reduction": 0.09485874328823597,
+    "setup_s": 0.1114206314086914,
+    "solve_s": 0.3269829750061035,
+    "total_s": 0.4634988307952881,
+    "converged": true
+   }
+  },
+  "v2-system_2": {
+   "gs-sym p SIZE_4": {
+    "iterations": 4,
+    "reduction": 0.07348761470828415,
+    "setup_s": 0.08456277847290039,
+    "solve_s": 0.19583535194396973,
+    "total_s": 0.30541324615478516,
+    "converged": true
+   },
+   "robust": {
+    "iterations": 3,
+    "reduction": 0.06585976128624586,
+    "setup_s": 0.2230839729309082,
+    "solve_s": 0.16820049285888672,
+    "total_s": 0.41602182388305664,
+    "converged": true
+   },
+   "robust smooth-coarse": {
+    "iterations": 3,
+    "reduction": 0.06585976128624586,
+    "setup_s": 0.21550774574279785,
+    "solve_s": 0.16710305213928223,
+    "total_s": 0.4069194793701172,
+    "converged": true
+   },
+   "dilu 1/2 (old default)": {
+    "iterations": 53,
+    "reduction": 0.09924281144242379,
+    "setup_s": 0.11546444892883301,
+    "solve_s": 3.3336191177368164,
+    "total_s": 3.475767135620117,
+    "converged": true
+   },
+   "dilu-p 0/1": {
+    "iterations": 17,
+    "reduction": 0.09134267039378002,
+    "setup_s": 0.09526467323303223,
+    "solve_s": 0.5427212715148926,
+    "total_s": 0.6627216339111328,
+    "converged": true
+   }
+  },
+  "synth2-dfg_slab": {
+   "gs-sym p SIZE_4": {
+    "iterations": 2,
+    "reduction": 0.056359691433008036,
+    "setup_s": 0.021288156509399414,
+    "solve_s": 0.0350184440612793,
+    "total_s": 0.05684018135070801,
+    "converged": true
+   },
+   "robust": {
+    "iterations": 1,
+    "reduction": 0.0825196007442061,
+    "setup_s": 0.041161298751831055,
+    "solve_s": 0.01786947250366211,
+    "total_s": 0.059595346450805664,
+    "converged": true
+   },
+   "dilu 1/2 (old default)": {
+    "iterations": 300,
+    "reduction": 0.8175947329614944,
+    "setup_s": 0.03179001808166504,
+    "solve_s": 3.7142245769500732,
+    "total_s": 3.7466492652893066,
+    "converged": false
+   },
+   "dilu-p 0/1": {
+    "iterations": 111,
+    "reduction": 0.09946592379921164,
+    "setup_s": 0.030312538146972656,
+    "solve_s": 0.8319470882415771,
+    "total_s": 0.8628125190734863,
+    "converged": true
+   }
+  },
+  "synth2-gateb_tube12": {
+   "gs-sym p SIZE_4": {
+    "iterations": 3,
+    "reduction": 0.09180983385075872,
+    "setup_s": 0.03829598426818848,
+    "solve_s": 0.10585522651672363,
+    "total_s": 0.14899826049804688,
+    "converged": true
+   },
+   "robust": {
+    "iterations": 2,
+    "reduction": 0.05779534632704644,
+    "setup_s": 0.09373879432678223,
+    "solve_s": 0.07010412216186523,
+    "total_s": 0.16875982284545898,
+    "converged": true
+   },
+   "dilu 1/2 (old default)": {
+    "iterations": 4,
+    "reduction": 0.09275290917490822,
+    "setup_s": 0.052024126052856445,
+    "solve_s": 0.16135692596435547,
+    "total_s": 0.21825909614562988,
+    "converged": true
+   },
+   "dilu-p 0/1": {
+    "iterations": 5,
+    "reduction": 0.0814057970590361,
+    "setup_s": 0.057038307189941406,
+    "solve_s": 0.12803268432617188,
+    "total_s": 0.1899411678314209,
+    "converged": true
+   }
+  },
+  "synth2-layered_tube": {
+   "gs-sym p SIZE_4": {
+    "iterations": 3,
+    "reduction": 0.0496894007269538,
+    "setup_s": 0.023211240768432617,
+    "solve_s": 0.09332633018493652,
+    "total_s": 0.11708474159240723,
+    "converged": true
+   },
+   "robust": {
+    "iterations": 2,
+    "reduction": 0.030347566840839182,
+    "setup_s": 0.04330563545227051,
+    "solve_s": 0.0526580810546875,
+    "total_s": 0.09651756286621094,
+    "converged": true
+   },
+   "dilu 1/2 (old default)": {
+    "iterations": 7,
+    "reduction": 0.05570006317352745,
+    "setup_s": 0.030998945236206055,
+    "solve_s": 0.12810063362121582,
+    "total_s": 0.15963435173034668,
+    "converged": true
+   },
+   "dilu-p 0/1": {
+    "iterations": 4,
+    "reduction": 0.07745445323157049,
+    "setup_s": 0.03745102882385254,
+    "solve_s": 0.09382367134094238,
+    "total_s": 0.13182473182678223,
+    "converged": true
+   }
+  },
+  "synth2-thin_slab": {
+   "gs-sym p SIZE_4": {
+    "iterations": 300,
+    "reduction": 0.9288158028855878,
+    "setup_s": 0.018509864807128906,
+    "solve_s": 2.5795862674713135,
+    "total_s": 2.598419189453125,
+    "converged": false
+   },
+   "robust": {
+    "iterations": 12,
+    "reduction": 0.08795031619299447,
+    "setup_s": 0.02145075798034668,
+    "solve_s": 0.08043074607849121,
+    "total_s": 0.1021888256072998,
+    "converged": true
+   },
+   "dilu 1/2 (old default)": {
+    "iterations": 300,
+    "reduction": 0.9988522797105294,
+    "setup_s": 0.02825331687927246,
+    "solve_s": 2.455517292022705,
+    "total_s": 2.4841134548187256,
+    "converged": false
+   },
+   "dilu-p 0/1": {
+    "iterations": 300,
+    "reduction": 0.9987384511621866,
+    "setup_s": 0.02354264259338379,
+    "solve_s": 2.2970781326293945,
+    "total_s": 2.3209354877471924,
+    "converged": false
+   }
+  },
+  "synth2-1e-6-dfg_slab": {
+   "gs-sym p SIZE_4": {
+    "iterations": 17,
+    "reduction": 5.219648574856421e-07,
+    "setup_s": 0.022153377532958984,
+    "solve_s": 0.21940207481384277,
+    "total_s": 0.24212360382080078,
+    "converged": true
+   },
+   "robust": {
+    "iterations": 11,
+    "reduction": 5.651739079627218e-07,
+    "setup_s": 0.0281527042388916,
+    "solve_s": 0.15009856224060059,
+    "total_s": 0.1787738800048828,
+    "converged": true
+   },
+   "dilu 1/2 (old default)": {
+    "iterations": 300,
+    "reduction": 0.8175947329614944,
+    "setup_s": 0.031342267990112305,
+    "solve_s": 3.654320001602173,
+    "total_s": 3.686180830001831,
+    "converged": false
+   },
+   "dilu-p 0/1": {
+    "iterations": 300,
+    "reduction": 0.08450530587584341,
+    "setup_s": 0.029065370559692383,
+    "solve_s": 2.081648826599121,
+    "total_s": 2.1113035678863525,
+    "converged": false
+   }
+  },
+  "synth2-1e-6-gateb_tube12": {
+   "gs-sym p SIZE_4": {
+    "iterations": 26,
+    "reduction": 8.501219254127526e-07,
+    "setup_s": 0.03725624084472656,
+    "solve_s": 0.6674525737762451,
+    "total_s": 0.7095372676849365,
+    "converged": true
+   },
+   "robust": {
+    "iterations": 13,
+    "reduction": 8.614316292409589e-07,
+    "setup_s": 0.08640575408935547,
+    "solve_s": 0.3383469581604004,
+    "total_s": 0.4295527935028076,
+    "converged": true
+   },
+   "dilu 1/2 (old default)": {
+    "iterations": 24,
+    "reduction": 5.659888232373752e-07,
+    "setup_s": 0.05641984939575195,
+    "solve_s": 0.7308409214019775,
+    "total_s": 0.7920629978179932,
+    "converged": true
+   },
+   "dilu-p 0/1": {
+    "iterations": 35,
+    "reduction": 8.984200484597317e-07,
+    "setup_s": 0.05150794982910156,
+    "solve_s": 0.6748692989349365,
+    "total_s": 0.7312002182006836,
+    "converged": true
+   }
+  },
+  "synth2-1e-6-layered_tube": {
+   "gs-sym p SIZE_4": {
+    "iterations": 17,
+    "reduction": 5.945842981719338e-07,
+    "setup_s": 0.027504920959472656,
+    "solve_s": 0.37481164932250977,
+    "total_s": 0.40287065505981445,
+    "converged": true
+   },
+   "robust": {
+    "iterations": 9,
+    "reduction": 9.138628306208917e-07,
+    "setup_s": 0.04281139373779297,
+    "solve_s": 0.2296609878540039,
+    "total_s": 0.2729988098144531,
+    "converged": true
+   },
+   "dilu 1/2 (old default)": {
+    "iterations": 24,
+    "reduction": 8.117070780030168e-07,
+    "setup_s": 0.028114795684814453,
+    "solve_s": 0.4279139041900635,
+    "total_s": 0.4565439224243164,
+    "converged": true
+   },
+   "dilu-p 0/1": {
+    "iterations": 28,
+    "reduction": 6.320640214468982e-07,
+    "setup_s": 0.034909963607788086,
+    "solve_s": 0.42238736152648926,
+    "total_s": 0.45783019065856934,
+    "converged": true
+   }
+  },
+  "synth2-1e-6-thin_slab": {
+   "gs-sym p SIZE_4": {
+    "iterations": 300,
+    "reduction": 0.9288158028855878,
+    "setup_s": 0.022238492965698242,
+    "solve_s": 2.5655016899108887,
+    "total_s": 2.5880672931671143,
+    "converged": false
+   },
+   "robust": {
+    "iterations": 283,
+    "reduction": 9.754871237920093e-07,
+    "setup_s": 0.025315046310424805,
+    "solve_s": 1.7969014644622803,
+    "total_s": 1.8225562572479248,
+    "converged": true
+   },
+   "dilu 1/2 (old default)": {
+    "iterations": 300,
+    "reduction": 0.9988522797105294,
+    "setup_s": 0.02691197395324707,
+    "solve_s": 2.3894031047821045,
+    "total_s": 2.4166386127471924,
+    "converged": false
+   },
+   "dilu-p 0/1": {
+    "iterations": 300,
+    "reduction": 0.9987384511621866,
+    "setup_s": 0.022623538970947266,
+    "solve_s": 2.2888965606689453,
+    "total_s": 2.311861515045166,
+    "converged": false
+   }
+  }
+ },
+ "thin_slab_crashes": "the last three thin_slab runs crashed because another job had taken the GPU memory"
+}

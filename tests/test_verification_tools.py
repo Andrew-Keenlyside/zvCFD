@@ -41,3 +41,24 @@ def test_grid_study_recovers_order_and_limit():
     assert s.asymptotic_ratio == pytest.approx(1.0, abs=0.1)
     assert observed_order(1.0, 1.0 + 1e-3, 1.0 + 4e-3, 2.0) == pytest.approx(np.log2(3.0))
     assert gci_two_grids(1.0, 1.03) == pytest.approx(3 * 0.03 / 3)
+
+
+def test_time_step_study_bdf2():
+    """A BDF2 decay ODE: second order in the step, and the extrapolate beats the fine run."""
+    from zvcfd.fv.reference import bdf_coefficients
+    from zvcfd.verification import time_step_study
+
+    lam, T = 3.0, 1.0
+
+    def run(dt):
+        n = int(round(T / dt))
+        y = [1.0, np.exp(-lam * dt)]                       # exact start, then BDF2
+        for _ in range(n - 1):
+            c0, c1, c2 = bdf_coefficients("bdf2", dt, dt, 2)
+            y.append((c1 * y[-1] + c2 * y[-2]) / (c0 + lam * dt))
+        return {"y": y[-1]}
+
+    st = time_step_study(run, 0.02)["y"]
+    assert abs(st.order - 2.0) < 0.05
+    exact = np.exp(-lam * T)
+    assert abs(st.extrapolated - exact) < 0.1 * abs(st.f1 - exact)

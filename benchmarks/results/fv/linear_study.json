@@ -1,0 +1,119 @@
+{
+ "system_0-rtol0.1": {
+  "amgx-dilu": {
+   "error": "RuntimeError: AmgX setup failed (code 15)"
+  },
+  "amgx-dilu-p": {
+   "error": "RuntimeError: AmgX setup failed (code 15)"
+  },
+  "amgx-robust": {
+   "error": "RuntimeError: AmgX setup failed (code 15)"
+  },
+  "amgx-dilu-mixed": {
+   "iterations": 400,
+   "reduction": 0.9117013927384757,
+   "converged": false,
+   "setup_s": 0.13769292831420898,
+   "solve_s": 32.64487290382385,
+   "total_s": 32.78272891044617
+  },
+  "amgx-robust-mixed": {
+   "iterations": 400,
+   "reduction": 0.876999150724422,
+   "converged": false,
+   "setup_s": 0.3589181900024414,
+   "solve_s": 45.244657039642334,
+   "total_s": 45.60367441177368
+  },
+  "amgx-ilu0-size4": {
+   "error": "RuntimeError: AmgX setup failed (code 15)"
+  },
+  "amgx-ilu0-size8": {
+   "error": "RuntimeError: AmgX upload failed (code 5)"
+  },
+  "amgx-dilu-size8-p": {
+   "error": "RuntimeError: AmgX upload failed (code 5)"
+  },
+  "amgx-dilu-size2": {
+   "error": "RuntimeError: AmgX setup failed (code 15)"
+  },
+  "simple": {
+   "error": "OutOfMemoryError: Out of memory allocating 66,580,992 bytes (allocated so far: 2,294,174,720 bytes)."
+  },
+  "acm": {
+   "error": "OutOfMemoryError: Out of memory allocating 710,196,224 bytes (allocated so far: 1,894,688,768 bytes)."
+  }
+ },
+ "dfg_slab-rtol1e-06": {
+  "simple": {
+   "iterations": 400,
+   "reduction": 0.8533012368896065,
+   "converged": false,
+   "setup_s": 0.16292262077331543,
+   "solve_s": 9.969622373580933,
+   "total_s": 10.132583618164062
+  },
+  "acm": {
+   "iterations": 400,
+   "reduction": 0.00892515297120235,
+   "converged": false,
+   "setup_s": 0.18841218948364258,
+   "solve_s": 1.224837064743042,
+   "total_s": 1.4132747650146484
+  }
+ },
+ "gateb_tube12-rtol1e-06": {
+  "simple": {
+   "iterations": 55,
+   "reduction": 7.637877412266957e-07,
+   "converged": true,
+   "setup_s": 0.2787327766418457,
+   "solve_s": 3.5789151191711426,
+   "total_s": 3.857686758041382
+  },
+  "acm": {
+   "iterations": 39,
+   "reduction": 8.282729228362737e-07,
+   "converged": true,
+   "setup_s": 1.2183587551116943,
+   "solve_s": 1.0435709953308105,
+   "total_s": 2.2619495391845703
+  }
+ },
+ "layered_tube-rtol1e-06": {
+  "simple": {
+   "iterations": 41,
+   "reduction": 9.581893702187975e-07,
+   "converged": true,
+   "setup_s": 0.07777833938598633,
+   "solve_s": 1.897230625152588,
+   "total_s": 1.9750392436981201
+  },
+  "acm": {
+   "iterations": 51,
+   "reduction": 8.369089637594691e-07,
+   "converged": true,
+   "setup_s": 0.12435603141784668,
+   "solve_s": 0.1262526512145996,
+   "total_s": 0.25063204765319824
+  }
+ },
+ "thin_slab-rtol1e-06": {
+  "simple": {
+   "iterations": 400,
+   "reduction": 0.9926468437365575,
+   "converged": false,
+   "setup_s": 0.028243064880371094,
+   "solve_s": 7.045847654342651,
+   "total_s": 7.074118137359619
+  },
+  "acm": {
+   "iterations": 400,
+   "reduction": 0.7126595666548493,
+   "converged": false,
+   "setup_s": 0.31199216842651367,
+   "solve_s": 0.9229373931884766,
+   "total_s": 1.2349543571472168
+  }
+ }
+}

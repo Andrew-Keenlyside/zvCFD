@@ -1,0 +1,252 @@
+{
+ "kind": "wedge",
+ "levels": [
+  {
+   "kind": "wedge",
+   "nc": 6,
+   "nodes": 9457,
+   "elements": {
+    "wedge": 17280
+   },
+   "wall_polygon_area_ratio": 0.9886159294653691,
+   "q_exact_polygon": 0.7671097970550458,
+   "stokes": {
+    "q": 0.7614103436502726,
+    "q_over_poiseuille_circle": 0.9694577593059169,
+    "centreline_in_mid_out": [
+     1.9778348714222667,
+     1.9778348715197074,
+     1.9778348714977099
+    ],
+    "outer_iterations": 28,
+    "converged": true,
+    "seconds": 2.667731523513794
+   },
+   "high_resolution": {
+    "q": 0.7656749947920438,
+    "q_over_poiseuille_circle": 0.97488768178412,
+    "centreline_in_mid_out": [
+     1.9889123640249449,
+     1.9889127044064943,
+     1.9819561606744303
+    ],
+    "outer_iterations": 36,
+    "converged": true,
+    "seconds": 1.924325704574585,
+    "q_over_stokes_minus_1": 0.005600989239686438,
+    "inlet_jet": -1.7113951189529075e-07
+   },
+   "blend_1": {
+    "q": 0.7656753923792475,
+    "q_over_poiseuille_circle": 0.9748881880078702,
+    "centreline_in_mid_out": [
+     1.9889137361125502,
+     1.9889137364650247,
+     1.9819494270222
+    ],
+    "outer_iterations": 37,
+    "converged": true,
+    "seconds": 1.9828853607177734,
+    "q_over_stokes_minus_1": 0.005601511411741367,
+    "inlet_jet": -1.7721957235039554e-10
+   },
+   "upwind": {
+    "q": 0.7614103442650548,
+    "q_over_poiseuille_circle": 0.9694577600886819,
+    "centreline_in_mid_out": [
+     1.9778348732765458,
+     1.9778348732280162,
+     1.9778348731413258
+    ],
+    "outer_iterations": 33,
+    "converged": true,
+    "seconds": 1.8577685356140137,
+    "q_over_stokes_minus_1": 8.074256818701997e-10,
+    "inlet_jet": 2.453681702263566e-11
+   },
+   "reconstruction": {
+    "q": NaN,
+    "q_over_poiseuille_circle": NaN,
+    "centreline_in_mid_out": [
+     null,
+     null,
+     null
+    ],
+    "outer_iterations": 31,
+    "converged": false,
+    "diverged": true,
+    "seconds": 33.30739092826843,
+    "q_over_stokes_minus_1": NaN,
+    "inlet_jet": null
+   }
+  },
+  {
+   "kind": "wedge",
+   "nc": 12,
+   "nodes": 72265,
+   "elements": {
+    "wedge": 138240
+   },
+   "wall_polygon_area_ratio": 0.9971466573496368,
+   "q_exact_polygon": 0.7808511404545881,
+   "stokes": {
+    "q": 0.7791464959589556,
+    "q_over_poiseuille_circle": 0.9920401297967779,
+    "centreline_in_mid_out": [
+     1.9954100989161874,
+     1.9954100989041452,
+     1.9954100987345833
+    ],
+    "outer_iterations": 28,
+    "converged": true,
+    "seconds": 3.4027156829833984
+   },
+   "high_resolution": {
+    "q": 0.7807325679709537,
+    "q_over_poiseuille_circle": 0.9940595794032516,
+    "centreline_in_mid_out": [
+     1.9994720513181174,
+     1.9994720618167914,
+     1.9969234250223629
+    ],
+    "outer_iterations": 32,
+    "converged": true,
+    "seconds": 4.992645740509033,
+    "q_over_stokes_minus_1": 0.0020356531412568657,
+    "inlet_jet": -5.250722967531374e-09
+   },
+   "blend_1": {
+    "q": 0.7807324201815786,
+    "q_over_poiseuille_circle": 0.994059391231975,
+    "centreline_in_mid_out": [
+     1.999471683475595,
+     1.999471683629598,
+     1.996918773979694
+    ],
+    "outer_iterations": 32,
+    "converged": true,
+    "seconds": 4.77930212020874,
+    "q_over_stokes_minus_1": 0.002035463460143161,
+    "inlet_jet": -7.70218333556727e-11
+   },
+   "upwind": {
+    "q": 0.7791464956256651,
+    "q_over_poiseuille_circle": 0.9920401293724193,
+    "centreline_in_mid_out": [
+     1.9954100981584373,
+     1.9954100980444873,
+     1.9954100978385254
+    ],
+    "outer_iterations": 31,
+    "converged": true,
+    "seconds": 4.492759704589844,
+    "q_over_stokes_minus_1": -4.277636023175546e-10,
+    "inlet_jet": 5.710609762843433e-11
+   },
+   "reconstruction": {
+    "q": 0.7789479626422395,
+    "q_over_poiseuille_circle": 0.9917873493269876,
+    "centreline_in_mid_out": [
+     1.9940910469572166,
+     1.9948643641167936,
+     1.9948654794406244
+    ],
+    "outer_iterations": 107,
+    "converged": true,
+    "seconds": 43.04848074913025,
+    "q_over_stokes_minus_1": -0.0002548087140810118,
+    "inlet_jet": -0.00038765400469686906
+   }
+  },
+  {
+   "kind": "wedge",
+   "nc": 18,
+   "nodes": 240265,
+   "elements": {
+    "wedge": 466560
+   },
+   "wall_polygon_area_ratio": 0.9987312439537491,
+   "q_exact_polygon": 0.7833827519996082,
+   "stokes": {
+    "q": 0.7824639204696014,
+    "q_over_poiseuille_circle": 0.996264005870406,
+    "centreline_in_mid_out": [
+     1.9986925815122993,
+     1.9986925816927574,
+     1.998692581760641
+    ],
+    "outer_iterations": 28,
+    "converged": true,
+    "seconds": 9.605017185211182
+   },
+   "high_resolution": {
+    "q": 0.7834331611595576,
+    "q_over_poiseuille_circle": 0.9974980814452246,
+    "centreline_in_mid_out": [
+     2.0011683675852807,
+     2.001168368853912,
+     1.999584181732693
+    ],
+    "outer_iterations": 31,
+    "converged": true,
+    "seconds": 11.718612432479858,
+    "q_over_stokes_minus_1": 0.0012387033633123323,
+    "inlet_jet": -6.339453406667417e-10
+   },
+   "blend_1": {
+    "q": 0.7834330658886484,
+    "q_over_poiseuille_circle": 0.9974979601425354,
+    "centreline_in_mid_out": [
+     2.001168125589488,
+     2.0011681256128573,
+     1.9995809075112454
+    ],
+    "outer_iterations": 31,
+    "converged": true,
+    "seconds": 11.631255388259888,
+    "q_over_stokes_minus_1": 0.001238581605737421,
+    "inlet_jet": -1.1677880884519709e-11
+   },
+   "upwind": {
+    "q": 0.7824639200163421,
+    "q_over_poiseuille_circle": 0.9962640052932983,
+    "centreline_in_mid_out": [
+     1.9986925804489073,
+     1.9986925803274145,
+     1.9986925803683961
+    ],
+    "outer_iterations": 29,
+    "converged": true,
+    "seconds": 10.835801601409912,
+    "q_over_stokes_minus_1": -5.792718527075635e-10,
+    "inlet_jet": 6.078604286585687e-11
+   },
+   "reconstruction": {
+    "q": 0.7824877303520459,
+    "q_over_poiseuille_circle": 0.9962943215542897,
+    "centreline_in_mid_out": [
+     1.999726341762773,
+     1.9988391880068725,
+     1.998738764825328
+    ],
+    "outer_iterations": 57,
+    "converged": true,
+    "seconds": 54.777820348739624,
+    "q_over_stokes_minus_1": 3.0429367823270326e-05,
+    "inlet_jet": 0.00044383448214513344
+   }
+  }
+ ],
+ "observed_order_high_resolution": [
+  1.4601898978111398,
+  1.2251401011609653
+ ],
+ "observed_order_blend_1": [
+  1.4604588277416786,
+  1.225152717240833
+ ],
+ "observed_order_upwind": [
+  0.9165157442542157,
+  -0.7477861114214083
+ ]
+}

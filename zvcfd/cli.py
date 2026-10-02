@@ -7,6 +7,7 @@ comma-separated shapes (``--shape 2048,2048,2048``).
     zvcfd probe [--require cupy,zv_device_decode] [--json]
     zvcfd plan --fluid-cells 6.3e8 [--fill 0.6] [--gpus 8] [--gpu H100-SXM] [--method lbm-fp32]
     zvcfd plan --shape 2048,2048,2048 --fluid-fraction 0.2 --geometry porous --layout dense
+    zvcfd import-mesh coronary.msh [--out coronary.zvmesh] [--unit mm] [--surface-only]
     zvcfd mesh-info coronary.msh [--voxel-size 0.02,0.01,0.005] [--unit mm]
     zvcfd voxelize coronary.msh --voxel-size 50 [--unit mm] [--out domain.zarrvectors]
     zvcfd phantom list | zvcfd phantom build <name> --out mask.npy
@@ -159,15 +160,36 @@ def _mesh_info_volume(args) -> int:
     return 0
 
 
+# ---------------------------------------------------------------- import-mesh
+
+def cmd_import_mesh(args) -> int:
+    from zvcfd.io.mesh_collection import collection_info, import_mesh
+
+    out = import_mesh(args.mesh, args.out, unit=args.unit, chunk=args.chunk,
+                      surface_only=args.surface_only)
+    info = collection_info(out)
+    lo, hi = info["bounds_m"]
+    print(f"  {info['nodes']:,} nodes, {info['elements'] or 'surface only'}; chunk "
+          f"{info['chunk'] * 1e3:g} mm; box {[round((b - a) * 1e3, 3) for a, b in zip(lo, hi)]} mm")
+    for z in info["zones"]:
+        print(f"  zone {z['zone']:>4} {z['kind']:<16} {z['faces']:>9,} faces  {z['name']}")
+    return 0
+
+
 # ---------------------------------------------------------------- voxelize
 
 def cmd_voxelize(args) -> int:
-    from zvcfd.geometry import voxelize_fluent
-    from zvcfd.run import _UNIT_UM
+    from zvcfd.io.mesh_collection import is_mesh_collection, voxelize_collection
 
-    unit_um = _UNIT_UM[args.unit]
-    dom, bnd, grid, rep = voxelize_fluent(args.mesh, args.voxel_size / unit_um,
-                                          unit_scale=unit_um * 1e-6)
+    if is_mesh_collection(args.mesh):
+        dom, bnd, grid, rep = voxelize_collection(args.mesh, args.voxel_size * 1e-6)
+    else:
+        from zvcfd.geometry import voxelize_fluent
+        from zvcfd.run import _UNIT_UM
+
+        unit_um = _UNIT_UM[args.unit]
+        dom, bnd, grid, rep = voxelize_fluent(args.mesh, args.voxel_size / unit_um,
+                                              unit_scale=unit_um * 1e-6)
     counts = bnd.counts()
     print(f"{args.mesh}: {args.voxel_size:g} um voxels, box {grid.shape}, "
           f"{rep['fluid_voxels']:,} fluid voxels in {dom.n_bricks:,} bricks (fill {dom.fill:.2f}); "
@@ -236,6 +258,14 @@ def cmd_info(args) -> int:
             if snaps:
                 print(f"  {len(snaps)} snapshots: {snaps[0]['id']} .. {snaps[-1]['id']}")
             return 0
+        if "ome" in attrs and "zvcfd:mesh" in attrs["ome"].get("attributes", {}):
+            info = attrs["ome"]["attributes"]["zvcfd:mesh"]
+            print(f"mesh collection {p.name}: {info['nodes']:,} nodes, "
+                  f"{info['elements'] or 'surface only'}, {len(info['zones'])} zones, "
+                  f"chunk {info['chunk']:g} m; from {info['source']}")
+            for n in attrs["ome"]["nodes"]:
+                print(f"  {n['type']:<18} {n['id']:<10} {n['path']['path']}")
+            return 0
         if "zarr_vectors" in attrs:
             import zarr_vectors as zv
 
@@ -243,14 +273,16 @@ def cmd_info(args) -> int:
             meta = dict(ds.metadata["zvcfd"]) if "zvcfd" in ds.metadata else {}
             print(f"zarr vectors store {p.name}: levels {len(ds.levels)}; zvcfd {meta}")
             return 0
-    print(f"{p}: not a zvcfd run or brick store", file=sys.stderr)
+    print(f"{p}: not a zvcfd run, mesh collection or store", file=sys.stderr)
     return 1
 
 
 # ---------------------------------------------------------------- parser
 
 def build_parser() -> argparse.ArgumentParser:
-    ap = argparse.ArgumentParser(prog="zvcfd", description="GPU CFD on Zarr Vectors stores.")
+    ap = argparse.ArgumentParser(prog="zvcfd", description="GPU CFD on Zarr Vectors stores: a "
+                                 "CFX-style finite-volume solver on meshes, and a "
+                                 "lattice-Boltzmann solver on voxels.")
     sub = ap.add_subparsers(dest="command", required=True)
 
     p = sub.add_parser("probe", help="report what this install and machine can do")
@@ -290,11 +322,24 @@ def build_parser() -> argparse.ArgumentParser:
     plan_opts(p)
     p.set_defaults(func=cmd_mesh_info)
 
-    p = sub.add_parser("voxelize", help="voxelise a Fluent mesh into a sparse domain with patches")
-    p.add_argument("mesh")
+    p = sub.add_parser("import-mesh",
+                       help="import a mesh into a Zarr Vectors mesh collection (.zvmesh)")
+    p.add_argument("mesh", help="Fluent .msh, .vtu, SimVascular mesh-complete folder, or any "
+                                "meshio format")
+    p.add_argument("--out", help="collection path (default: <mesh>.zvmesh beside the mesh)")
+    p.add_argument("--unit", default="mm", help="the source's coordinate unit; stored in metres")
+    p.add_argument("--chunk", type=float, help="spatial chunk edge, metres "
+                                               "(default: a quarter of the longest box edge)")
+    p.add_argument("--surface-only", action="store_true", dest="surface_only",
+                   help="boundary store only (enough for the voxel solver)")
+    p.set_defaults(func=cmd_import_mesh)
+
+    p = sub.add_parser("voxelize", help="voxelise a mesh collection or a Fluent mesh into a "
+                                        "sparse domain with patches")
+    p.add_argument("mesh", help=".zvmesh collection, or a Fluent .msh")
     p.add_argument("--voxel-size", type=float, required=True, dest="voxel_size",
                    help="micrometre")
-    p.add_argument("--unit", default="mm", help="mesh coordinate unit")
+    p.add_argument("--unit", default="mm", help="Fluent mesh coordinate unit")
     p.add_argument("--out", help="write the domain brick store here")
     p.add_argument("--chunk-bricks", type=int, default=32, dest="chunk_bricks")
     p.set_defaults(func=cmd_voxelize)
@@ -305,13 +350,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--out", default="phantom.npy")
     p.set_defaults(func=cmd_phantom)
 
-    p = sub.add_parser("run", help="run a configuration (single GPU)")
+    p = sub.add_parser("run", help="run a configuration: the finite-volume solver for a mesh, "
+                                   "the lattice-Boltzmann solver for voxels")
     p.add_argument("config")
     p.add_argument("--out")
     p.add_argument("--steps", type=int)
     p.set_defaults(func=cmd_run)
 
-    p = sub.add_parser("info", help="describe a run collection or a brick store")
+    p = sub.add_parser("info", help="describe a run collection, mesh collection or store")
     p.add_argument("target")
     p.set_defaults(func=cmd_info)
     return ap

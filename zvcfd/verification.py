@@ -10,7 +10,9 @@ For a quantity ``f`` computed on three systematically refined grids (fine
   formal order is assumed and ``F_s = 3``.
 
 The procedure is that of Roache (1994) as standardised in ASME V&V 20
-and by Celik et al. (2008). A study is in the asymptotic range when the
+and by Celik et al. (2008). :func:`time_step_study` applies it to the time
+step: rerun at half and double the step, the check the CFX-Solver Modeling
+Guide (§16.4.2) recommends for transient runs. A study is in the asymptotic range when the
 observed order is near the formal order, and when ``GCI_23 ≈ r^p GCI_12``.
 
 References: P. J. Roache, *Perspective: a method for uniform reporting of
@@ -66,10 +68,23 @@ def grid_study(f1: float, f2: float, f3: float, r: float = 2.0, *,
     return GridStudy(f1, f2, f3, r, p, ext, g12, g23, ratio, osc)
 
 
+def time_step_study(run, dt: float, *, r: float = 2.0,
+                    safety: float = 1.25) -> dict[str, GridStudy]:
+    """Temporal study of the quantities ``run(dt) -> {name: value}`` at ``dt/r, dt, r dt``.
+
+    Each quantity gets a :class:`GridStudy` with the time step in the role of
+    the grid spacing: its observed temporal order and a time-step
+    uncertainty (GCI) for the run at ``dt/r``.
+    """
+    f1, f2, f3 = run(dt / r), run(dt), run(dt * r)
+    return {k: grid_study(float(f1[k]), float(f2[k]), float(f3[k]), r, safety=safety)
+            for k in f1}
+
+
 def gci_two_grids(f1: float, f2: float, r: float = 2.0, order: float = 2.0,
                   safety: float = 3.0) -> float:
     """Relative fine-grid GCI from two grids, assuming the formal ``order``."""
     return safety * abs((f1 - f2) / f1) / (r ** order - 1)
 
 
-__all__ = ["GridStudy", "gci_two_grids", "grid_study", "observed_order"]
+__all__ = ["GridStudy", "gci_two_grids", "grid_study", "observed_order", "time_step_study"]

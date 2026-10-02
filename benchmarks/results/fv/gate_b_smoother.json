@@ -1,0 +1,82 @@
+{
+ "amgx": [
+  {
+   "nc": 12,
+   "error": "RuntimeError: AmgX setup failed (code 7)"
+  },
+  {
+   "nc": 16,
+   "error": "RuntimeError: AmgX setup failed (code 7)"
+  }
+ ],
+ "amgx-dilu": [
+  {
+   "nc": 12,
+   "nodes": 72265,
+   "elements": {
+    "tet": 248832,
+    "wedge": 55296
+   },
+   "blocks": 1224793,
+   "setup_s": 2.6814730167388916,
+   "single": {
+    "iterations": 24,
+    "residual": 7.091176991199181e-07,
+    "reduction_per_iteration": 0.5543447389977029,
+    "setup_s": 0.034027099609375,
+    "solve_s": 0.3602907657623291,
+    "converged": true,
+    "device_pool_gb": 0.549144064
+   },
+   "steady": {
+    "outer_iterations": 24,
+    "converged": true,
+    "linear_per_outer": 2.25,
+    "linear_failures": 0,
+    "seconds_per_outer": 0.32966317733128864,
+    "assemble_s": 0.2214661439259847,
+    "linear_setup_s": 0.03409138321876526,
+    "linear_solve_s": 0.03554445505142212,
+    "total_s": 7.9218220710754395,
+    "final_rms_u": 5.4402708509187496e-12,
+    "final_rms_p": 1.0352333822904763e-10,
+    "imbalance": 2.1135802106994776e-10
+   },
+   "device_pool_gb": 0.54002432
+  },
+  {
+   "nc": 16,
+   "nodes": 169377,
+   "elements": {
+    "tet": 589824,
+    "wedge": 131072
+   },
+   "blocks": 2889953,
+   "setup_s": 6.587226867675781,
+   "single": {
+    "iterations": 26,
+    "residual": 9.348514069533902e-07,
+    "reduction_per_iteration": 0.5862805465951224,
+    "setup_s": 0.05537533760070801,
+    "solve_s": 0.7606918811798096,
+    "converged": true,
+    "device_pool_gb": 1.294377984
+   },
+   "steady": {
+    "outer_iterations": 24,
+    "converged": true,
+    "linear_per_outer": 2.0,
+    "linear_failures": 0,
+    "seconds_per_outer": 0.9168823858102163,
+    "assemble_s": 0.7140831351280212,
+    "linear_setup_s": 0.05553951859474182,
+    "linear_solve_s": 0.061928629875183105,
+    "total_s": 22.02343773841858,
+    "final_rms_u": 1.99907719917181e-12,
+    "final_rms_p": 5.7721839054767593e-11,
+    "imbalance": 2.914249713679061e-11
+   },
+   "device_pool_gb": 1.294377984
+  }
+ ]
+}

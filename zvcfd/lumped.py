@@ -19,7 +19,8 @@ as an affine function of that step's end flow:
 
 An implicit 3-D solver enters ``r`` into its equations, so the outlet is
 coupled inside each coefficient loop (stable with many outlets, where a
-lagged explicit coupling is not). An explicit solver (the LBM patch
+lagged explicit coupling is not); :meth:`LumpedOutlet.steady_coefficients`
+gives the pair for a steady solve. An explicit solver (the LBM patch
 controller) measures ``Q`` over an interval and calls
 :meth:`LumpedOutlet.advance`, which commits the step and returns the
 pressure to hold for the next interval.
@@ -108,6 +109,12 @@ class LumpedOutlet:
     def resistance(self) -> float:
         """Total steady resistance ``dP/dQ`` at rest (Pa·s/m³)."""
         return float(self.Dq - self.Cx @ np.linalg.solve(self.A, self.Bq))
+
+    def steady_coefficients(self, t: float | None = None) -> tuple[float, float]:
+        """``(a, r)`` with ``P = a + r Q`` at rest (compliances full), inputs frozen at ``t``."""
+        t = self.t if t is None else t
+        a = float(self.Cx @ self.steady_state(0.0, t) + self.Du @ self.inputs(t))
+        return a, self.resistance()
 
     def initialise(self, q: float = 0.0, t: float = 0.0) -> None:
         """Start at the steady state for outflow ``q`` at time ``t``."""

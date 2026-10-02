@@ -225,6 +225,71 @@ def square_duct_flux(a: float, F: float, nu: float, terms: int = 200) -> float:
 # ---------------------------------------------------------------- Womersley
 
 
+def polygon_poiseuille_flux(n_sides: int, R: float, G_over_mu: float = 1.0,
+                            k: int = 48) -> float:
+    """Poiseuille flow rate of a regular ``n_sides``-gon with vertices on radius ``R``,
+    for ``G/μ`` the pressure gradient over the viscosity: ``(G/μ) ∫ w dA`` with
+    ``−Δw = 1`` in the polygon and ``w = 0`` on its edges.
+
+    Linear triangles on each of the ``n_sides`` sectors, refined ``k`` times along
+    a side, and once more at ``k/2``: the integral converges at second order, so
+    their Richardson extrapolation is accurate to about 10⁻⁶ relative. For
+    regular polygons the flow rate is *not* the circle's times the area ratio
+    squared (that holds for similar sections): for 12, 24 and 48 sides, 0.9074,
+    0.97671 and 0.99421 of the circle's, against 0.9119, 0.9774 and 0.9943.
+    """
+    import scipy.sparse as sp
+    import scipy.sparse.linalg as spl
+
+    def integral(k):
+        # nodes of sector s: centre, then the barycentric grid (i, j), i + j <= k
+        ij = [(i, j) for i in range(k + 1) for j in range(k + 1 - i)]
+        loc = {p: m for m, p in enumerate(ij)}
+        tri = []
+        for i in range(k):
+            for j in range(k - i):
+                tri.append((loc[i, j], loc[i + 1, j], loc[i, j + 1]))
+                if j < k - i - 1:
+                    tri.append((loc[i + 1, j], loc[i + 1, j + 1], loc[i, j + 1]))
+        tri = np.array(tri)
+        u, v = np.array(ij, float).T / k
+        npts = len(ij)
+        X = []
+        for s in range(n_sides):
+            a0, a1 = 2 * np.pi * s / n_sides, 2 * np.pi * (s + 1) / n_sides
+            B = R * np.array([np.cos(a0), np.sin(a0)])
+            C = R * np.array([np.cos(a1), np.sin(a1)])
+            X.append(np.outer(u, B) + np.outer(v, C))
+        X = np.concatenate(X)
+        T = np.concatenate([tri + s * npts for s in range(n_sides)])
+        # merge the nodes shared between sectors
+        key = np.round(X, 12)
+        _, first, inv = np.unique(key, axis=0, return_index=True, return_inverse=True)
+        X, T = X[first], inv.reshape(-1)[T]
+        x = X[T]                                                    # (E, 3, 2)
+        d1, d2 = x[:, 1] - x[:, 0], x[:, 2] - x[:, 0]
+        area = 0.5 * np.abs(d1[:, 0] * d2[:, 1] - d1[:, 1] * d2[:, 0])
+        M = np.concatenate([np.ones((len(T), 3, 1)), x], 2)
+        Gr = np.linalg.inv(M)[:, 1:]                                # (E, 2, 3)
+        K = area[:, None, None] * np.einsum("eka,ekb->eab", Gr, Gr)
+        n = len(X)
+        rows = np.repeat(T, 3, axis=1).reshape(-1)
+        cols = np.tile(T, (1, 3)).reshape(-1)
+        Kg = sp.csr_matrix((K.reshape(-1), (rows, cols)), shape=(n, n))
+        f = np.bincount(T.reshape(-1), np.repeat(area / 3, 3), n)
+        th = np.arctan2(X[:, 1], X[:, 0]) % (2 * np.pi)
+        mid = (np.floor(th / (2 * np.pi / n_sides)) + 0.5) * 2 * np.pi / n_sides
+        edge = np.abs(R * np.cos(np.pi / n_sides)
+                      - np.hypot(X[:, 0], X[:, 1]) * np.cos(th - mid)) < 1e-9
+        w = np.zeros(n)
+        free = ~edge
+        w[free] = spl.spsolve(Kg[free][:, free].tocsc(), f[free])
+        return float(f @ w)
+
+    q1, q2 = integral(k // 2), integral(k)
+    return G_over_mu * (q2 + (q2 - q1) / 3)
+
+
 def womersley_plane(zeta: np.ndarray, H: float, F0: float, omega: float, nu: float,
                     t: float) -> np.ndarray:
     """Channel of width ``H`` driven by ``F0 cos(omega t)``: the periodic (post-transient) state."""
@@ -320,3 +385,10 @@ def sc_drag_series(phi: np.ndarray) -> np.ndarray:
 DFG_2D1 = {"cd": 5.57953523384, "cl": 0.010618948146, "dp": 0.11752016697,
            "dp_norm": 0.11752016697 / 0.04,
            "interval": {"cd": (5.57, 5.59), "cl": (0.0104, 0.0110), "dp": (0.1172, 0.1176)}}
+
+# DFG 2D-2: the same channel at Re = 100 (U_max 1.5, U_mean 1.0 m/s): periodic vortex
+# shedding. The benchmark's intervals (Schäfer & Turek 1996, table 4): maximum drag and
+# lift coefficients, Strouhal number St = f D / U_mean, and dp at t0 + 1/(2f), t0 the
+# time of maximum lift.
+DFG_2D2 = {"interval": {"cd_max": (3.22, 3.24), "cl_max": (0.99, 1.01),
+                        "st": (0.295, 0.305), "dp": (2.46, 2.50)}}

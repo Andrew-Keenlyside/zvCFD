@@ -1,0 +1,14 @@
+# HiP-CT coronary tree on its own Ansys Fluent mesh with the finite-volume solver (gate C case).
+# Steady Newtonian flow, inlet 0.19 mL/s (parabolic-equivalent developed profile of the cap),
+# 77 outlets at 0 Pa, as the OpenFOAM comparison (docs/validation/cross_code.md).
+# Needs one H100: 106 M blocks, ~25 GB with AmgX in mixed precision (zvcfd mesh-info --volume).
+name: coronary-fv
+source: {kind: mesh, path: "/home/andrew/Downloads/mesh 1.msh", unit: mm}
+physics: {nu: 3.5e-6, rho: 1060.0}
+boundaries:
+  patches:
+    - {match: inlet, kind: velocity, flow_rate: 1.9396e-7, profile: parabolic}
+    - {match: outlet, kind: pressure, pressure: 0.0}
+solver: {method: fv}
+fv: {linear: amgx, precision: mixed, iterations: 500, tolerance: 1.0e-6}
+output: {path: runs, dtype: float32}

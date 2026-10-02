@@ -19,6 +19,7 @@ made yet.** H100 figures are extrapolations, and milestone 0 of the
 | I/O | How fast can 8 workers write and read a snapshot: ZV bricks vs dense Zarr vs Icechunk? GPU reads? | `bench_io.py`, `bench_gpu_read.py` | [I/O](io.md) |
 | Multiresolution | Do coarse levels or a cheap pressure solve shorten the fine solve? Does AMG scale? | `multires_init.py`, `amg_check.py` | [Multiresolution](multiresolution.md) |
 | OpenFOAM | Same problems, same workstation: do zvCFD and OpenFOAM v2506 agree, and which gets there first? | `openfoam/voxel_compare.py`, `openfoam/coronary.py`, `openfoam/tau_scan.py` | [OpenFOAM](openfoam.md) |
+| FV solver speed | Where does the GPU finite-volume solver spend its time, what did the speed review gain, and how does it compare with OpenFOAM, the CPU reference and the LBM on one pipe? | `fv/profile_iteration.py`, `fv/amgx_smoothers.py`, `fv/compare_methods.py`, `fv/speed_simvascular.py` | [FV solver speed](fv_speed.md) |
 | Comparison | How does that translate against Fluent, CFX, STAR-CCM+, OpenFOAM, SimVascular and GPU LBM codes? | `estimates.py` | [Comparison](comparison.md) |
 
 ## Reproducing
@@ -59,5 +60,6 @@ kernels
 io
 multiresolution
 openfoam
+fv_speed
 comparison
 ```

@@ -24,6 +24,7 @@ Then cite what your results depend on, from the tables below.
 | [Zarr Vectors / zarr-vectors-py](https://github.com/AllenInstitute/zarr-vectors-py) (Allen Institute; A. Keenlyside, F. Collman; BSD-3) | every brick store, written through `zarr_vectors.building`; GPU decode | the repository |
 | [OME-NGFF](https://ngff.openmicroscopy.org) RFC-8 *Collections*, RFC-5 coordinate systems | the run collection layout | the RFCs |
 | [zarr-python](https://zarr.dev), [CuPy](https://cupy.dev), [NumPy](https://numpy.org), [SciPy](https://scipy.org), [PyAMG](https://github.com/pyamg/pyamg) | arrays, GPU kernels, CPU numerics, the lubrication solve | [Software](references.md#software) |
+| [NVIDIA AmgX](https://github.com/NVIDIA/AMGX) (BSD-3), built from source and called through a thin ctypes binding | the finite-volume solver's algebraic multigrid (`zvcfd.fv.linear`) | M. Naumov et al., *AmgX: a library for GPU accelerated algebraic multigrid and preconditioned iterative methods*, SIAM J. Sci. Comput. 37, S602 (2015) |
 
 ## Methods
 
@@ -44,6 +45,15 @@ implements.
 | Carreau–Yasuda blood rheology, default parameters | Cho & Kensey (1991) |
 | 16-bit population storage | Lehmann et al. (2022) |
 | Smoothed-aggregation multigrid | Vaněk, Mandel & Brezina (1996) |
+| Element-based finite volumes (finite-volume solver) | Schneider & Raw, Numer. Heat Transfer 11, 363 (1987) |
+| Rhie–Chow pressure–velocity coupling; its time-step-independent form | Rhie & Chow, AIAA J. 21, 1525 (1983); Choi, Numer. Heat Transfer B 36, 545 (1999) |
+| High Resolution limiter | Barth & Jespersen, AIAA paper 89-0366 (1989) |
+| Additive-correction multigrid | Hutchinson & Raithby (1986); Raw, AIAA paper 96-0297 (1996); Notay (2010) |
+| Flexible GMRES | Saad, SIAM J. Sci. Comput. 14, 461 (1993) |
+| SIMPLE-type block preconditioner | Patankar (1980); Elman, Silvester & Wathen (2014) |
+| Backflow stabilisation | Esmaily Moghadam et al., Comput. Mech. 48, 277 (2011) |
+| Open-loop coronary and RCR outlets | Kim et al., Ann. Biomed. Eng. 38, 3195 (2010); Westerhof et al. (2009) |
+| TAWSS, OSI, RRT | He & Ku (1996); Himburg et al. (2004) |
 
 ## Validation
 
@@ -53,7 +63,10 @@ implements.
 | Pulsatile pipe flow | Womersley (1955) |
 | Decaying vortices | Taylor & Green (1937) |
 | Periodic sphere arrays | Sangani & Acrivos (1982); Bogner, Mohanty & Rüde (2015) |
-| Flow past a cylinder (DFG 2D-1) | Schäfer & Turek (1996); John & Matthies (2001) |
+| Flow past a cylinder (DFG 2D-1, 2D-2) | Schäfer & Turek (1996); John & Matthies (2001) |
+| Kovasznay flow; Ethier–Steinman flow | Kovasznay (1948); Ethier & Steinman (1994) |
+| Lid-driven cavity | Ghia, Ghia & Shin (1982) |
+| Solution verification (GCI) | Roache (1994); Celik et al. (2008) |
 
 ## Comparisons and data
 

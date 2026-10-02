@@ -1,0 +1,114 @@
+{
+ "fv_levels": {
+  "6": {
+   "nodes": 9457,
+   "cells": 38016,
+   "elements": {
+    "tet": 31104,
+    "wedge": 6912
+   },
+   "gpu-fv": {
+    "q": 0.7593623974887067,
+    "q_ratio_poiseuille": 0.9668502332675226,
+    "iterations": 226,
+    "converged": true,
+    "setup_s": 1.1139073371887207,
+    "solve_s": 112.22868800163269,
+    "per_iteration_s": 0.49658711505147207,
+    "t_q_0.1pct_s": 5.23396372795105,
+    "t_q_1pct_s": 2.6436660289764404,
+    "linear_iterations_mean": 5.951327433628318,
+    "device_pool_gb": 0.112372224,
+    "gpu_before": {
+     "copy_gbs": 248.03228918447414,
+     "sync_us": 9.577954187989235
+    },
+    "gpu_after": {
+     "copy_gbs": 124.35051468675218,
+     "sync_us": 10.579940862953663
+    },
+    "load_average_at_start": 1.81982421875
+   },
+   "gpu-fv-before": {
+    "q": 0.7618972420971165,
+    "q_ratio_poiseuille": 0.9700776976627087,
+    "iterations": 165,
+    "converged": true,
+    "setup_s": 0.40156054496765137,
+    "solve_s": 208.6890254020691,
+    "per_iteration_s": 1.264781972133752,
+    "t_q_0.1pct_s": 42.11282539367676,
+    "t_q_1pct_s": 26.413773775100708,
+    "linear_iterations_mean": 3.9393939393939394,
+    "device_pool_gb": 0.106056704,
+    "gpu_before": {
+     "copy_gbs": 122.44073524484939,
+     "sync_us": 2331.8934836424887
+    },
+    "gpu_after": {
+     "copy_gbs": 119.1958557087207,
+     "sync_us": 2351.900504436344
+    },
+    "load_average_at_start": 1.81982421875
+   }
+  },
+  "12": {
+   "nodes": 72265,
+   "cells": 304128,
+   "elements": {
+    "tet": 248832,
+    "wedge": 55296
+   },
+   "gpu-fv": {
+    "q": 0.7730586699444244,
+    "q_ratio_poiseuille": 0.9842888689736093,
+    "iterations": 74,
+    "converged": true,
+    "setup_s": 0.7449705600738525,
+    "solve_s": 138.3393852710724,
+    "per_iteration_s": 1.869451152311789,
+    "t_q_0.1pct_s": 15.014826774597168,
+    "t_q_1pct_s": 9.847086668014526,
+    "linear_iterations_mean": 11.283783783783784,
+    "device_pool_gb": 0.892864,
+    "gpu_before": {
+     "copy_gbs": 114.66938803775167,
+     "sync_us": 2344.015520066023
+    },
+    "gpu_after": {
+     "copy_gbs": 253.0545060672076,
+     "sync_us": 9.813520591706038
+    },
+    "load_average_at_start": 1.81982421875
+   },
+   "gpu-fv-before": {
+    "q": 0.7733119778020197,
+    "q_ratio_poiseuille": 0.9846113905548918,
+    "iterations": 79,
+    "converged": true,
+    "setup_s": 2.5678884983062744,
+    "solve_s": 23.616974592208862,
+    "per_iteration_s": 0.29894904547099826,
+    "t_q_0.1pct_s": 5.607414722442627,
+    "t_q_1pct_s": 1.611759901046753,
+    "linear_iterations_mean": 5.69620253164557,
+    "device_pool_gb": 0.799910912,
+    "gpu_before": {
+     "copy_gbs": 251.70631843761538,
+     "sync_us": 9.759038221091032
+    },
+    "gpu_after": {
+     "copy_gbs": 253.5829682912245,
+     "sync_us": 10.018993634730577
+    },
+    "load_average_at_start": 1.81982421875
+   }
+  }
+ },
+ "lbm": {},
+ "machine": {
+  "gpu": "RTX A2000 12GB (idle copy bandwidth 253 GB/s)",
+  "cpu": "Threadripper PRO 5955WX (16 cores)"
+ },
+ "q_poiseuille": 0.7853981633974483
+}

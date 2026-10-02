@@ -57,6 +57,12 @@ Per zone, from a ``{zone id: spec}`` table. Values may be constants,
     with velocity interpolated on the face to the sub-face's area centroid
     (exact for linear profiles), enters the continuity rows. A moving wall
     is a velocity zone with tangential velocity.
+``{"kind": "velocity", "flow_rate": Q, "profile": "poiseuille"}``
+    a flow-rate inlet: the profile shape (:mod:`zvcfd.fv.profiles`: ``plug``,
+    ``poiseuille`` — the developed profile of the zone's own cross-section —
+    or ``f(x)``) along the inward normal, scaled every time step so that the
+    discrete inflow is exactly ``ρ Q``. ``Q`` (m³/s into the domain) is a
+    constant, ``Q(t)``, or a periodic ``[(t, Q), ...]`` table.
 ``{"kind": "symmetry"}``
     a plane of symmetry aligned with a coordinate axis: the normal velocity
     component is zero at the zone's nodes, the tangential components are
@@ -65,7 +71,12 @@ Per zone, from a ``{zone id: spec}`` table. Values may be constants,
     ``p`` prescribed at the zone's nodes (static pressure) and on its
     sub-faces for the pressure force; momentum ``ṁ_b u_node`` crosses with
     the flow in either direction (``backflow="consistent"``, the default),
-    or only where it leaves (``"outflow"``). The
+    or only where it leaves (``"outflow"``). ``"backflow_stabilisation": β``
+    (default 0) adds ``β (ṁ_b)₋ u`` to the outflowing momentum wherever the
+    boundary flow enters, the node-based form of the Esmaily Moghadam et
+    al. (2011) term: it removes that fraction of the kinetic energy that
+    backflow carries in (β = 1 removes it all, as ``"outflow"`` does;
+    SimVascular uses 0.2). The
     viscous flux is either zero-normal-gradient (only the transpose part
     ``μ (∇u)ᵀ · A``, from nodal gradients, lagged) or, with ``grad``
     (a callable giving ``du_k/dx_j`` as ``(M, 3, 3)``), the full prescribed
@@ -89,7 +100,10 @@ checks the global mass and momentum balances with them.
 References: C. M. Rhie, W. L. Chow, AIAA J. 21, 1525 (1983); S. K. Choi,
 Numer. Heat Transfer B 36, 545 (1999); T. J. Barth, D. C. Jespersen, AIAA
 paper 89-0366 (1989); G. E. Schneider, M. J. Raw, Numer. Heat Transfer 11,
-363 (1987).
+363 (1987); M. Esmaily Moghadam, Y. Bazilevs, T.-Y. Hsia, I. E. Vignon-Clementel,
+A. L. Marsden, *A comparison of outlet boundary treatments for prevention of
+backflow divergence with relevance to blood flow simulations*, Comput. Mech.
+48, 277 (2011).
 """
 
 from __future__ import annotations
@@ -102,6 +116,13 @@ import numpy as np
 import scipy.sparse as sp
 import scipy.sparse.linalg as spl
 
+from zvcfd.fv.boundary_advection import (
+    boundary_advection_tables,
+    boundary_moments,
+    inflow_cross_stream,
+    inflow_offsets,
+    neighbour_minmax,
+)
 from zvcfd.fv.geometry import (
     boundary_subface_weights,
     dual_geometry,
@@ -112,10 +133,44 @@ from zvcfd.fv.geometry import (
     scv_volumes,
     topology,
 )
+from zvcfd.fv.pattern import node_graph
 from zvcfd.mesh.core import UnstructuredMesh
 
 # BDF coefficients: (c0, c1, c2) with du/dt ~ (c0 u^{n+1} - c1 u^n - c2 u^{n-1}) / dt
 BDF = {"bdf1": (1.0, 1.0, 0.0), "bdf2": (1.5, 2.0, -0.5)}
+
+
+def bdf_coefficients(scheme: str, dt: float, dt_prev: float | None, levels: int):
+    """``(c0, c1, c2)`` with ``∂u/∂t ≈ (c0 u^{n+1} − c1 u^n − c2 u^{n−1}) / Δt``.
+
+    BDF2 on a variable step, ratio ``ω = Δt_n / Δt_{n−1}``: ``c0 = (1 + 2ω)/(1 + ω)``,
+    ``c1 = 1 + ω``, ``c2 = −ω²/(1 + ω)`` (second order for any smooth ratio;
+    ``ω = 1`` gives 3/2, 2, −1/2). BDF1 with one level, or for ``"bdf1"``.
+    """
+    if scheme == "bdf1" or levels < 2:
+        return BDF["bdf1"]
+    w = dt / (dt_prev or dt)
+    return (1 + 2 * w) / (1 + w), 1 + w, -w * w / (1 + w)
+
+
+def time_steps(dt, steps: int | None, t0: float):
+    """Step sizes from a constant (with ``steps``), a sequence, or ``dt(t)`` (with ``steps``)."""
+    if callable(dt):
+        if steps is None:
+            raise ValueError("a dt(t) schedule needs steps")
+        t = t0
+        for _ in range(steps):
+            h = float(dt(t))
+            yield h
+            t += h
+    elif np.ndim(dt):
+        seq = list(dt)
+        yield from (float(h) for h in (seq if steps is None else seq[:steps]))
+    else:
+        if steps is None:
+            raise ValueError("a constant dt needs steps")
+        for _ in range(steps):
+            yield float(dt)
 
 
 @dataclass
@@ -164,71 +219,14 @@ def _call(fn, x, t):
     return fn(x, t) if n >= 2 else fn(x)
 
 
-class ReferenceSolver:
-    """Steady, pseudo-transient or transient coupled solve on an :class:`UnstructuredMesh`.
+class BoundaryConditions:
+    """Boundary classification, boundary values in time, and symmetry mirroring.
 
-    Args:
-        mesh: the mesh (coordinates in metres, or any consistent unit).
-        fluid: :class:`Fluid`.
-        bcs: ``{zone id: {"kind": ..., "value": ...}}``; every zone needs one.
-        source: body force per unit volume, ``f(x)`` or ``f(x, t)`` -> ``(N, 3)``.
-        advection: ``"upwind"``, ``"high-resolution"``, or a blend factor in [0, 1].
-        dt: false time step (s) for steady solves; None for none.
-        reference_pressure: ``(node, value)`` to pin when no zone fixes pressure.
-        stokes: drop advection altogether (creeping flow).
-        freeze_limiter: with High Resolution, keep the limiter's blend factors fixed
-            after this many Picard iterations. The Barth–Jespersen limiter is not
-            differentiable, and left free it holds Picard in a limit cycle (a
-            relative change of ~5 × 10⁻³ on a tetrahedral box); frozen, the
-            iteration converges to round-off. None never freezes.
-        rhie_chow: scale on the pressure-redistribution coefficient ``d`` (1 = V / a_P).
-        transpose: keep the ``μ (∇u)ᵀ`` part of the viscous stress. It integrates to
-            zero for constant viscosity; with ``"auto"`` it is kept only for a
-            generalised-Newtonian fluid.
-        t: initial time (s), for time-dependent values.
-        lag_rhie_chow: take the interpolated nodal pressure gradient ``∇̄p`` from
-            the previous iterate (explicit), as CFX does and the GPU solver will,
-            instead of implicitly. The converged solution is the same; getting
-            there takes more iterations.
+    Shared by :class:`ReferenceSolver` and the GPU solver
+    (:mod:`zvcfd.fv.solver`). It needs ``mesh``, ``bcs``, ``fluid``,
+    ``source``, ``N`` and ``geom`` (a :class:`~zvcfd.fv.geometry.DualGeometry`),
+    and sets the boundary arrays both solvers use.
     """
-
-    def __init__(self, mesh: UnstructuredMesh, fluid: Fluid, bcs: dict, *, source=None,
-                 advection="high-resolution", dt: float | None = None,
-                 reference_pressure: tuple[int, float] | None = None, stokes: bool = False,
-                 rhie_chow: float = 1.0, transpose="auto", freeze_limiter: int | None = 10,
-                 t: float = 0.0, lag_rhie_chow: bool = False):
-        self.mesh, self.fluid, self.bcs = mesh, fluid, bcs
-        self.advection, self.dt, self.stokes = advection, dt, stokes
-        self.rhie_chow = rhie_chow
-        self.freeze_limiter = freeze_limiter
-        self.lag_rhie_chow = lag_rhie_chow
-        self.iteration = 0
-        self._frozen_beta = None
-        self.transpose = (fluid.viscosity is not None) if transpose == "auto" else bool(transpose)
-        self.source = source
-        self.t = float(t)
-        N = mesh.n_nodes
-        self.N = N
-        self.geom = dual_geometry(mesh, keep_areas=False)
-        self.V = self.geom.node_volume
-        self.kinds: list[_Kind] = []
-        for k, e in mesh.elements.items():
-            topo = topology(k)
-            x = mesh.nodes[e]
-            P = element_points(x, topo)
-            G, _ = gradients(x, topo)
-            self.kinds.append(_Kind(
-                k, e, ip_areas(P, topo), G, topo.N_ip, ip_points(P, topo),
-                scv_volumes(P, topo), G.mean(1), topo.edges[:, 0], topo.edges[:, 1],
-                np.zeros((len(e), topo.n_ip))))
-        self.U = np.zeros((N, 3))
-        self.P = np.zeros(N)
-        # time stepping: None (steady or false time step), or (scheme, dt, old U levels)
-        self._time = None
-        self._classify(reference_pressure)
-        self._update_boundary(self.t)
-        self.U[self.vel_fixed_comp] = self.vel_value[self.vel_fixed_comp]
-        self.P[self.p_fixed] = self.p_value[self.p_fixed]
 
     # ------------------------------------------------------------ boundary sets
 
@@ -290,14 +288,18 @@ class ReferenceSolver:
                 continue
             nodes = self._zone_nodes[zid]
             if spec["kind"] == "velocity":
-                v = _call(spec["value"], x[nodes], t)
+                v = self._inlet_shape(zid) if spec.get("flow_rate") is not None \
+                    else _call(spec["value"], x[nodes], t)
                 vel[nodes] = np.broadcast_to(np.asarray(v, float), (len(nodes), 3))
         for zid, spec in self.bcs.items():
             if zid in self._zone_nodes and spec["kind"] == "pressure":
                 nodes = self._zone_nodes[zid]
-                pval[nodes] = np.broadcast_to(np.asarray(_call(spec["value"], x[nodes], t),
+                pval[nodes] = np.broadcast_to(np.asarray(_call(spec.get("value", 0.0), x[nodes], t),
                                                          float), (len(nodes),))
         vel[self.wall] = 0.0
+        for zid, spec in self.bcs.items():
+            if spec["kind"] == "velocity" and spec.get("flow_rate") is not None:
+                self._scale_to_flow(zid, spec, vel, t)
         if self._pin is not None:
             node, value = self._pin
             pval[node] = (float(np.asarray(_call(value, x[node:node + 1], t)).reshape(-1)[0])
@@ -319,7 +321,8 @@ class ReferenceSolver:
                 xs = np.einsum("fij,fjk->fik", W, x[fz])              # sub-face centroids
                 pts = xs[ok]
                 p_sub = np.zeros(ok.shape)
-                p_sub[ok] = np.broadcast_to(np.asarray(_call(spec["value"], pts, t), float),
+                val = _call(spec.get("value", 0.0), pts, t)
+                p_sub[ok] = np.broadcast_to(np.asarray(val, float),
                                             (len(pts),))
                 grad = None
                 if spec.get("grad") is not None:
@@ -335,23 +338,34 @@ class ReferenceSolver:
         src = _call(self.source, x, t) if self.source is not None else None
         self.f = np.zeros((N, 3)) if src is None else np.asarray(src, float).reshape(N, 3)
 
-    # ------------------------------------------------------------ gradients
+    def _inlet_shape(self, zid) -> np.ndarray:
+        """Unscaled velocity shape of a flow-rate inlet at its nodes (cached)."""
+        from zvcfd.fv.profiles import shape
 
-    def nodal_gradient(self, phi: np.ndarray) -> np.ndarray:
-        """SCV-weighted element gradients: ``(N, 3)`` for ``(N,)``, ``(N, C, 3)`` for ``(N, C)``."""
-        phi = np.asarray(phi)
-        vec = phi.ndim == 2
-        out = np.zeros((self.N,) + (phi.shape[1:] if vec else ()) + (3,))
-        for K in self.kinds:
-            g = np.einsum("enk,en...->e...k", K.gbar, phi[K.elem])        # element gradient
-            w = K.scv[..., None] if not vec else K.scv[..., None, None]
-            contrib = w * g[:, None]
-            flat = contrib.reshape(-1, *contrib.shape[2:])
-            idx = K.elem.reshape(-1)
-            for j in np.ndindex(flat.shape[1:]):
-                out[(slice(None),) + j] += np.bincount(idx, flat[(slice(None),) + j], self.N)
-        out = out / (self.V[:, None, None] if vec else self.V[:, None])
-        return self._mirror(out)
+        cache = self.__dict__.setdefault("_shapes", {})
+        if zid not in cache:
+            nodes, v = shape(self.mesh.nodes, self.mesh.zones[zid].faces,
+                             self.bcs[zid].get("profile", "poiseuille"))
+            assert np.array_equal(nodes, self._zone_nodes[zid])
+            cache[zid] = v
+        return cache[zid]
+
+    def _scale_to_flow(self, zid, spec, vel, t) -> None:
+        """Scale a flow-rate inlet's velocities so its discrete inflow is ``ρ Q(t)``."""
+        from zvcfd.lumped import _Signal
+
+        f, S = self.sub[zid]
+        ok = f >= 0
+        W = boundary_subface_weights(f)
+        usub = np.einsum("fij,fjk->fik", W, vel[np.where(ok, f, 0)])
+        q = -float((np.einsum("fik,fik->fi", S, usub) * ok).sum())
+        Q = spec["flow_rate"]
+        Q = float(Q(t)) if callable(Q) else _Signal(Q)(t)
+        if q <= 0:
+            raise ValueError(f"zone {zid}: the inlet profile carries no inflow")
+        nodes = self._zone_nodes[zid]
+        free = nodes[~self.wall[nodes]]
+        vel[free] *= Q / q
 
     def _mirror(self, g: np.ndarray) -> np.ndarray:
         """Impose mirror symmetry on nodal gradients at symmetry-plane nodes.
@@ -377,6 +391,113 @@ class ReferenceSolver:
                             g[idx, j, k] = 0.0
         return g
 
+
+class ReferenceSolver(BoundaryConditions):
+    """Steady, pseudo-transient or transient coupled solve on an :class:`UnstructuredMesh`.
+
+    Args:
+        mesh: the mesh (coordinates in metres, or any consistent unit).
+        fluid: :class:`Fluid`.
+        bcs: ``{zone id: {"kind": ..., "value": ...}}``; every zone needs one.
+        source: body force per unit volume, ``f(x)`` or ``f(x, t)`` -> ``(N, 3)``.
+        advection: ``"upwind"``, ``"high-resolution"``, or a blend factor in [0, 1].
+        dt: false time step (s) for steady solves; None for none.
+        reference_pressure: ``(node, value)`` to pin when no zone fixes pressure.
+        stokes: drop advection altogether (creeping flow).
+        freeze_limiter: with High Resolution, keep the limiter's blend factors fixed
+            after this many Picard iterations. The Barth–Jespersen limiter is not
+            differentiable, and left free it holds Picard in a limit cycle (a
+            relative change of ~5 × 10⁻³ on a tetrahedral box); frozen, the
+            iteration converges to round-off. None never freezes.
+        rhie_chow: scale on the pressure-redistribution coefficient ``d`` (1 = V / a_P).
+        transpose: keep the ``μ (∇u)ᵀ`` part of the viscous stress. It integrates to
+            zero for constant viscosity; with ``"auto"`` it is kept only for a
+            generalised-Newtonian fluid.
+        t: initial time (s), for time-dependent values.
+        lag_rhie_chow: take the interpolated nodal pressure gradient ``∇̄p`` from
+            the previous iterate (explicit), as CFX does and the GPU solver will,
+            instead of implicitly. The converged solution is the same; getting
+            there takes more iterations.
+    """
+
+    def __init__(self, mesh: UnstructuredMesh, fluid: Fluid, bcs: dict, *, source=None,
+                 advection="high-resolution", dt: float | None = None,
+                 reference_pressure: tuple[int, float] | None = None, stokes: bool = False,
+                 rhie_chow: float = 1.0, transpose="auto", freeze_limiter: int | None = 10,
+                 t: float = 0.0, lag_rhie_chow: bool = False):
+        for zid, spec in bcs.items():
+            if spec.get("lumped") is not None or spec.get("profile") == "average" \
+                    or spec.get("opening"):
+                raise NotImplementedError(f"zone {zid}: lumped, average-pressure and opening "
+                                          "zones are GPU-solver features")
+        self.mesh, self.fluid, self.bcs = mesh, fluid, bcs
+        self.advection, self.dt, self.stokes = advection, dt, stokes
+        self.rhie_chow = rhie_chow
+        self.freeze_limiter = freeze_limiter
+        self.lag_rhie_chow = lag_rhie_chow
+        self.iteration = 0
+        self._frozen_beta = None
+        self.transpose = (fluid.viscosity is not None) if transpose == "auto" else bool(transpose)
+        self.source = source
+        self.t = float(t)
+        N = mesh.n_nodes
+        self.N = N
+        self.geom = dual_geometry(mesh, keep_areas=False)
+        self.V = self.geom.node_volume
+        self.kinds: list[_Kind] = []
+        for k, e in mesh.elements.items():
+            topo = topology(k)
+            x = mesh.nodes[e]
+            P = element_points(x, topo)
+            G, _ = gradients(x, topo)
+            self.kinds.append(_Kind(
+                k, e, ip_areas(P, topo), G, topo.N_ip, ip_points(P, topo),
+                scv_volumes(P, topo), G.mean(1), topo.edges[:, 0], topo.edges[:, 1],
+                np.zeros((len(e), topo.n_ip))))
+        self.U = np.zeros((N, 3))
+        self.P = np.zeros(N)
+        # time stepping: None (steady or false time step), or (scheme, dt, old U levels)
+        self._time = None
+        self._classify(reference_pressure)
+        self._update_boundary(self.t)
+        self.U[self.vel_fixed_comp] = self.vel_value[self.vel_fixed_comp]
+        self.P[self.p_fixed] = self.p_value[self.p_fixed]
+
+    # ------------------------------------------------------------ gradients
+
+    def nodal_gradient(self, phi: np.ndarray) -> np.ndarray:
+        """SCV-weighted element gradients: ``(N, 3)`` for ``(N,)``, ``(N, C, 3)`` for ``(N, C)``."""
+        phi = np.asarray(phi)
+        vec = phi.ndim == 2
+        out = np.zeros((self.N,) + (phi.shape[1:] if vec else ()) + (3,))
+        for K in self.kinds:
+            g = np.einsum("enk,en...->e...k", K.gbar, phi[K.elem])        # element gradient
+            w = K.scv[..., None] if not vec else K.scv[..., None, None]
+            contrib = w * g[:, None]
+            flat = contrib.reshape(-1, *contrib.shape[2:])
+            idx = K.elem.reshape(-1)
+            for j in np.ndindex(flat.shape[1:]):
+                out[(slice(None),) + j] += np.bincount(idx, flat[(slice(None),) + j], self.N)
+        out = out / (self.V[:, None, None] if vec else self.V[:, None])
+        return self._mirror(out)
+
+    def _nodal_gradient_matrices(self):
+        """:meth:`nodal_gradient` (before mirroring) as three ``N × N`` matrices, once."""
+        if getattr(self, "_gop_bnd", None) is None:
+            rows, cols, vals = [], [], []
+            for K in self.kinds:
+                n = K.elem.shape[1]
+                for a in range(n):
+                    for c in range(n):
+                        rows.append(K.elem[:, a])
+                        cols.append(K.elem[:, c])
+                        vals.append(K.scv[:, a, None] * K.gbar[:, c, :]
+                                    / self.V[K.elem[:, a], None])
+            r, c, v = np.concatenate(rows), np.concatenate(cols), np.concatenate(vals)
+            self._gop_bnd = tuple(sp.csr_matrix((v[:, k], (r, c)), shape=(self.N, self.N))
+                              for k in range(3))
+        return self._gop_bnd
+
     def _node_viscosity(self) -> np.ndarray:
         if self.fluid.viscosity is None:
             return np.full(self.N, self.fluid.mu)
@@ -400,7 +521,27 @@ class ReferenceSolver:
         if self.advection == "upwind":
             return 0.0
         if self.advection != "high-resolution":
-            return float(self.advection)
+            return np.full((self.N, 3), float(self.advection))
+        return self._limiter(grad)
+
+    def _own_inflow(self) -> np.ndarray | None:
+        """Nodes whose rows leave out the deferred corrections of the faces they are
+        upwind of: see :meth:`zvcfd.fv.solver.GPUSolver._own_inflow`."""
+        if self.stokes or getattr(self, "boundary_reconstruction", False):
+            return None
+        if not hasattr(self, "_badv"):
+            self._badv = boundary_advection_tables(self.mesh.nodes, self.sub, self.bcs)
+        if self._badv is None:
+            return None
+        if getattr(self, "_oonly", None) is None:
+            T = self._badv
+            self._oonly = np.bincount(T["node"], T["outflow_only"], self.N) > 0
+            self._dd = inflow_offsets(self.mesh, T, sym=getattr(self, "sym", None))
+        return ((getattr(self, "_mb", np.zeros(self.N)) < 0.0) & ~self.vel_fixed_comp.all(1)
+                & ~self._oonly)
+
+    def _limiter(self, grad: np.ndarray) -> np.ndarray:
+        """Barth–Jespersen factors ``(N, 3)`` of the extrapolations to every flux point."""
         U = self.U
         lo = U.copy()
         hi = U.copy()
@@ -432,8 +573,8 @@ class ReferenceSolver:
         """
         rho = self.fluid.rho
         if self._time is not None:
-            scheme, dt, old = self._time
-            c0, c1, c2 = BDF[scheme] if len(old) > 1 else BDF["bdf1"]
+            scheme, dt, old, dt_prev = self._time
+            c0, c1, c2 = bdf_coefficients(scheme, dt, dt_prev, len(old))
             w = rho * self.V / dt
             rhs = w[:, None] * (c1 * old[0] + (c2 * old[1] if len(old) > 1 and c2 else 0.0))
             return c0 * w, rhs
@@ -451,8 +592,8 @@ class ReferenceSolver:
         if self._time is None and self.dt:
             return [(0, 1.0)]
         if self._time is not None:
-            scheme, dt, old = self._time
-            c0, c1, c2 = BDF[scheme] if len(old) > 1 else BDF["bdf1"]
+            scheme, dt, old, dt_prev = self._time
+            c0, c1, c2 = bdf_coefficients(scheme, dt, dt_prev, len(old))
             out = [(0, c1 / c0)]
             if len(old) > 1 and c2:
                 out.append((1, c2 / c0))
@@ -478,6 +619,8 @@ class ReferenceSolver:
             if (self.advection == "high-resolution" and self.freeze_limiter is not None
                     and self.iteration >= self.freeze_limiter):
                 self._frozen_beta = beta
+        own = self._own_inflow()
+        self._own_moment = np.zeros((N, 3))     # momentum the inflow boundary flux carries in
         blocks, rows_cols = [], []
         rc_rows, rc_cols, rc_w = [], [], []
         b = np.zeros((N, 4))
@@ -546,15 +689,29 @@ class ReferenceSolver:
                     dx = K.xip[:, s] - self.mesh.nodes[up]
                     bt = beta[up] if np.ndim(beta) else beta
                     corr = md[:, None] * bt * np.einsum("ejk,ek->ej", gradU[up], dx)
+                    ka = kb = 1.0
+                    if own is not None:                  # not in the inflow node's own row
+                        ka = ~(own[up] & (up == ia))
+                        kb = ~(own[up] & (up == ib))
+                        for k in range(3):
+                            np.add.at(self._own_moment[:, k], ia, -corr[:, k] * (1 - ka))
+                            np.add.at(self._own_moment[:, k], ib, corr[:, k] * (1 - kb))
                     for k in range(3):
-                        np.add.at(b[:, k], ia, -corr[:, k])
-                        np.add.at(b[:, k], ib, corr[:, k])
+                        np.add.at(b[:, k], ia, -corr[:, k] * ka)
+                        np.add.at(b[:, k], ib, corr[:, k] * kb)
             ii, jj = np.meshgrid(np.arange(n), np.arange(n), indexing="ij")
             r = (4 * K.elem[:, ii][..., None, None] + np.arange(4)[:, None])
             c = (4 * K.elem[:, jj][..., None, None] + np.arange(4)[None, :])
             r, c = np.broadcast_arrays(r, c)
             blocks.append(Km.reshape(-1))
             rows_cols.append((r.reshape(-1), c.reshape(-1)))
+        if own is not None and not self.stokes and np.any(np.asarray(beta) > 0):
+            # the cross-stream part of a tetrahedral inflow row's boundary flux
+            G = inflow_cross_stream(np, self._dd, getattr(self, "_mb", np.zeros(N)), gradU,
+                                    beta)
+            G = np.where(own[:, None], G, 0.0)
+            b[:, :3] -= G
+            self._own_moment += G
         rows = np.concatenate([rc[0] for rc in rows_cols])
         cols = np.concatenate([rc[1] for rc in rows_cols])
         vals = np.concatenate(blocks)
@@ -570,6 +727,30 @@ class ReferenceSolver:
             b[:, :3] += trhs
         # pressure outlets: boundary pressure force, viscous traction, outflowing momentum
         self._outlet_terms(b, extra_r, extra_c, extra_v, gradU)
+        if (not self.stokes and np.any(np.asarray(beta) > 0)
+                and getattr(self, "boundary_reconstruction", False)):
+            # experimental: second-order momentum through pressure boundaries, implicit
+            # through the nodal-gradient operator (zvcfd.fv.boundary_advection)
+            if not hasattr(self, "_badv"):
+                self._badv = boundary_advection_tables(self.mesh.nodes, self.sub, self.bcs)
+            if self._badv is not None:
+                if getattr(self, "_graph", None) is None:
+                    self._graph = node_graph(self.mesh)
+                frozen = getattr(self, "_frozen_bsf", None)
+                lo = hi = None
+                if frozen is None:
+                    lo, hi = neighbour_minmax(np, *self._graph, self.U)
+                D, bsf = boundary_moments(np, self._badv, self.U,
+                                          getattr(self, "_mb", np.zeros(N)), gradU, beta, lo, hi,
+                                          rho, N, sym=getattr(self, "sym", None), bsf=frozen)
+                if frozen is None and self._frozen_beta is not None:
+                    self._frozen_bsf = bsf     # frozen with High Resolution's limiter
+                G = self._nodal_gradient_matrices()
+                for k in range(3):
+                    C = sum(sp.diags(D[:, k, j]) @ G[j] for j in range(3)).tocoo()
+                    extra_r.append(4 * C.row + k)
+                    extra_c.append(4 * C.col + k)
+                    extra_v.append(C.data)
         if extra_r:
             rows = np.concatenate([rows] + extra_r)
             cols = np.concatenate([cols] + extra_c)
@@ -670,8 +851,10 @@ class ReferenceSolver:
                 share = np.linalg.norm(S[ok], axis=1)
                 tot = np.bincount(nodes, share, self.N)
                 mb = getattr(self, "_mb", np.zeros(self.N))
-                flow = mb[nodes] if self.bcs[zid].get("backflow", "consistent") == "consistent" \
+                spec = self.bcs[zid]
+                flow = mb[nodes] if spec.get("backflow", "consistent") == "consistent" \
                     else np.maximum(mb[nodes], 0.0)
+                flow = flow + spec.get("backflow_stabilisation", 0.0) * np.maximum(-mb[nodes], 0)
                 w = flow * np.divide(share, tot[nodes], out=np.zeros_like(share),
                                      where=tot[nodes] > 0)
                 acc = np.bincount(nodes, w, self.N)
@@ -782,14 +965,15 @@ class ReferenceSolver:
         self.assemble()
         self.update_mass_flows()
 
-    def solve_transient(self, dt: float, steps: int, *, scheme: str = "bdf2",
+    def solve_transient(self, dt, steps: int | None = None, *, scheme: str = "bdf2",
                         loops: int = 5, tol: float = 1e-10, callback=None,
                         log=None) -> SolveReport:
-        """March ``steps`` time steps of ``dt`` with BDF1 or BDF2 and coefficient loops.
+        """March time steps with BDF1 or BDF2 (variable step) and coefficient loops.
 
-        Each step runs Picard coefficient loops (at most ``loops``) until the
-        change falls below ``tol``. The first BDF2 step is BDF1.
-        ``callback(solver)`` runs after each step.
+        ``dt`` is a constant (with ``steps``), a sequence of step sizes, or a
+        schedule ``dt(t)`` (with ``steps``). Each step runs Picard coefficient
+        loops (at most ``loops``) until the change falls below ``tol``. The
+        first BDF2 step is BDF1. ``callback(solver)`` runs after each step.
         """
         if scheme not in BDF:
             raise ValueError(f"scheme {scheme!r}; expected one of {sorted(BDF)}")
@@ -798,9 +982,11 @@ class ReferenceSolver:
         old = [self.U.copy()]
         self._store_old(first=True)
         total = 0
-        for _ in range(steps):
+        dt_prev = None
+        for dt in time_steps(dt, steps, self.t):
             self.t += dt
-            self._time = (scheme, dt, old)
+            self._time = (scheme, dt, old, dt_prev)
+            dt_prev = dt
             self._update_boundary(self.t)
             self.U[self.vel_fixed_comp] = self.vel_value[self.vel_fixed_comp]
             self.P[self.p_fixed] = self.p_value[self.p_fixed]
@@ -884,10 +1070,18 @@ class ReferenceSolver:
                 nodes = f[ok]
                 tot = np.bincount(nodes, share[ok], self.N)
                 w = share[ok] / tot[nodes]
-                flow = mb[nodes] if self.bcs[zid].get("backflow", "consistent") == \
+                spec = self.bcs[zid]
+                flow = mb[nodes] if spec.get("backflow", "consistent") == \
                     "consistent" else np.maximum(mb[nodes], 0.0)
+                flow = flow + spec.get("backflow_stabilisation", 0.0) * np.maximum(-mb[nodes], 0)
                 out[zid] = (flow * w)[:, None] * self.U[nodes] \
                     if not self.stokes else np.zeros((len(nodes), 3))
+                # where flow enters, the boundary flux also carries in the corrections of
+                # the faces the node is upwind of (left out of its row: _own_inflow)
+                own = getattr(self, "_own_moment", None)
+                if own is not None and not self.stokes:
+                    solved = ~self.vel_fixed_comp[nodes]
+                    out[zid] = out[zid] + w[:, None] * np.where(solved, own[nodes], 0.0)
                 out[zid] = out[zid].sum(0)
             elif self.stokes:
                 out[zid] = np.zeros(3)
@@ -945,4 +1139,5 @@ class ReferenceSolver:
                 "identity": (total - leftover) / scale_f}
 
 
-__all__ = ["BDF", "Fluid", "ReferenceSolver", "SolveReport"]
+__all__ = ["BDF", "BoundaryConditions", "Fluid", "ReferenceSolver", "SolveReport",
+           "bdf_coefficients", "time_steps"]

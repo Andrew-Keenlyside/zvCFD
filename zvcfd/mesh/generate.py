@@ -219,8 +219,9 @@ def _section(radius: float, n_core: int, n_ring: int, core: float, growth: float
     """
     s = core * radius / np.sqrt(2.0)                  # half-width of the core square
     t = np.linspace(-1.0, 1.0, n_core + 1)
-    # radial node positions between the square side (0) and the wall (1), cells shrinking by growth
-    w = growth ** np.arange(n_ring)[::-1]
+    # radial node positions between the square side (0) and the wall (1): from the core outward
+    # each cell is `growth` times the last, so growth < 1 makes the wall cell the smallest
+    w = growth ** np.arange(n_ring)
     rho = np.r_[0.0, np.cumsum(w) / w.sum()]
     pts, quads, ring, column = [], [], [], []
     cx, cy = np.meshgrid(t, t, indexing="ij")

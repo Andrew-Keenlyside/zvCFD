@@ -1,0 +1,14 @@
+# A 2 mm pipe (Fluent mesh written by the finite-volume tutorial), one cardiac-like cycle:
+# flow-rate inlet with a waveform, RCR outlet, blood density and viscosity (Newtonian).
+name: pipe-fv
+source: {kind: mesh, path: "pipe.msh", unit: mm}
+physics: {nu: 3.5e-6, rho: 1060.0}
+boundaries:
+  patches:
+    - {match: inlet, kind: velocity, flow_rate: 2.0e-7, profile: parabolic,
+       waveform: [[0.0, 1.0], [0.15, 2.2], [0.4, 1.0], [0.8, 0.8], [1.0, 1.0]]}
+    - {match: outlet, kind: rcr, rcr: [1.0e8, 1.0e-10, 4.0e8], pressure: 1000.0}
+solver: {method: fv}
+fv: {linear: auto, iterations: 300, tolerance: 1.0e-8, dt: 0.01, periods: 1.0, loops: 5,
+     loop_tolerance: 1.0e-6}
+output: {path: runs, every: 25}
