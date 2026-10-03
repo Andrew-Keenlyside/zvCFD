@@ -172,6 +172,19 @@ def make_gpu_solver(cfg: RunConfig, mesh, bcs, fluid):
                      linear_options=opts)
 
 
+def turbulence_model(cfg: RunConfig, solver):
+    """The ``fv.turbulence`` model for ``solver`` (:mod:`zvcfd.fv.turbulence`)."""
+    from zvcfd.fv.turbulence import KkLModel, tmr_freestream
+
+    t = cfg.fv.turbulence
+    if "k_inf" in t:
+        k_inf, kl_inf = float(t["k_inf"]), float(t["kl_inf"])
+    else:
+        ph = cfg.physics
+        k_inf, kl_inf = tmr_freestream(ph.rho, ph.rho * ph.nu, float(t["speed"]), float(t["mach"]))
+    return KkLModel(solver, k_inf, kl_inf, relax=float(t.get("relax", 0.7)))
+
+
 # ---------------------------------------------------------------- run
 
 def run_fv(cfg: RunConfig, *, out: str | None = None, steps: int | None = None,
@@ -196,6 +209,10 @@ def run_fv(cfg: RunConfig, *, out: str | None = None, steps: int | None = None,
         + f"  ({time.time() - t0:.1f} s)")
     s = make_gpu_solver(cfg, mesh, bcs, fluid)
     log(f"solver set up: linear {s.linear.name}, {s.setup_seconds:.1f} s")
+    if fv.turbulence is not None:
+        turbulence_model(cfg, s).attach()
+        log(f"turbulence: {s.turbulence.name}, k_inf {s.turbulence.k_inf:.3g} m2/s2, "
+            f"kL_inf {s.turbulence.phi_inf:.3g} m3/s2")
 
     run_dir = Path(out or cfg.output.path) / f"{cfg.name}-{cfg.hash}.zvcfd"
     run_dir.mkdir(parents=True, exist_ok=True)

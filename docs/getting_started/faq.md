@@ -25,7 +25,7 @@ meshes that fit one GPU. On SimVascular's coronary model it matches
 SimVascular's outlet flows to 0.5 %. Still to do: the HiP-CT coronary
 tree against a collaborator's CFX run on the same mesh (it needs an
 H100), scaling across GPUs, and much of what a commercial code offers
-(turbulence models, FSI, moving meshes). The lattice-Boltzmann solver is
+(turbulence models beyond k-kL, FSI, moving meshes). The lattice-Boltzmann solver is
 for the regime a meshed solver cannot reach on one node: image-native
 resolutions, straight from OME-Zarr. See
 [Comparison](../benchmarks/comparison.md).

@@ -16,7 +16,9 @@ each run published as an OME-NGFF RFC-8 collection. It has two solvers:
   prisms, pyramids and hexahedra. Pressure and velocity are solved
   coupled, with algebraic multigrid (NVIDIA AmgX) on the GPU. It is steady
   or transient (BDF2), with flow-rate inlets, RCR and coronary outlets,
-  and Carreau–Yasuda blood. Wall shear stress is evaluated as CFX does.
+  Carreau–Yasuda blood, and an optional RANS turbulence model (k-kL,
+  checked against NASA's CFL3D and FUN3D on the TMR flat plate and NACA 0012). Wall shear
+  stress is evaluated as CFX does.
   Any mesh (Ansys Fluent, VTK, SimVascular, Gmsh via meshio) is imported
   once into a Zarr Vectors mesh collection, and the solver runs from it.
 - **Lattice Boltzmann (for voxel geometries)**: D3Q19 TRT on sparse 8³
