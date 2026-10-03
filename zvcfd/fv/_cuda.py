@@ -192,7 +192,8 @@ extern "C" __global__ void diagonal(const long long *elem, const long long *list
                                     const double *dN, const int *edges, GEO_ARGS, const double *mdot,
                                     const double *U, int rheo, double mu0, double muinf,
                                     double lam, double ca, double cn,
-                                    int transpose, int stokes, double *diag) {
+                                    int transpose, int stokes, int has_mut, const double *mut,
+                                    const double *Nip, double *diag) {
     long long t = blockIdx.x * (long long)blockDim.x + threadIdx.x;
     if (t >= count) return;
     long long e = list[t];
@@ -204,6 +205,8 @@ extern "C" __global__ void diagonal(const long long *elem, const long long *list
         double gu[3][3];
         ip_gradient(U, node, GPTR(s), gu);
         double mu = viscosity(gu, rheo, mu0, muinf, lam, ca, cn);
+        if (has_mut)                                      // eddy viscosity, interpolated
+            for (int a = 0; a < N_NODES; ++a) mu += Nip[s * N_NODES + a] * mut[node[a]];
         double GAa = 0.0, GAb = 0.0;
         for (int k = 0; k < 3; ++k) { GAa += GPTR(s)[ia][k] * APTR(s)[k]; GAb += GPTR(s)[ib][k] * APTR(s)[k]; }
         double ra = -mu * GAa, rb = -mu * GAb;             // x-momentum, own column
@@ -229,7 +232,7 @@ extern "C" __global__ void residual(const long long *elem, const long long *list
                                     const double *gradP, const double *dnode,
                                     double rho, int rheo, double mu0, double muinf,
                                     double lam, double ca, double cn, int transpose, int stokes,
-                                    double *R) {
+                                    int has_mut, const double *mut, double *R) {
     long long t = blockIdx.x * (long long)blockDim.x + threadIdx.x;
     if (t >= count) return;
     long long e = list[t];
@@ -254,6 +257,8 @@ extern "C" __global__ void residual(const long long *elem, const long long *list
             }
         }
         double mu = viscosity(gu, rheo, mu0, muinf, lam, ca, cn);
+        if (has_mut)                                      // eddy viscosity, interpolated
+            for (int a = 0; a < N_NODES; ++a) mu += Nip[s * N_NODES + a] * mut[node[a]];
         // momentum flux leaving a through this face: advection + pressure - viscous
         double m = mdot[e * N_IP + s];
         long long nA = node[ia], nB = node[ib];
@@ -303,7 +308,8 @@ extern "C" __global__ void assemble(const long long *elem, const long long *list
                                     double c2, const double *Uo2, const double *mo2,
                                     double rho, int rheo, double mu0, double muinf,
                                     double lam, double ca, double cn, int transpose, int stokes,
-                                    const int *own, const long long *indptr, const int *indices,
+                                    int has_mut, const double *mut, const int *own,
+                                    const long long *indptr, const int *indices,
                                     const int *pos, double *data, double *b) {
     long long t = blockIdx.x * (long long)blockDim.x + threadIdx.x;
     if (t >= count) return;
@@ -322,6 +328,8 @@ extern "C" __global__ void assemble(const long long *elem, const long long *list
         double gu[3][3];
         ip_gradient(U, node, GPTR(s), gu);
         double mu = viscosity(gu, rheo, mu0, muinf, lam, ca, cn);
+        if (has_mut)                                      // eddy viscosity, interpolated
+            for (int a = 0; a < N_NODES; ++a) mu += Nip[s * N_NODES + a] * mut[node[a]];
         double m = mdot[e * N_IP + s];
         double d = 0.5 * (dnode[nA] + dnode[nB]);
         double sbar = 0.5 * (snode[nA] + snode[nB]);

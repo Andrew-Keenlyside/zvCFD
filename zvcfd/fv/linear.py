@@ -1148,12 +1148,16 @@ class Auto:
             t = time.time()
             try:
                 x, info = self.current.solve(A, b, x0, rtol=rtol)
-                failed = not info.converged and info.residual > self.fail_ratio * rtol
+                # a diverged smoother gives NaN, and NaN > anything is False: test it
+                finite = np.isfinite(info.residual) and _all_finite(x)
+                failed = not finite or (not info.converged
+                                        and info.residual > self.fail_ratio * rtol)
             except RuntimeError as exc:           # e.g. an AmgX setup limit on this mesh
-                x, info, failed = None, None, True
+                x, info, failed, finite = None, None, True, False
                 why = str(exc)
             else:
-                why = f"residual {info.residual:.1e} after {info.iterations} iterations"
+                why = (f"residual {info.residual:.1e} after {info.iterations} iterations"
+                       if finite else f"non-finite solution after {info.iterations} iterations")
             if not failed:
                 return self._maybe_probe(A, b, x0, rtol, x, info, time.time() - t)
             if self._probed_from is not None:          # the probed rung failed: go back
@@ -1161,10 +1165,20 @@ class Auto:
                 self._switch(back, "probed solver failed: " + why)
                 continue
             if self.index + 1 >= len(self.ladder):
-                if x is None:
+                if x is None or not finite:
                     raise RuntimeError(f"every linear solver failed ({why})")
                 return x, info
             self._switch(self.index + 1, why)
+
+
+def _all_finite(x) -> bool:
+    """Whether every entry of a NumPy or CuPy array is finite (one reduction)."""
+    try:
+        import cupy as cp
+        xp = cp.get_array_module(x)
+    except ImportError:
+        xp = np
+    return bool(xp.isfinite(x).all())
 
 
 def make(name: str, **kw):

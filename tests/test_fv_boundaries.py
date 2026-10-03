@@ -206,6 +206,33 @@ def test_backflow_stabilisation_matches_reference():
 
 
 @gpu
+def test_node_on_two_pressure_zones_counts_once():
+    """Outflow and top of a channel share an edge of nodes: their boundary mass flow and
+    outflowing momentum are split between the two zones by area, not counted in both."""
+    from zvcfd.mesh.generate import box
+
+    m = box((10, 6, 1), (2.0, 1.0, 0.2), kind="hex")
+    z = {zz.name: k for k, zz in m.zones.items()}
+    bcs = {z["xmin"]: {"kind": "velocity", "value": [1.0, 0.0, 0.0]},
+           z["xmax"]: {"kind": "pressure", "value": 0.0},
+           z["ymax"]: {"kind": "pressure", "value": 0.0},
+           z["ymin"]: {"kind": "wall"}, z["zmin"]: {"kind": "symmetry"},
+           z["zmax"]: {"kind": "symmetry"}}
+    fl = Fluid(1.0, 0.05)
+    g = _gpu(m, bcs, fluid=fl, advection=1.0)
+    assert g.solve(max_iterations=300, tol=1e-11).converged
+    q = g.zone_flows()
+    assert abs(sum(q.values())) < 1e-10 * sum(abs(v) for v in q.values())
+    assert q[z["xmax"]] > 0 and q[z["ymax"]] > 0
+    ref = ReferenceSolver(m, fl, bcs, advection=1.0)
+    ref.solve(max_iterations=300, tol=1e-12)
+    np.testing.assert_allclose(g.fields()["U"], ref.U, atol=1e-8)
+    qr = ref.zone_flows()
+    assert abs(qr[z["xmax"]] - q[z["xmax"]]) < 1e-8 and abs(sum(qr.values())) < 1e-10
+    assert np.abs(ref.balances()["identity"]).max() < 1e-10
+
+
+@gpu
 def test_average_static_pressure():
     m, z = _pipe()
     bcs = {z["inlet"]: {"kind": "velocity", "flow_rate": 0.3},

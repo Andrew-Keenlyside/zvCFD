@@ -448,8 +448,17 @@ class MultiGPUSolver(BoundaryConditions):
 
     # ------------------------------------------------------------ public interface
 
+    turbulence = None          # eddy viscosity and turbulence models: one GPU for now
+    mu_t = None
+
+    def _laminar_only(self):
+        if self.turbulence is not None or self.mu_t is not None:
+            raise NotImplementedError("eddy viscosity and turbulence models run on one GPU "
+                                      "(GPUSolver) for now")
+
     def solve(self, *, max_iterations: int = 200, tol: float = 1e-10, log=None,
               residual_target: float | None = None) -> SolveReport:
+        self._laminar_only()
         t0 = time.time()
         hist = []
         it, conv = self._iterate(max_iterations, tol, log, hist, residual_target)
@@ -475,6 +484,7 @@ class MultiGPUSolver(BoundaryConditions):
                         loops: int = 5, tol: float = 1e-8, callback=None,
                         log=None, residual_target: float | None = None) -> SolveReport:
         """As :meth:`GPUSolver.solve_transient`, over the partitions."""
+        self._laminar_only()
         cp = self.cp
         if scheme not in BDF:
             raise ValueError(f"scheme {scheme!r}")

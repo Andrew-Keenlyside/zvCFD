@@ -755,6 +755,8 @@ level, as momentum conservation requires in Stokes flow.
 | Smoother sweep | ILU(1)'s fill on tetrahedral rows (about 20 blocks) | AmgX setup error (shared memory per row) | ILU(0) as the default |
 | SimVascular segment (zvcfd-be) | wall shear at inlet rims took part of the inlet's pressure force, tangential to the wall | up to 3,950 Pa against a median 4.4 Pa at cut rims | subtract the inlet sub-faces' pressure force and momentum explicitly |
 | Same mesh as OpenFOAM; developed pipe | deferred corrections on the faces leaving a pressure-inflow node, with nothing for them in its boundary momentum `ṁ_b u_node` | an inflow jet; the flow rate 3.4–3.8 % above the exact one, not converging; 10 % from OpenFOAM | the corrections stay out of the inflow node's own row and its boundary flux carries them, plus the cross-stream part of the faces' offset (`β = 0` there only moved the mismatch one row in; the full reconstruction is unstable on coarse meshes) |
+| TMR flat plate (zvcfd-be) | a node on two pressure zones (where the outflow meets the top) took each zone's full share of its boundary flow | zone flows 7 % out of balance at convergence; that node's outflowing momentum counted twice | share a node's boundary flow among its pressure zones by area (`BoundaryConditions._pressure_area`) |
+| TMR flat plate with the transpose term (zvcfd-be) | AmgX `gs` diverged to NaN on a thin slab, and `auto` took the NaN as a success (`NaN > tol` is false) | NaN from the first outer iteration | a non-finite solve is a failure (`auto` moves to `robust`); a non-finite outer update stops the solve with an error |
 
 ## Reproducing
 
