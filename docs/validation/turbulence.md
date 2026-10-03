@@ -25,7 +25,7 @@ data come from the Resource (`TMR=/hdd/data/zvcfd_turb`).
 | Case | Reference | Exercises | Result |
 |---|---|---|---|
 | Fully developed channel, Re_τ = 942 and 5000 | an independent 1-D solver of the same equations; Dean's correlation | the model's equations, the wall terms, the log layer | the 1-D solver gives c_f 0.00324 at Re_τ = 5000 (Dean 0.00327); zvCFD at Re_τ = 941: U_c/U_b within 0.03 %, c_f 3.5 % low on a coarser grid |
-| Flat plate, Re = 5 million per unit length | CFL3D and FUN3D with the same model on the same grids (NASA TMR); boundary-layer marching of the same equations | wall layers, leading edge, transition from the freestream turbulence, u⁺ and μ_t profiles | c_f(0.97) **0.002712** on the 137 × 97 grid, CFL3D and FUN3D 0.002688 and 0.002690 there and 0.002692 on 545 × 385 (+0.8 %); peak μ_t/μ 196.2 against 194.7 and 194.9 |
+| Flat plate, Re = 5 million per unit length | CFL3D and FUN3D with the same model on the same grids (NASA TMR); boundary-layer marching of the same equations | wall layers, leading edge, transition from the freestream turbulence, u⁺ and μ_t profiles | c_f(0.97) **0.002717** on the 273 × 193 grid, extrapolated 0.002718, against 0.002692 from CFL3D and FUN3D (+0.96 %; +0.26 % normalised by each code's edge velocity); peak μ_t/μ 196.3 against 194.7 and 194.9 |
 | NACA 0012, Re = 6 million, α = 0, 10, 15° | CFL3D, FUN3D and TAU with the same model (NASA TMR, 897 × 257); Ladson (1988), Gregory & O'Reilly (1970) | lift, drag, surface pressure and skin friction, a trailing edge near separation at 15° | on 225 × 65: Cp and Cf on CFL3D's; CL 2.6–3.0 % low, CD 5–15 % high, both converging towards the NASA codes from 113 × 33 |
 
 ---
@@ -92,23 +92,33 @@ same family of grids (its K-kL-MEAH2015m flat-plate page; the data are in
 |---|---|---|---|---|
 | 35 × 25 | 0.002629 | 0.002623 | 0.002675 | 178, 43 s |
 | 69 × 49 | 0.002690 | 0.002670 | 0.002697 | 172, 5 min |
-| 137 × 97 | **0.002712** | 0.002688 | 0.002690 | 241, 61 min |
-| 273 × 193 | | 0.002691 | 0.002691 | |
+| 137 × 97 | 0.002712 | 0.002688 | 0.002690 | 241, 61 min |
+| 273 × 193 | **0.002717** | 0.002691 | 0.002691 | 148, 9.0 h |
 | 545 × 385 | | **0.002692** | **0.002692** | |
 | boundary-layer marching (same model) | 0.002695 | | | |
 
 ![Skin friction along the plate, the velocity profile and the eddy viscosity at x = 0.97, against CFL3D and FUN3D](../_static/figures/turbulence_flat_plate.png)
 
 On the two coarser grids zvCFD lies between the two NASA codes. On the
-137 × 97 grid it is 0.8 % above both, and above their grid-converged
-0.002692. Its sequence rises by 0.000061, then by 0.000022, and its
-Richardson extrapolation (observed order 1.5) is 0.00272, about 1 % above
-the NASA codes. CFL3D's and FUN3D's sequences have settled by the 137 × 97
-grid. zvCFD's has not, so a 273 × 193 run (in progress) is needed to say
-whether the 1 % is a converged difference or the tail of a slower approach. The
-boundary-layer marching code, which shares nothing with any of the three,
-agrees with the NASA codes to 0.1 %. That confirms the model's
-transcription; the 1 % belongs to zvCFD's discretisation.
+finer ones it settles above them. Its sequence rises by 0.000061, 0.000022
+and 0.0000046, an observed order of 2.2 over the last two refinements, and
+extrapolates to 0.002718. That is 0.96 % above the NASA codes'
+grid-converged 0.002692. The gap does not close with refinement.
+
+Most of it is the flow outside the layer, not the layer. At x = 0.97, three
+boundary-layer thicknesses from the wall, zvCFD's flow runs at
+1.0018 U∞, and CFL3D's and FUN3D's at 0.9985 U∞. zvCFD fixes the velocity
+at the inlet and the pressure at the top and the outlet. Its wall pressure
+falls from 0.0016 ρU∞² at x = 0.1 to zero along the plate, so the outer
+flow speeds up slightly as the layer displaces it. The NASA codes run
+compressible at M = 0.2 with their own inflow and far-field conditions.
+The Resource notes that variations of these "may also work and yield
+similar results". Skin friction scales with the square of the edge
+velocity. Normalised by each code's own edge velocity, c_f/(u_e/U∞)² is
+0.002707 for zvCFD on 273 × 193 against 0.002700 for both NASA codes: a
+difference of 0.26 %. The boundary-layer marching code, which shares
+nothing with any of the three and has u_e = U∞ exactly, agrees with the
+NASA codes to 0.1 %, which confirms the model's transcription.
 
 Along the plate the 69 × 49 and 137 × 97 solutions lie on CFL3D's and
 FUN3D's from x = 0.05 onward. Near the leading edge, transition from the
@@ -117,8 +127,9 @@ in all of them. At x = 0.97 the velocity profile in wall units follows the
 NASA codes across the viscous sublayer, the buffer layer and the log
 layer, out to the edge of the layer at y⁺ ≈ 3,000. The eddy viscosity
 profile is the most searching check of a turbulence model's
-implementation. zvCFD's peaks at μ_t/μ = 196.2 on the 137 × 97 grid,
-against 194.7 (CFL3D) and 194.9 (FUN3D) on 545 × 385, at the same height.
+implementation. zvCFD's peaks at μ_t/μ = 196.3 on the 273 × 193 grid
+(196.2 on 137 × 97), against 194.7 (CFL3D) and 194.9 (FUN3D) on
+545 × 385, at the same height.
 The coarser grids smear only the layer's outer edge, where the grid is
 coarsest.
 
@@ -127,13 +138,13 @@ coupled 4 × 4 system every iteration. It is not the GPU solver's speed.
 
 ### The boundary layer
 
-![The flat plate on the 137 × 97 grid: the velocity deficit with the edge of the boundary layer, and the eddy viscosity](../_static/figures/turbulence_render_flat_plate.png)
+![The flat plate on the 273 × 193 grid: the velocity deficit with the edge of the boundary layer, and the eddy viscosity](../_static/figures/turbulence_render_flat_plate.png)
 
-The boundary layer grows from the leading edge to δ₉₉ = 0.0134 at
-x = 0.97 and 0.0251 at the end of the plate (the vertical scale is
-exaggerated 12 times). The eddy viscosity is zero at the wall, where `μ_t`
+The boundary layer grows from the leading edge to δ₉₉ = 0.0133 at
+x = 0.97 (CFL3D and FUN3D: 0.0136) and 0.0253 at the end of the plate (the
+vertical scale is exaggerated 12 times). The eddy viscosity is zero at the wall, where `μ_t`
 vanishes with `k` and `Φ`. It rises through the log layer to its peak at
-half the layer's thickness (μ_t/μ = 196 at x = 0.97, 352 at x = 2), and
+half the layer's thickness (μ_t/μ = 196 at x = 0.97, 355 at x = 2), and
 falls steeply at the layer's edge. Above it, the Resource's freestream
 turbulence has no shear to feed on: its μ_t/μ decays from 0.009 at the
 inlet to 0.003 over the plate.
@@ -329,6 +340,7 @@ python benchmarks/turbulence/channel_1d.py 942 5000  # the 1-D reference
 python benchmarks/turbulence/channel_fv.py           # zvCFD's channel, about 20 min
 python benchmarks/turbulence/plate_bl.py             # the boundary-layer reference
 python benchmarks/turbulence/flat_plate.py 35 69 137 # about 70 min, mostly the 137 grid
+python benchmarks/turbulence/flat_plate.py 273 --tol 1e-6   # about 9 h
 python benchmarks/turbulence/naca0012.py --grid 113 225 --alpha 0 10 15 --false-dt 20
 python benchmarks/turbulence/figures.py
 python benchmarks/turbulence/renders.py              # the field renderings
