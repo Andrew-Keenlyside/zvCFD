@@ -12,6 +12,7 @@ realistic:
 | Finite-volume solver (the main solver), validated on meshes that fit one GPU | [Finite-volume solver](fv_solver.md) | exact, manufactured and benchmark solutions on unstructured meshes; OpenFOAM on the same mesh | the numbers: orders, errors, invariances, GPU agreement, defects found |
 | | [Verification and validation](vv_plan.md) | the V&V evidence for the CFX-style solver, by ASME V&V 20 / 40 layer | what is established, prepared and missing |
 | | [Against SimVascular](simvascular.md#the-finite-volume-solver) | SimVascular's published results, on SimVascular's own mesh | the same pulsatile flow, velocity and wall shear stress through a whole cardiac cycle |
+| | [Turbulent flow](turbulence.md) | NASA Turbulence Modeling Resource cases (flat plate, NACA 0012); independent solvers of the same equations; Ladson's and Gregory & O'Reilly's experiments | the k-kL model: skin friction, velocity profiles, lift, drag and surface pressure |
 | Lattice-Boltzmann solver: exact solutions | [Exact solutions](exact_solutions.md) | closed-form solutions of the Navier–Stokes equations | the equations are solved, and to what order of accuracy |
 | Lattice-Boltzmann solver: standard benchmarks | [Standard benchmarks](benchmarks.md) | literature reference values (Sangani & Acrivos; Schäfer & Turek) | accuracy on porous-media drag and on forces on a curved body |
 | Lattice-Boltzmann solver: cross-code comparison | [Against OpenFOAM](cross_code.md) | OpenFOAM v2506 on the same problems | the same answers on identical voxel geometries and on the HiP-CT coronary tree |
@@ -42,6 +43,8 @@ organised by ASME V&V 20 / 40 layer on
 | Developed pipe flow against OpenFOAM on the same mesh | zvCFD 0.5–0.7 % from the exact flow rate, OpenFOAM 5.8–6.8 % |
 | Wall shear stress (CFX's wall-gradient method) | exact for linear fields on every element type; within 2 % of Poiseuille with prism layers at R/32 |
 | SimVascular coronary model, one cardiac cycle, SimVascular's mesh | outlet flows 0.5 % (2.2 % max), velocity 1.3–1.8 %, TAWSS 3.1 % ([Against SimVascular](simvascular.md#the-finite-volume-solver)) |
+| k-kL turbulence model, NASA flat plate (Re = 5 million) | c_f(0.97) grid-converged 1 % above CFL3D and FUN3D with the same model, 0.26 % normalised by each code's edge velocity; peak eddy viscosity within 1 % ([Turbulent flow](turbulence.md)) |
+| k-kL turbulence model, NACA 0012 (Re = 6 million, α = 0–15°) | on the 225 × 65 grid surface pressure and skin friction on CFL3D's with the same model; lift 2.6–3.0 % low and drag 5–15 % high against CFL3D, FUN3D and TAU on 897 × 257, converging towards them ([Turbulent flow](turbulence.md)) |
 
 Pending: the HiP-CT coronary tree against the collaborator's Ansys CFX run
 (the main target; it needs an H100), coronary runs at H100 scale, scaling
@@ -149,4 +152,5 @@ cross_code
 simvascular
 vv_plan
 fv_solver
+turbulence
 ```

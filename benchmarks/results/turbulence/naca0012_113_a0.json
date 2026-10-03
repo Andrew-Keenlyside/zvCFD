@@ -1,0 +1,17 @@
+{
+ "grid": 113,
+ "alpha": 0.0,
+ "nodes": 7408,
+ "span": 3.446115580052642e-05,
+ "iterations": 233,
+ "converged": true,
+ "wall_s": 1066.6946167945862,
+ "turbulence_linear_failures": 13,
+ "flow_linear_converged": true,
+ "CL": -1.7006224683381051e-06,
+ "CD": 0.010231506133692565,
+ "CL_surface": -1.7007366748712464e-06,
+ "CD_surface": 0.009738020013224687,
+ "CD_pressure": 0.0024955072990313514,
+ "CD_viscous": 0.007242512714193335
+}

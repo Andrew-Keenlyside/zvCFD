@@ -392,6 +392,26 @@ class BoundaryConditions:
         return g
 
 
+    def _pressure_area(self) -> np.ndarray:
+        """``(N,)``: each node's sub-face area over *all* pressure zones.
+
+        A node's boundary mass flow ``ṁ_b`` is shared among its pressure zones in
+        proportion to this, so a node on two of them (where an outlet meets
+        another, as at the corner of a channel's outflow and top) is counted once.
+        Shared per zone it was counted in each: its flow appeared twice in the zone
+        flows and its outflowing momentum twice in its equation.
+        """
+        a = getattr(self, "_parea", None)
+        if a is None:
+            a = np.zeros(self.N)
+            for zid, (f, S) in self.sub.items():
+                if self.bcs[zid]["kind"] == "pressure":
+                    ok = f >= 0
+                    a += np.bincount(f[ok], np.linalg.norm(S, axis=2)[ok], self.N)
+            self._parea = a
+        return a
+
+
 class ReferenceSolver(BoundaryConditions):
     """Steady, pseudo-transient or transient coupled solve on an :class:`UnstructuredMesh`.
 
@@ -438,6 +458,7 @@ class ReferenceSolver(BoundaryConditions):
         self.iteration = 0
         self._frozen_beta = None
         self.transpose = (fluid.viscosity is not None) if transpose == "auto" else bool(transpose)
+        self._transpose0 = self.transpose
         self.source = source
         self.t = float(t)
         N = mesh.n_nodes
@@ -498,21 +519,37 @@ class ReferenceSolver(BoundaryConditions):
                               for k in range(3))
         return self._gop_bnd
 
+    @property
+    def mu_t(self):
+        """Eddy viscosity at the nodes ``(N,)``, or ``None``: as :attr:`GPUSolver.mu_t`."""
+        return getattr(self, "_mu_t", None)
+
+    @mu_t.setter
+    def mu_t(self, value):
+        if value is not None:
+            value = np.asarray(value, dtype=float).reshape(-1)
+            if value.size != self.N:
+                raise ValueError(f"mu_t has {value.size} values for {self.N} nodes")
+        self._mu_t = value
+        self.transpose = self._transpose0 or value is not None
+
     def _node_viscosity(self) -> np.ndarray:
+        mut = 0.0 if self.mu_t is None else self.mu_t
         if self.fluid.viscosity is None:
-            return np.full(self.N, self.fluid.mu)
+            return np.full(self.N, self.fluid.mu) + mut
         g = self.nodal_gradient(self.U)
         s = 0.5 * (g + np.swapaxes(g, 1, 2))
-        return self.fluid.viscosity(np.sqrt(2.0 * np.einsum("ijk,ijk->i", s, s)))
+        return self.fluid.viscosity(np.sqrt(2.0 * np.einsum("ijk,ijk->i", s, s))) + mut
 
     def _viscosity(self, K: _Kind) -> np.ndarray:
-        """Viscosity at each ip ``(E, ne)``."""
+        """Viscosity at each ip ``(E, ne)``, plus the interpolated :attr:`mu_t`."""
+        mut = 0.0 if self.mu_t is None else np.einsum("sn,en->es", K.N, self.mu_t[K.elem])
         if self.fluid.viscosity is None:
-            return np.full(K.A.shape[:2], self.fluid.mu)
+            return np.full(K.A.shape[:2], self.fluid.mu) + mut
         gu = np.einsum("eink,enj->eijk", K.G, self.U[K.elem])             # du_j/dx_k
         s = 0.5 * (gu + np.swapaxes(gu, 2, 3))
         gamma = np.sqrt(2.0 * np.einsum("eijk,eijk->ei", s, s))
-        return self.fluid.viscosity(gamma)
+        return self.fluid.viscosity(gamma) + mut
 
     # ------------------------------------------------------------ advection correction
 
@@ -849,7 +886,7 @@ class ReferenceSolver(BoundaryConditions):
             if not self.stokes:
                 # outflow momentum at the node: m_b u_node, m_b from the consistent flux
                 share = np.linalg.norm(S[ok], axis=1)
-                tot = np.bincount(nodes, share, self.N)
+                tot = self._pressure_area()
                 mb = getattr(self, "_mb", np.zeros(self.N))
                 spec = self.bcs[zid]
                 flow = mb[nodes] if spec.get("backflow", "consistent") == "consistent" \
@@ -1019,7 +1056,7 @@ class ReferenceSolver(BoundaryConditions):
             if self.bcs[zid]["kind"] == "pressure":
                 share = np.linalg.norm(S, axis=2) * ok
                 nodes = f[ok]
-                tot = np.bincount(nodes, share[ok], self.N)
+                tot = self._pressure_area()
                 w = share[ok] / tot[nodes]
                 out[zid] = float(np.sum(mb[nodes] * w))
             else:
@@ -1068,7 +1105,7 @@ class ReferenceSolver(BoundaryConditions):
             if self.bcs[zid]["kind"] == "pressure":
                 share = np.linalg.norm(S, axis=2) * ok
                 nodes = f[ok]
-                tot = np.bincount(nodes, share[ok], self.N)
+                tot = self._pressure_area()
                 w = share[ok] / tot[nodes]
                 spec = self.bcs[zid]
                 flow = mb[nodes] if spec.get("backflow", "consistent") == \

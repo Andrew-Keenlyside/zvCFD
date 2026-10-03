@@ -324,22 +324,25 @@ class FastAssembler:
         g = out.reshape(self.N, nc, 3)
         return g if vec else g[:, 0]
 
-    def diagonal(self, mdot: dict, U=None):
-        """Momentum diagonal ``a_P`` from slot-ordered mass flows (any rheology)."""
+    def diagonal(self, mdot: dict, U=None, *, mu_t=None):
+        """Momentum diagonal ``a_P`` from slot-ordered mass flows (any rheology; ``mu_t``
+        (N,) an eddy viscosity at the nodes, added at every flux point)."""
         cp = self.cp
         diag = cp.zeros(self.N)
         U_ = self._vec(U if U is not None else cp.zeros((self.N, 3)))
+        mt = self._mut(mu_t)
         for K in self.kinds:
             self._launch(K, "diag", (cp.ascontiguousarray(mdot[K["kind"]]), U_) + self.rheo +
-                         (np.int32(self.transpose), np.int32(self.stokes), diag))
+                         (np.int32(self.transpose), np.int32(self.stokes)) + mt + (diag,))
         return diag
 
     def assemble(self, U, mdot: dict, gradU, beta, gradP, dnode, snode, *, levels=(),
-                 own=None):
+                 own=None, mu_t=None):
         """Block values ``(nnzb, 4, 4)`` and right-hand side ``(N, 4)`` of the ip fluxes.
 
         ``own`` (N,) flags nodes whose row leaves out the deferred corrections of
-        the faces they are upwind of (inflow through a pressure boundary).
+        the faces they are upwind of (inflow through a pressure boundary). ``mu_t``
+        (N,) is an eddy viscosity at the nodes, added at every flux point.
         """
         cp = self.cp
         indptr, indices = self.pattern
@@ -347,13 +350,23 @@ class FastAssembler:
         b = cp.zeros(self.N * 4)
         U_, gU, be, gP, dn, sn = (self._vec(a) for a in (U, gradU, beta, gradP, dnode, snode))
         own = self._own(own)
+        mt = self._mut(mu_t)
         for K in self.kinds:
             self._launch(K, "assemble",
                          (U_, cp.ascontiguousarray(mdot[K["kind"]]), gU, be, gP, dn, sn)
                          + self._levels(levels, K["kind"]) + (np.float64(self.rho),) + self.rheo
-                         + (np.int32(self.transpose), np.int32(self.stokes), own, K["pos"],
-                            data, b))
+                         + (np.int32(self.transpose), np.int32(self.stokes)) + mt
+                         + (own, K["pos"], data, b))
         return data.reshape(-1, 4, 4), b.reshape(self.N, 4)
+
+    def _mut(self, mu_t):
+        """``(has_mut, mu_t)`` kernel arguments; a one-element dummy when there is none."""
+        cp = self.cp
+        if mu_t is None:
+            if getattr(self, "_no_mut", None) is None:
+                self._no_mut = cp.zeros(1)
+            return np.int32(0), self._no_mut
+        return np.int32(1), cp.ascontiguousarray(cp.asarray(mu_t, dtype=cp.float64))
 
     def _own(self, own):
         """``own`` as int32 on the device; no node flagged when it is ``None``."""

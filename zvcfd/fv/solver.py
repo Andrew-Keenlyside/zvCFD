@@ -135,6 +135,7 @@ class GPUSolver(BoundaryConditions):
         if fluid.viscosity is not None and not isinstance(fluid.viscosity, CarreauYasuda):
             raise ValueError("the GPU solver takes Newtonian or CarreauYasuda viscosity")
         self.transpose = (fluid.viscosity is not None) if transpose == "auto" else bool(transpose)
+        self._transpose0 = self.transpose
         if getattr(self, "kernels", "fast") == "fast":
             # the whole-mesh work on the device: colouring, pattern, geometry, node volumes;
             # the host keeps only the boundary sub-faces
@@ -154,6 +155,48 @@ class GPUSolver(BoundaryConditions):
     @property
     def fast(self) -> bool:
         return getattr(self, "kernels", "fast") == "fast"
+
+    # ------------------------------------------------------------ eddy viscosity
+
+    turbulence = None
+    """A turbulence model, or ``None`` (laminar). ``turbulence.update(solver)`` runs after
+    every outer iteration's linear solve and mass-flow update, before the next assembly
+    (steady and in every transient coefficient loop). It may set :attr:`mu_t`. If it
+    returns a number, that is recorded as ``"turbulence"`` in the history, and the outer
+    loop converges only once it is below ``tol`` too."""
+
+    @property
+    def mu_t(self):
+        """Eddy viscosity at the nodes, ``(N,)`` on the device, or ``None`` (laminar).
+
+        Added to the molecular viscosity at every flux point, interpolated with the
+        shape functions, in the momentum diagonal and the assembled fluxes, and to the
+        node viscosity of the natural-outlet traction. Setting it switches on the
+        transpose term, ``∇·(μ_eff ∇uᵀ)``, which no longer integrates to zero when the
+        viscosity varies, and the per-iteration momentum diagonal. Wall shear stays
+        molecular: an eddy viscosity vanishes at walls."""
+        return getattr(self, "_mu_t", None)
+
+    @mu_t.setter
+    def mu_t(self, value):
+        cp = self.cp
+        if value is not None:
+            value = cp.ascontiguousarray(cp.asarray(value, dtype=cp.float64).reshape(-1))
+            if value.size != self.N:
+                raise ValueError(f"mu_t has {value.size} values for {self.N} nodes")
+        self._mu_t = value
+        self.transpose = self._transpose0 or value is not None
+        if getattr(self, "asm", None) is not None:
+            self.asm.transpose = self.transpose
+
+    def _turbulence_update(self):
+        """Run the turbulence model's update; its convergence measure, or ``None``."""
+        if self.turbulence is None:
+            return None
+        if not self.fast:
+            raise NotImplementedError("turbulence models run with the fast kernels")
+        r = self.turbulence.update(self)
+        return None if r is None else float(r)
 
     def _build(self):
         """Device structures: pattern, assembler, state, special zones, boundary data."""
@@ -341,13 +384,13 @@ class GPUSolver(BoundaryConditions):
                     mu = self.fluid.viscosity(np.sqrt(2 * np.einsum("fikj,fikj->fi", S2, S2)))
                 tau = grad + np.swapaxes(grad, -1, -2) if self.transpose else grad
                 flux = flux - mu[..., None] * np.einsum("fikj,fij->fik", tau, S)
-            elif self.transpose:
+            else:                     # used when the transpose term is on (it may be set later)
                 for k in range(3):
                     a_out[:, k] += np.bincount(f[ok], S[ok][:, k], N)
             for k in range(3):
                 force[:, k] += np.bincount(f[ok], flux[ok][:, k], N)
             share = np.linalg.norm(S, axis=2) * ok
-            tot = np.bincount(f[ok], share[ok], N)
+            tot = self._pressure_area()             # a node on two pressure zones: once
             w = np.bincount(f[ok], share[ok] / tot[f[ok]], N)
             if spec.get("backflow", "consistent") == "consistent":
                 w_cons += w
@@ -489,11 +532,11 @@ class GPUSolver(BoundaryConditions):
         g = self.asm.gradient(self.cp.concatenate([self.U, self.P[:, None]], 1))   # one pass
         gradU = self._mirror_d(self.cp.ascontiguousarray(g[:, :3]))
         gradP = self._mirror_d(self.cp.ascontiguousarray(g[:, 3]))
-        if self.fast and self.fluid.viscosity is None:
+        if self.fast and self.fluid.viscosity is None and self.mu_t is None:
             # static viscous part + the advective part the last mass-flow pass left
             diag = self.asm.dvisc if self.stokes else self.asm.dvisc + self._adv
         else:
-            diag = self.asm.diagonal(self.mdot, self.U)
+            diag = self.asm.diagonal(self.mdot, self.U, mu_t=self.mu_t)
         return {"gradU": gradU, "gradP": gradP, "beta": self._beta(gradU), "diag": diag}
 
     def _assemble_stage2(self, pre: dict):
@@ -506,10 +549,11 @@ class GPUSolver(BoundaryConditions):
         snode = self.rhie_chow * self.Vd / diag
         if self.fast:
             data, b = self.asm.assemble(self.U, self.mdot, gradU, beta, gradP, dnode, snode,
-                                        levels=levels, own=self._own_inflow())
+                                        levels=levels, own=self._own_inflow(), mu_t=self.mu_t)
         else:
             data, b = self.asm.assemble(self.pattern, self.U, self.mdot, gradU, beta, gradP,
-                                        dnode, snode, levels=levels, own=self._own_inflow())
+                                        dnode, snode, levels=levels, own=self._own_inflow(),
+                                        mu_t=self.mu_t)
         self._dnode, self._snode, self._levels = dnode, snode, levels
         self.aP = diag + t
         self._boundary_advection(data, b, gradU, beta)
@@ -598,7 +642,7 @@ class GPUSolver(BoundaryConditions):
         dnode = self.rhie_chow * self.Vd / (diag + t)
         snode = self.rhie_chow * self.Vd / diag
         data, b = self.asm.assemble(self.U, self.mdot, gradU, beta, gradP, dnode, snode,
-                                    levels=levels, own=self._own_inflow())
+                                    levels=levels, own=self._own_inflow(), mu_t=self.mu_t)
         self._dnode, self._snode, self._levels = dnode, snode, levels
         self.aP = aP = diag + t
         self._boundary_advection(data, b, gradU, beta)
@@ -723,13 +767,16 @@ class GPUSolver(BoundaryConditions):
             z["a"], z["r"], z["sc"] = a, r, sc
 
     def _node_viscosity_d(self, gradU):
+        """Viscosity at the nodes, molecular plus :attr:`mu_t`."""
         cp = self.cp
+        mut = 0.0 if self.mu_t is None else self.mu_t
         if self.fluid.viscosity is None:
-            return cp.full(self.N, self.fluid.mu)
+            return cp.full(self.N, self.fluid.mu) + mut
         s = 0.5 * (gradU + cp.swapaxes(gradU, 1, 2))
         g = cp.sqrt(2.0 * cp.einsum("ijk,ijk->i", s, s))
         v = self.fluid.viscosity
-        return v.mu_inf + (v.mu_0 - v.mu_inf) * (1 + (v.lam * g) ** v.a) ** ((v.n - 1) / v.a)
+        return v.mu_inf + (v.mu_0 - v.mu_inf) * (1 + (v.lam * g) ** v.a) ** ((v.n - 1) / v.a) \
+            + mut
 
     def _dirichlet(self, A: BlockMatrix, b):
         cp = self.cp
@@ -854,6 +901,7 @@ class GPUSolver(BoundaryConditions):
             part = cp.empty(nb * 5)
             self._upd_k((nb,), (256,), (np.int64(self.N), x, self.U, self.P, part))
             self.update_mass_flows()
+            turb = self._turbulence_update()
             pr = part.reshape(-1, 5)
             small = cp.concatenate([scal, pr[:, 0].max()[None], pr[:, 1].max()[None],
                                     pr[:, 2].max()[None], pr[:, 3].min()[None],
@@ -863,6 +911,7 @@ class GPUSolver(BoundaryConditions):
             du_, um, dp_, pmin, pmax = small[ns:ns + 5]
             du = float(du_) / max(float(um), 1e-300)
             dp = float(dp_) / max(float(pmax - pmin), 1e-300)
+            _finite_or_raise(du, dp, it, info, self.linear)
             q = self._zone_flows_from(small[ns + 5:])
             rec = {"iteration": it, "du": du, "dp": dp, "linear_iterations": info.iterations,
                    "linear_residual": info.residual, "linear_converged": bool(info.converged),
@@ -872,14 +921,17 @@ class GPUSolver(BoundaryConditions):
             gross = sum(abs(v) for v in q.values()) or 1.0
             rec["imbalance"] = sum(q.values()) / gross
             rec["flows"] = q
+            if turb is not None:
+                rec["turbulence"] = turb
             hist.append(rec)
             if log:
                 log(f"  it {it:4d}  rms u {res['rms_u']:.2e} p {res['rms_p']:.2e}  "
                     f"du {du:.2e} dp {dp:.2e}  lin {info.iterations} ({info.residual:.1e})  "
                     f"imb {rec['imbalance']:+.1e}  {rec['seconds']:.2f}s")
             rms = max(res["rms_u"], res["rms_v"], res["rms_w"], res["rms_p"])
-            done = (du < tol and dp < tol) or \
-                (residual_target is not None and rms < residual_target)
+            done = ((du < tol and dp < tol) or
+                    (residual_target is not None and rms < residual_target)) and \
+                (turb is None or turb < tol)
             if it > 1 and done and info.converged:
                 converged = True
                 break
@@ -903,8 +955,10 @@ class GPUSolver(BoundaryConditions):
             X = x.reshape(-1, 4)
             du = float(cp.abs(X[:, :3] - self.U).max()) / max(float(cp.abs(X[:, :3]).max()), 1e-300)
             dp = float(cp.abs(X[:, 3] - self.P).max()) / max(float(cp.ptp(X[:, 3])), 1e-300)
+            _finite_or_raise(du, dp, it, info, self.linear)
             self.U, self.P = X[:, :3].copy(), X[:, 3].copy()
             self.update_mass_flows()
+            turb = self._turbulence_update()
             rec = {"iteration": it, "du": du, "dp": dp, "linear_iterations": info.iterations,
                    "linear_residual": info.residual, "linear_converged": bool(info.converged),
                    "linear_solver": getattr(self.linear, "active", self.linear.name),
@@ -914,6 +968,8 @@ class GPUSolver(BoundaryConditions):
             gross = sum(abs(v) for v in q.values()) or 1.0
             rec["imbalance"] = sum(q.values()) / gross
             rec["flows"] = q
+            if turb is not None:
+                rec["turbulence"] = turb
             hist.append(rec)
             if log:
                 log(f"  it {it:4d}  rms u {res['rms_u']:.2e} p {res['rms_p']:.2e}  "
@@ -921,8 +977,9 @@ class GPUSolver(BoundaryConditions):
                     f"imb {rec['imbalance']:+.1e}  {rec['seconds']:.2f}s")
             # a stalled linear solve also gives small du, dp: not convergence
             rms = max(res["rms_u"], res["rms_v"], res["rms_w"], res["rms_p"])
-            done = (du < tol and dp < tol) or \
-                (residual_target is not None and rms < residual_target)
+            done = ((du < tol and dp < tol) or
+                    (residual_target is not None and rms < residual_target)) and \
+                (turb is None or turb < tol)
             if it > 1 and done and info.converged:
                 converged = True
                 break
@@ -1184,7 +1241,7 @@ class GPUSolver(BoundaryConditions):
                 own = ok & (f < self._n_own)
                 share = np.linalg.norm(S, axis=2) * ok
                 nodes = f[ok]
-                tot = np.bincount(nodes, share[ok], self.N)
+                tot = self._pressure_area()
                 w = np.where(own[ok], share[ok] / np.where(tot[nodes] > 0, tot[nodes], 1), 0)
                 idx.append(nodes)
                 wts.append(w)
@@ -1223,7 +1280,7 @@ class GPUSolver(BoundaryConditions):
             if self.bcs[zid]["kind"] == "pressure":
                 share = np.linalg.norm(S, axis=2) * ok
                 nodes = f[ok]
-                tot = np.bincount(nodes, share[ok], self.N)
+                tot = self._pressure_area()
                 w = np.where(own[ok], share[ok] / np.where(tot[nodes] > 0, tot[nodes], 1), 0)
                 out[zid] = float(np.sum(mb[nodes] * w))
             else:
@@ -1233,6 +1290,15 @@ class GPUSolver(BoundaryConditions):
     def fields(self) -> dict:
         """Node fields on the host: ``{"U": (N, 3), "P": (N,)}``."""
         return {"U": self.cp.asnumpy(self.U), "P": self.cp.asnumpy(self.P)}
+
+
+def _finite_or_raise(du, dp, it, info, linear):
+    """Stop at the first non-finite outer update rather than carry NaN on."""
+    if not (np.isfinite(du) and np.isfinite(dp)):
+        raise FloatingPointError(
+            f"outer iteration {it}: the linear solve ({getattr(linear, 'active', linear.name)},"
+            f" {info.iterations} iterations) returned non-finite values. The smoother may have"
+            " diverged: try linear: auto, or the AmgX robust preset")
 
 
 class RawRows:

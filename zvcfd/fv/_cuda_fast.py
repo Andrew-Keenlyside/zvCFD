@@ -241,7 +241,7 @@ extern "C" __global__ void diag(const int *conn, long long base, long long count
                                 const double *X, const double *georec, const double *mdot,
                                 const double *U, int rheo, double mu0, double muinf,
                                 double lam, double ca, double cn, int transpose, int stokes,
-                                double *out) {
+                                int has_mut, const double *mut, double *out) {
     __shared__ double s_x[EPB][N_NODES * 3];
     __shared__ double s_u[EPB][N_NODES * 3];
     __shared__ double s_rec[EPB][REC];
@@ -272,6 +272,8 @@ extern "C" __global__ void diag(const int *conn, long long base, long long count
             }
             mu = visc(gu, rheo, mu0, muinf, lam, ca, cn);
         }
+        if (has_mut)                                   // eddy viscosity, interpolated
+            for (int q = 0; q < N_NODES; ++q) mu += T.nip[t][q] * mut[s_n[le][q]];
         s_mu[le][t] = mu;
     }
     __syncthreads();
@@ -308,8 +310,8 @@ extern "C" __global__ void assemble(const int *conn, long long base, long long c
                                     double c2, const double *Uo2, const double *mo2,
                                     double rho, int rheo, double mu0, double muinf,
                                     double lam, double ca, double cn, int transpose,
-                                    int stokes, const int *own, const int *pos, double *data,
-                                    double *b) {
+                                    int stokes, int has_mut, const double *mut, const int *own,
+                                    const int *pos, double *data, double *b) {
     __shared__ double s_x[EPB][N_NODES * 3];
     __shared__ double s_u[EPB][N_NODES * 3];
     __shared__ double s_gp[EPB][N_NODES * 3];
@@ -366,6 +368,8 @@ extern "C" __global__ void assemble(const int *conn, long long base, long long c
             }
             mu = visc(gu, rheo, mu0, muinf, lam, ca, cn);
         }
+        if (has_mut)                                   // eddy viscosity, interpolated
+            for (int q = 0; q < N_NODES; ++q) mu += T.nip[s][q] * mut[s_n[le][q]];
         double m = mdot[slot * N_IP + s];
         double d = 0.5 * (s_dn[le][ia] + s_dn[le][ib]);
         s_ip[le][s][0] = mu;

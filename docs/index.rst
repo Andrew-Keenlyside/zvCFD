@@ -33,8 +33,9 @@ The package is at **v0.1**. It has:
 - the finite-volume solver: steady and transient (BDF2), flow-rate and
   velocity inlets, pressure, RCR and coronary outlets coupled implicitly,
   backflow stabilisation, Carreau–Yasuda blood, wall shear stress evaluated
-  as CFX does (TAWSS, OSI, RRT), and partitions for several GPUs
-  (verified so far as several partitions on one GPU);
+  as CFX does (TAWSS, OSI, RRT), an optional RANS turbulence model (k-kL,
+  one GPU), and partitions for several GPUs (verified so far as several
+  partitions on one GPU);
 - the lattice-Boltzmann solver: sparse-brick D3Q19 (TRT), with the same
   outlet models, on one or several GPUs;
 - mesh collections, brick stores and run collections on Zarr Vectors;

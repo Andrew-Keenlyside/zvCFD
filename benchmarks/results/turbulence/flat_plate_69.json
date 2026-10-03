@@ -1,0 +1,12 @@
+{
+ "ni": 69,
+ "nodes": 6762,
+ "iterations": 172,
+ "converged": true,
+ "wall_s": 317.992299079895,
+ "cf097": 0.0026904605569543234,
+ "re_theta": 7767.253039683018,
+ "cf_ks": 0.002760993812371877,
+ "turbulence_linear_failures": 0,
+ "flow_linear_converged": true
+}

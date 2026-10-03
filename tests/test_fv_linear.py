@@ -135,6 +135,32 @@ def test_auto_ladder(layered_tube, dfg_slab):
     assert b.active == "simple" and x is not None
 
 
+def test_auto_falls_back_on_a_non_finite_solve(dfg_slab):
+    """A diverged smoother returns NaN, and ``NaN > tol`` is False: the ladder must still
+    count it as a failure and move on (AmgX gs on a thin slab with the transpose term)."""
+    import cupy as cp
+
+    from zvcfd.fv.linear import Auto, SolveInfo
+
+    class Diverged:
+        name = "diverged"
+
+        def solve(self, A, b, x0=None, rtol=0.1):
+            return cp.full_like(b, cp.nan), SolveInfo(200, float("nan"), 0.0, converged=False)
+
+    a = Auto(rtol=0.1)
+    a.ladder[0] = ("diverged", Diverged)
+    a.current = Diverged()
+    x, info = a.solve(*dfg_slab[:3], rtol=0.1)
+    assert a.switches[0][:2] == ("diverged", "amgx-robust")
+    assert "non-finite" in a.switches[0][2]
+    assert info.converged and bool(cp.isfinite(x).all())
+    a.ladder = [("diverged", Diverged)]                 # nothing left to fall back on
+    a.index, a.current = 0, Diverged()
+    with pytest.raises(RuntimeError, match="every linear solver failed"):
+        a.solve(*dfg_slab[:3], rtol=0.1)
+
+
 def test_auto_probe(dfg_slab, layered_tube):
     from zvcfd.fv.linear import Auto
 

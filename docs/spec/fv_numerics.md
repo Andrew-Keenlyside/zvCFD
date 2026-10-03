@@ -105,7 +105,7 @@ For each CV, with outward ip areas and the boundary sub-faces:
 | `ṁ_ip` | `ρ [ū_ip · A + d_ip (∇̄p_ip − ∇p_ip) · A] + f_ip Σ_l (c_l/c_0)(ṁ_ip^l − ρ ū_ip^l · A)`, with `ū, ∇p` from shape functions, `∇̄p` interpolated nodal gradients, `d_ip` the mean of `V/(a_P + t)` at the edge's two nodes (`t` the time term's diagonal), and `f_ip = 1 − d_ip / mean(V/a_P)` (Rhie & Chow 1983; Choi 1999). Then `d_ip/(1 − f_ip) = mean(V/a_P)` exactly: a steady state does not depend on the (false or physical) time step, and halving a control volume at a symmetry plane changes nothing |
 | nodal gradient `∇̄φ_i` | element gradients averaged with SCV weights: exact for linear fields at every node, boundary nodes included |
 | advection `u_ip` | upwind in the lagged `ṁ`, plus a deferred correction to `u_up + β ∇u_up · (x_ip − x_up)`; `β` fixed (Specified Blend) or from a Barth–Jespersen limiter (High Resolution), frozen after 10 Picard iterations (left free, the non-differentiable limiter holds Picard in a limit cycle) |
-| viscosity | constant, or `μ(γ̇)` at each ip from the shape-function strain rate (`zvcfd.rheology`: Carreau–Yasuda, Cross, power law, Casson, with CFX-style shear-rate clips); the `μ (∇u)ᵀ` stress term is kept for generalised-Newtonian fluids and dropped for constant viscosity, where it integrates to zero |
+| viscosity | constant, or `μ(γ̇)` at each ip from the shape-function strain rate (`zvcfd.rheology`: Carreau–Yasuda, Cross, power law, Casson, with CFX-style shear-rate clips); the `μ (∇u)ᵀ` stress term is kept for generalised-Newtonian fluids and dropped for constant viscosity, where it integrates to zero. A turbulence model adds an eddy viscosity `μ_t` at the nodes (`GPUSolver.mu_t`, set by `turbulence.update` after each outer iteration), interpolated to every flux point with the shape functions; it switches the transpose term on and enters the natural outlet's traction, not the wall shear stress |
 | time | a false time step (pseudo-transient) for steady runs, or BDF1 / BDF2 with Picard coefficient loops per step, the first BDF2 step BDF1. BDF2 takes a variable step: with `ω = Δt_n/Δt_{n−1}`, `c = (1 + 2ω)/(1 + ω), 1 + ω, −ω²/(1 + ω)` (`3/2, 2, −1/2` at `ω = 1`), exact for quadratics at any ratio; observed order 1.9–2.0 with ratios 0.6 and 1.67 alternating |
 
 The reference solver takes `∇̄p` implicitly (a sparse operator product, which
@@ -387,6 +387,28 @@ extreme case (aspect ratio 10 in every cell). `robust` solves it to 0.1 in
 smoothing and is the check solver for meshes without thin cells: on the
 169 k-node gate B tube, whose wall layers are now thin, it no longer
 converges.
+
+**Quasi-2-D slabs with wall-resolved boundary layers.** A 2-D case run as
+one layer of hexahedra between two symmetry planes, such as the NASA
+turbulence-modelling flat plate (wall spacing 8 × 10⁻⁶ in a domain of
+size 1), has two copies of every 2-D node, coupled only through the faces
+normal to the span. Their coupling scales as `Δx Δy / span` and the
+wall-normal one as `Δx span / Δy`, so a span chosen for the domain (0.05)
+makes the spanwise coupling 10⁻¹⁰ of the wall-normal one in the wall
+cells. The difference between the two layers is then a mode that no
+smoother damps and no aggregation coarsens: every solver stalls at the
+iteration limit (ratio 0.96–0.99). A span of a few wall spacings fixes it.
+With 4 wall spacings, `auto` converges each system in 4–18 iterations of
+`robust`. `gs` still fails on these slabs: it stalls without the
+transpose term, and diverges to NaN with it (an eddy viscosity switches it
+on). `auto` counts a non-finite solve as a failure and moves to `robust`.
+A single back end (`linear: amgx`) stops the solve with an error at the
+first non-finite outer update rather than carry NaN on.
+Once a turbulence model's eddy viscosity has developed, the slab stalls
+every iterative solver again: the coupling across the span then dominates
+in the outer part of the boundary layer, where the cells are tens of times
+taller than the span. The two-dimensional turbulence cases use
+`host-direct` ([Turbulence](turbulence.md#meshes)).
 
 ### Wall shear stress
 

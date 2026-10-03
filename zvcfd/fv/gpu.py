@@ -239,25 +239,35 @@ class GPUAssembler:
         self.node_volume = vol
         return g if vec else g[:, 0]
 
-    def diagonal(self, mdot: dict, U=None):
+    def diagonal(self, mdot: dict, U=None, *, mu_t=None):
         """Momentum diagonal ``a_P`` (N,), with ``mdot = {kind: (E, n_ip)}`` lagged mass flows.
 
-        ``U`` is needed for a generalised-Newtonian viscosity (strain rate at each ip).
+        ``U`` is needed for a generalised-Newtonian viscosity (strain rate at each ip);
+        ``mu_t`` (N,) is an eddy viscosity at the nodes, added at every flux point.
         """
         cp = self.cp
         diag = cp.zeros(self.N)
         U_ = self._vec(U if U is not None else cp.zeros((self.N, 3)))
+        mt = self._mut(mu_t)
         for K in self.kinds:
             m = cp.asarray(mdot[K["kind"]], dtype=cp.float64)
             self._launch(K, self._kernel(K, "diagonal"),
                          (cp.ascontiguousarray(m), U_) + self.rheo +
-                         (np.int32(self.transpose), np.int32(self.stokes), diag))
+                         (np.int32(self.transpose), np.int32(self.stokes)) + mt +
+                         (K["N"], diag))
         return diag
+
+    def _mut(self, mu_t):
+        """``(has_mut, mu_t)`` kernel arguments; a one-element dummy when there is none."""
+        cp = self.cp
+        if mu_t is None:
+            return np.int32(0), cp.zeros(1)
+        return np.int32(1), cp.ascontiguousarray(cp.asarray(mu_t, dtype=cp.float64))
 
     def _vec(self, a):
         return self.cp.ascontiguousarray(self.cp.asarray(a, dtype=self.cp.float64).reshape(-1))
 
-    def residual(self, U, P, mdot: dict, gradU, beta, gradP, dnode):
+    def residual(self, U, P, mdot: dict, gradU, beta, gradP, dnode, *, mu_t=None):
         """Momentum and continuity residuals ``(N, 4)`` of the ip fluxes for the given state."""
         cp = self.cp
         R = cp.zeros(self.N * 4)
@@ -268,7 +278,8 @@ class GPUAssembler:
             m = cp.ascontiguousarray(cp.asarray(mdot[K["kind"]], dtype=cp.float64))
             self._launch(K, self._kernel(K, "residual"),
                          (K["N"], U_, P_, m, gU, be, gP, dn, np.float64(self.rho)) + self.rheo +
-                         (np.int32(self.transpose), np.int32(self.stokes), R))
+                         (np.int32(self.transpose), np.int32(self.stokes)) + self._mut(mu_t) +
+                         (R,))
         return R.reshape(self.N, 4)
 
     def _levels(self, levels, kind):
@@ -286,7 +297,7 @@ class GPUAssembler:
         return tuple(out)
 
     def assemble(self, pattern, U, mdot: dict, gradU, beta, gradP, dnode, snode, *,
-                 levels=(), own=None):
+                 levels=(), own=None, mu_t=None):
         """Block matrix values ``(nnzb, 4, 4)`` and right-hand side ``(N, 4)`` of the ip fluxes.
 
         ``pattern`` is ``(indptr, indices)`` on the device (sorted columns). The
@@ -294,7 +305,8 @@ class GPUAssembler:
         ``levels`` are the old time levels ``[(c_l / c_0, U_l, mdot_l)]`` of the
         transient Rhie–Chow part (a false time step: ``[(1, U, mdot)]``).
         ``own`` (N,) flags nodes whose row leaves out the deferred corrections of
-        the faces they are upwind of (inflow through a pressure boundary).
+        the faces they are upwind of (inflow through a pressure boundary). ``mu_t``
+        (N,) is an eddy viscosity at the nodes, added at every flux point.
         Boundary rows, body forces, known boundary mass flows and the time term
         are added by the caller.
         """
@@ -313,8 +325,8 @@ class GPUAssembler:
             self._launch(K, self._kernel(K, "assemble"),
                          (K["N"], U_, m, gU, be, gP, dn, sn) + self._levels(levels, K["kind"]) +
                          (np.float64(self.rho),) + self.rheo +
-                         (np.int32(self.transpose), np.int32(self.stokes), own, indptr,
-                          indices, pos, data, b))
+                         (np.int32(self.transpose), np.int32(self.stokes)) + self._mut(mu_t) +
+                         (own, indptr, indices, pos, data, b))
         return data.reshape(-1, 4, 4), b.reshape(self.N, 4)
 
     def massflow(self, U, P, gradP, dnode, snode, *, levels=()):

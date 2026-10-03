@@ -118,6 +118,8 @@ class Fv:
     wss: bool = True                 # wall shear stress in snapshots and the boundary store
     tawss_from: float | None = None  # s; default: the last period
     chunk: float | None = None       # mesh store chunk edge (m); default: bounding box / 4
+    # RANS turbulence: None (laminar) or {model: k-kl, k_inf, kl_inf | speed, mach; relax}
+    turbulence: dict | None = None
 
 
 @dataclass
@@ -248,6 +250,19 @@ def _validate(cfg: RunConfig) -> None:
         raise ValueError(f"fv.precision {cfg.fv.precision!r}")
     if cfg.fv.scheme not in ("bdf1", "bdf2"):
         raise ValueError(f"fv.scheme {cfg.fv.scheme!r}")
+    if cfg.fv.turbulence is not None:
+        t = cfg.fv.turbulence
+        bad = set(t) - {"model", "k_inf", "kl_inf", "speed", "mach", "relax"}
+        if bad:
+            raise ValueError(f"unknown fv.turbulence keys: {sorted(bad)}")
+        if t.get("model") != "k-kl":
+            raise ValueError(f"fv.turbulence.model {t.get('model')!r}: k-kl (k-kL-MEAH2015m)")
+        if not fv:
+            raise ValueError("fv.turbulence needs solver.method fv")
+        given = ("k_inf" in t and "kl_inf" in t, "speed" in t and "mach" in t)
+        if given.count(True) != 1:
+            raise ValueError("fv.turbulence: give k_inf and kl_inf, or speed and mach "
+                             "(the NASA TMR freestream values)")
     if cfg.solver.collision not in ("trt", "bgk"):
         raise ValueError(f"solver.collision {cfg.solver.collision!r}")
     if cfg.solver.precision not in ("fp32", "fp16"):
